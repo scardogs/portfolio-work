@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   Box,
   Tabs,
@@ -12,7 +12,15 @@ import {
   Text,
   Divider,
   Heading,
+  useClipboard,
+  useToast,
+  IconButton,
 } from "@chakra-ui/react";
+import { motion } from "framer-motion";
+import { FaVolumeUp, FaVolumeMute } from "react-icons/fa";
+
+const MotionBox = motion(Box);
+const MotionTab = motion(Tab);
 
 const sections = [
   { label: "About", id: "about" },
@@ -34,6 +42,32 @@ const PortfolioTab = () => {
   };
 
   const { isOpen, onToggle } = useDisclosure();
+  const { onCopy, hasCopied } = useClipboard("09946760366");
+  const toast = useToast();
+
+  // Audio player logic
+  const audioRef = useRef(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = 0.5;
+      audioRef.current.muted = isMuted;
+      if (!isPlaying) {
+        audioRef.current
+          .play()
+          .then(() => setIsPlaying(true))
+          .catch(() => {});
+      }
+    }
+  }, [isMuted, isPlaying]);
+
+  // Animation variants
+  const sectionVariant = {
+    hidden: { opacity: 0, y: 40 },
+    visible: { opacity: 1, y: 0 },
+  };
 
   return (
     <Box
@@ -42,11 +76,15 @@ const PortfolioTab = () => {
       mx="auto"
       mt={[4, 8]}
       px={[2, 4, 0]}
+      position="relative"
     >
-      <Tabs variant="enclosed" isFitted colorScheme="brand">
-        <TabList>
-          {sections.map((section) => (
-            <Tab
+      {/* Audio element and mute button */}
+      <audio ref={audioRef} src="/song1.mp3" autoPlay loop />
+
+      <Tabs variant="enclosed" isFitted colorScheme="brand" position="relative">
+        <TabList position="relative">
+          {sections.map((section, idx) => (
+            <MotionTab
               key={section.id}
               onClick={() => handleTabClick(section.id)}
               fontWeight="bold"
@@ -63,14 +101,16 @@ const PortfolioTab = () => {
                 bg: "#232323",
                 transition: "all 0.2s",
               }}
+              layout
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
             >
               {section.label}
-            </Tab>
+            </MotionTab>
           ))}
         </TabList>
       </Tabs>
       {/* About Section */}
-      <Box
+      <MotionBox
         ref={sectionRefs.about}
         id="about"
         minH="200px"
@@ -84,6 +124,11 @@ const PortfolioTab = () => {
         alignItems="center"
         justifyContent="center"
         fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+        variants={sectionVariant}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+        transition={{ duration: 0.6, delay: 0.1 }}
       >
         <Heading
           as="h2"
@@ -96,15 +141,28 @@ const PortfolioTab = () => {
         >
           About
         </Heading>
+        {/* Mute/Unmute Button in About upper left */}
+        <IconButton
+          aria-label={isMuted ? "Unmute" : "Mute"}
+          icon={isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
+          onClick={() => setIsMuted((m) => !m)}
+          position="absolute"
+          top={10}
+          left={2}
+          zIndex={10}
+          colorScheme="yellow"
+          variant="ghost"
+          size="lg"
+          fontSize="2xl"
+        />
         <Divider borderColor="#232323" mb={4} />
         <Avatar
           src="/profile.png"
           name="John Michael T. Escarlan"
-          boxSize="300px" // Customize this as needed
+          boxSize="300px"
           border="2px solid #e2b714"
           mb={4}
         />
-
         <Tooltip
           label="John Michael T. Escarlan"
           fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
@@ -129,9 +187,9 @@ const PortfolioTab = () => {
           contribute to meaningful projects. I am committed to delivering
           high-quality work and continuously growing in the field of technology.
         </Text>
-      </Box>
+      </MotionBox>
       {/* Skills Section */}
-      <Box
+      <MotionBox
         ref={sectionRefs.skills}
         id="skills"
         minH="200px"
@@ -141,6 +199,11 @@ const PortfolioTab = () => {
         borderRadius="md"
         border="1px solid #232323"
         fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+        variants={sectionVariant}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
       >
         <Heading
           as="h2"
@@ -177,35 +240,39 @@ const PortfolioTab = () => {
               color="#e2b714"
               fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
             >
-              <Box
-                as="li"
-                mb={2}
-                px={4}
-                py={2}
-                display="inline-block"
-                bg="#232323"
-                borderRadius="md"
-                border="1px solid #e2b714"
-                color="#fff"
-                fontWeight="bold"
-                fontSize={["md", "lg"]}
-                m={2}
-                fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-                _hover={{
-                  color: "#e2b714",
-                  bg: "#191919",
-                  borderColor: "#e2b714",
-                  transition: "all 0.2s",
+              <motion.div
+                whileHover={{
+                  scale: 1.08,
+                  backgroundColor: "#e2b714",
+                  color: "#191919",
                 }}
+                transition={{ type: "spring", stiffness: 300 }}
+                style={{ display: "inline-block" }}
               >
-                {skill}
-              </Box>
+                <Box
+                  as="li"
+                  mb={2}
+                  px={4}
+                  py={2}
+                  bg="#232323"
+                  borderRadius="md"
+                  border="1px solid #e2b714"
+                  color="#fff"
+                  fontWeight="bold"
+                  fontSize={["md", "lg"]}
+                  m={2}
+                  fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+                  cursor="pointer"
+                >
+                  {skill}
+                </Box>
+              </motion.div>
             </Tooltip>
           ))}
         </Box>
-      </Box>
+      </MotionBox>
       {/* Projects Section */}
-      <Box
+      <MotionBox
         ref={sectionRefs.projects}
         id="projects"
         minH="200px"
@@ -215,6 +282,11 @@ const PortfolioTab = () => {
         borderRadius="md"
         border="1px solid #232323"
         fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+        variants={sectionVariant}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+        transition={{ duration: 0.6, delay: 0.3 }}
       >
         <Heading
           as="h2"
@@ -236,26 +308,40 @@ const PortfolioTab = () => {
           justifyContent="center"
           gap={[6, 12]}
         >
-          <Box
-            minW="120px"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
+          <motion.div
+            whileHover={{
+              y: -8,
+              boxShadow: "0 8px 32px 0 rgba(226,183,20,0.18)",
+              borderColor: "#e2b714",
+            }}
+            transition={{ type: "spring", stiffness: 300 }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
           >
-            <img
-              src="/LOGO.png"
-              alt="Justine Cargo Services Logo"
-              style={{
-                width: "110px",
-                height: "110px",
-                objectFit: "contain",
-                background: "#191919",
-                borderRadius: "8px",
-                marginBottom: 16,
-                border: "1px solid #e2b714",
-              }}
-            />
-          </Box>
+            <Box
+              minW="120px"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+            >
+              <img
+                src="/LOGO.png"
+                alt="Justine Cargo Services Logo"
+                style={{
+                  width: "110px",
+                  height: "110px",
+                  objectFit: "contain",
+                  background: "#191919",
+                  borderRadius: "8px",
+                  marginBottom: 16,
+                  border: "1px solid #e2b714",
+                }}
+              />
+            </Box>
+          </motion.div>
           <Box textAlign={["center", "left"]}>
             <Text
               color="#e2b714"
@@ -303,30 +389,13 @@ const PortfolioTab = () => {
                 payroll, billing generation, and report creation. This reduces
                 manual work, improves data accuracy, and helps the company
                 manage information more efficiently.
-                <Text
-                  as="span"
-                  color="#fff"
-                  fontSize={16}
-                  mb={2}
-                  display="block"
-                >
-                  Github:{" "}
-                  <a
-                    href="https://github.com/justines-cargo-services/JCS-System"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: "#e2b714", textDecoration: "underline" }}
-                  >
-                    link
-                  </a>
-                </Text>
               </Box>
             </Collapse>
           </Box>
         </Box>
-      </Box>
+      </MotionBox>
       {/* Contact Section */}
-      <Box
+      <MotionBox
         ref={sectionRefs.contact}
         id="contact"
         minH="200px"
@@ -336,6 +405,11 @@ const PortfolioTab = () => {
         borderRadius="md"
         border="1px solid #232323"
         fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+        variants={sectionVariant}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+        transition={{ duration: 0.6, delay: 0.4 }}
       >
         <Heading
           as="h2"
@@ -393,15 +467,44 @@ const PortfolioTab = () => {
             color="#e2b714"
             fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
           >
-            <Text as="span" color="#fff" fontSize={16} mb={2} display="block">
-              Mobile number:{" "}
-              <Box as="span" color="#e2b714" display="inline">
-                09946760366
-              </Box>
+            <Button
+              size="sm"
+              colorScheme="yellow"
+              variant="outline"
+              borderColor="#e2b714"
+              color="#e2b714"
+              fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+              mt={2}
+              onClick={() => {
+                onCopy();
+                toast({
+                  title: hasCopied ? "Copied!" : "Copied to clipboard!",
+                  status: "success",
+                  duration: 1200,
+                  isClosable: true,
+                  position: "top",
+                });
+              }}
+              _hover={{
+                bg: "#191919",
+                color: "#e2b714",
+                borderColor: "#e2b714",
+              }}
+            >
+              {hasCopied ? "Copied!" : "Copy Mobile Number"}
+            </Button>
+            <Text
+              as="span"
+              color="#e2b714"
+              fontSize={16}
+              mt={2}
+              display="block"
+            >
+              09946760366
             </Text>
           </Tooltip>
         </Box>
-      </Box>
+      </MotionBox>
     </Box>
   );
 };
