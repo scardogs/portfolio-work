@@ -99,11 +99,12 @@ const PortfolioTab = () => {
         <Divider borderColor="#232323" mb={4} />
         <Avatar
           src="/profile.png"
-          size="xl"
+          name="John Michael T. Escarlan"
+          boxSize="300px" // Customize this as needed
           border="2px solid #e2b714"
           mb={4}
-          name="John Michael T. Escarlan"
         />
+
         <Tooltip
           label="John Michael T. Escarlan"
           fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
@@ -302,6 +303,23 @@ const PortfolioTab = () => {
                 payroll, billing generation, and report creation. This reduces
                 manual work, improves data accuracy, and helps the company
                 manage information more efficiently.
+                <Text
+                  as="span"
+                  color="#fff"
+                  fontSize={16}
+                  mb={2}
+                  display="block"
+                >
+                  Github:{" "}
+                  <a
+                    href="https://github.com/justines-cargo-services/JCS-System"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "#e2b714", textDecoration: "underline" }}
+                  >
+                    link
+                  </a>
+                </Text>
               </Box>
             </Collapse>
           </Box>

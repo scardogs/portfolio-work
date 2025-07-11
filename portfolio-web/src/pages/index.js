@@ -1,8 +1,8 @@
 import React from "react";
-import PortfolioTab from "../component/portfolio-tab";
+import FrontPage from "../component/front-page";
 
-const PortfolioPage = () => {
-  return <PortfolioTab />;
+const FrontSPage = () => {
+  return <FrontPage />;
 };
 
-export default PortfolioPage;
+export default FrontSPage;

@@ -11,7 +11,7 @@ export default function App({ Component, pageProps }) {
       <ScrollingBackground
         backgroundColor="#191919"
         backgroundImage={svgPattern}
-        speed={0.5}
+        speed={5.0}
         style={{
           position: "fixed",
           zIndex: 0,
