@@ -389,6 +389,23 @@ const PortfolioTab = () => {
                 payroll, billing generation, and report creation. This reduces
                 manual work, improves data accuracy, and helps the company
                 manage information more efficiently.
+                <Text
+                  as="span"
+                  color="#fff"
+                  fontSize={16}
+                  mb={2}
+                  display="block"
+                >
+                  GitHUb:{" "}
+                  <a
+                    href="https://github.com/justines-cargo-services/JCS-System"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "#e2b714", textDecoration: "underline" }}
+                  >
+                    Link
+                  </a>
+                </Text>
               </Box>
             </Collapse>
           </Box>
