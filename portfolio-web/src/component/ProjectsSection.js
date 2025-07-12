@@ -10,6 +10,8 @@ import {
 import { motion } from "framer-motion";
 
 const MotionBox = motion(Box);
+const MotionHeading = motion(Heading);
+const MotionText = motion(Text);
 
 const projects = [
   {
@@ -39,10 +41,10 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
       id="projects"
       minH="200px"
       mb={[10, 16]}
-      p={[5, 10]}
+      p={[6, 10, 12]}
       bg="#272727"
-      borderRadius="md"
-      border="1px solid #232323"
+      borderRadius="2xl"
+      border="2px solid #232323"
       fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
       variants={sectionVariant}
       initial="hidden"
@@ -50,7 +52,8 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
       viewport={{ once: true, amount: 0.3 }}
       whileHover={{
         y: -8,
-        boxShadow: "0 8px 32px 0 rgba(226,183,20,0.18)",
+        boxShadow:
+          "0 12px 40px 0 rgba(226,183,20,0.15), 0 0 0 1px rgba(226,183,20,0.1)",
         borderColor: "#e2b714",
       }}
       transition={{
@@ -59,39 +62,90 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
         type: "spring",
         stiffness: 300,
       }}
+      backdropFilter="blur(10px)"
+      _before={{
+        content: '""',
+        position: "absolute",
+        top: "-2px",
+        left: "-2px",
+        right: "-2px",
+        bottom: "-2px",
+        background: "linear-gradient(45deg, #e2b714, #f7d794, #e2b714)",
+        borderRadius: "2xl",
+        zIndex: "-1",
+        opacity: 0.1,
+      }}
     >
-      <Heading
+      <MotionHeading
         as="h2"
-        size="md"
+        size="lg"
         color="#e2b714"
         fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-        mb={2}
+        mb={4}
         fontWeight="bold"
-        letterSpacing={1}
+        letterSpacing="2px"
+        textShadow="0 2px 4px rgba(226,183,20,0.3)"
+        initial={{ y: -20, opacity: 0 }}
+        whileInView={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
       >
         Projects
-      </Heading>
-      <Divider borderColor="#232323" mb={4} />
-      <Box display="flex" flexDirection="column" gap={8}>
+      </MotionHeading>
+
+      <MotionBox
+        initial={{ scaleX: 0 }}
+        whileInView={{ scaleX: 1 }}
+        transition={{ duration: 0.8, delay: 0.3 }}
+        mb={8}
+      >
+        <Divider
+          borderColor="#e2b714"
+          borderWidth="2px"
+          opacity="0.6"
+          w="150px"
+        />
+      </MotionBox>
+
+      <MotionBox
+        display="flex"
+        flexDirection="column"
+        gap={10}
+        initial={{ y: 20, opacity: 0 }}
+        whileInView={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, delay: 0.4 }}
+      >
         {projects.map((project, idx) => (
-          <Box
+          <MotionBox
             key={project.title}
             display="flex"
             flexDirection={["column", "row"]}
             alignItems="center"
             justifyContent="center"
-            gap={[4, 8, 12]}
-            p={[4, 6]}
+            gap={[6, 10, 14]}
+            p={[6, 8, 10]}
             bg="#232323"
-            borderRadius="md"
-            border="1px solid #e2b714"
-            boxShadow="0 2px 16px 0 rgba(226,183,20,0.08)"
+            borderRadius="xl"
+            border="2px solid #e2b714"
+            boxShadow="0 4px 20px 0 rgba(226,183,20,0.1)"
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            whileInView={{ scale: 1, opacity: 1, y: 0 }}
+            whileHover={{
+              y: -8,
+              boxShadow: "0 12px 32px 0 rgba(226,183,20,0.2)",
+              borderColor: "#f7d794",
+            }}
+            transition={{
+              duration: 0.6,
+              delay: 0.1 * (idx + 1),
+              type: "spring",
+              stiffness: 300,
+            }}
           >
             <motion.div
               whileHover={{
-                y: -8,
-                boxShadow: "0 8px 32px 0 rgba(226,183,20,0.18)",
-                borderColor: "#e2b714",
+                scale: 1.05,
+                y: -5,
+                boxShadow: "0 8px 24px 0 rgba(226,183,20,0.25)",
               }}
               transition={{ type: "spring", stiffness: 300 }}
               style={{
@@ -101,91 +155,155 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
               }}
             >
               <Box
-                minW="120px"
+                minW="140px"
                 display="flex"
                 alignItems="center"
                 justifyContent="center"
+                position="relative"
+                _before={{
+                  content: '""',
+                  position: "absolute",
+                  top: "-4px",
+                  left: "-4px",
+                  right: "-4px",
+                  bottom: "-4px",
+                  background:
+                    "linear-gradient(45deg, #e2b714, #f7d794, #e2b714)",
+                  borderRadius: "12px",
+                  zIndex: "-1",
+                  opacity: 0.3,
+                }}
               >
                 <img
                   src={project.img}
                   alt={project.title + " Logo"}
                   style={{
-                    width: "110px",
-                    height: "110px",
+                    width: "120px",
+                    height: "120px",
                     objectFit: "contain",
-                    background: "#ffffff",
-                    borderRadius: "8px",
-                    marginBottom: 16,
-                    border: "1px solid #e2b714",
+                    background: "white",
+                    borderRadius: "12px",
+                    padding: "12px",
+                    border: "2px solid #e2b714",
+                    boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
                   }}
                 />
               </Box>
             </motion.div>
-            <Box textAlign={["center", "left"]} flex={1}>
-              <Text
+
+            <MotionBox
+              textAlign={["center", "left"]}
+              flex={1}
+              initial={{ x: 20, opacity: 0 }}
+              whileInView={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.1 * (idx + 1) + 0.2 }}
+            >
+              <MotionText
                 color="#e2b714"
                 fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-                fontSize={18}
+                fontSize={[16, 18, 20]}
                 fontWeight="bold"
-                mb={2}
+                mb={3}
+                letterSpacing="1px"
+                textShadow="0 2px 4px rgba(226,183,20,0.3)"
               >
                 {project.title}
-              </Text>
-              <Button
-                onClick={() => handleToggle(idx)}
-                colorScheme="yellow"
-                variant="outline"
-                borderColor="#e2b714"
-                color="#e2b714"
-                fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-                mb={2}
-                mt={2}
-                size="md"
-                _hover={{
-                  bg: "#191919",
-                  color: "#e2b714",
-                  borderColor: "#e2b714",
-                }}
+              </MotionText>
+
+              <MotionBox
+                initial={{ scale: 0.9, opacity: 0 }}
+                whileInView={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.1 * (idx + 1) + 0.3 }}
               >
-                {openIndex === idx ? "Hide Description" : "Show Description"}
-              </Button>
+                <Button
+                  onClick={() => handleToggle(idx)}
+                  colorScheme="yellow"
+                  variant="outline"
+                  borderColor="#e2b714"
+                  color="#e2b714"
+                  fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+                  mb={3}
+                  mt={3}
+                  size="md"
+                  fontWeight="bold"
+                  letterSpacing="1px"
+                  _hover={{
+                    bg: "#191919",
+                    color: "#e2b714",
+                    borderColor: "#e2b714",
+                    transform: "translateY(-2px)",
+                    boxShadow: "0 4px 12px rgba(226,183,20,0.2)",
+                  }}
+                  _active={{
+                    transform: "translateY(0px)",
+                  }}
+                  transition="all 0.2s"
+                >
+                  {openIndex === idx ? "Hide Description" : "Show Description"}
+                </Button>
+              </MotionBox>
+
               <Collapse in={openIndex === idx} animateOpacity>
-                <Box
-                  mt={2}
-                  p={4}
-                  bg="#232323"
-                  borderRadius="md"
+                <MotionBox
+                  mt={4}
+                  p={6}
+                  bg="#1a1a1a"
+                  borderRadius="xl"
                   border="1px solid #e2b714"
                   color="#fff"
                   fontSize={15}
                   textAlign="left"
                   maxW={500}
                   fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+                  lineHeight="1.8"
+                  boxShadow="0 4px 16px rgba(226,183,20,0.1)"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
                 >
                   {project.description}
-                  <Text
+                  <MotionText
                     as="span"
-                    color="#fff"
+                    color="#f7d794"
                     fontSize={16}
-                    mb={2}
+                    mb={3}
                     display="block"
+                    mt={4}
+                    fontWeight="bold"
+                    letterSpacing="1px"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
                   >
-                    GitHUb:{" "}
+                    GitHub:{" "}
                     <a
                       href={project.github}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ color: "#e2b714", textDecoration: "underline" }}
+                      style={{
+                        color: "#e2b714",
+                        textDecoration: "underline",
+                        transition: "all 0.2s",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.color = "#f7d794";
+                        e.target.style.textShadow =
+                          "0 2px 4px rgba(226,183,20,0.3)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.color = "#e2b714";
+                        e.target.style.textShadow = "none";
+                      }}
                     >
-                      Link
+                      View Project
                     </a>
-                  </Text>
-                </Box>
+                  </MotionText>
+                </MotionBox>
               </Collapse>
-            </Box>
-          </Box>
+            </MotionBox>
+          </MotionBox>
         ))}
-      </Box>
+      </MotionBox>
     </MotionBox>
   );
 };

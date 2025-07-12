@@ -418,8 +418,12 @@ const PortfolioTab = () => {
               isFitted
               colorScheme="brand"
               position="relative"
+              bg="#232323"
+              borderRadius="xl"
+              boxShadow="0 8px 32px 0 rgba(226,183,20,0.1)"
+              overflow="hidden"
             >
-              <TabList position="relative">
+              <TabList position="relative" bg="transparent" border="none" p={2}>
                 {sections.map((section, idx) => (
                   <MotionTab
                     key={section.id}
@@ -439,17 +443,26 @@ const PortfolioTab = () => {
                     }
                     _selected={{
                       color: "#e2b714",
-                      bg: "#272727",
+                      bg: "#191919",
                       borderColor: "#e2b714",
-                      boxShadow: "none",
+                      boxShadow: "0 4px 16px rgba(226,183,20,0.2)",
+                      transform: "translateY(-2px)",
                     }}
                     _hover={{
                       color: "#e2b714",
-                      bg: "#232323",
+                      bg: "#1a1a1a",
                       transition: "all 0.2s",
+                      transform: "translateY(-1px)",
                     }}
                     layout
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                    borderRadius="lg"
+                    border="1px solid transparent"
+                    mx={1}
+                    py={3}
+                    px={4}
+                    letterSpacing="1px"
+                    textShadow="0 1px 2px rgba(226,183,20,0.3)"
                   >
                     {section.label}
                   </MotionTab>
