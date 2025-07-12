@@ -35,6 +35,8 @@ const TRAIL_LENGTH = 22;
 const LIGHT_RADIUS = 12;
 const TRAIL_MAX_RADIUS = 18;
 const INTRO_STAR_SIZE = 60;
+const BLINKING_STARS = 5;
+const BLINKING_STAR_SIZE = 5;
 
 const PortfolioTab = () => {
   const sectionRefs = {
@@ -136,6 +138,37 @@ const PortfolioTab = () => {
     }
   }, [isMuted, isPlaying]);
 
+  // Generate blinking star positions on client only
+  const [starPositions, setStarPositions] = useState([]);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setStarPositions(
+        Array.from({ length: BLINKING_STARS }, () => ({
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * window.innerHeight,
+          delay: Math.random() * 1.5,
+        }))
+      );
+    }
+  }, []);
+
+  // Continuous star movement and blinking
+  useEffect(() => {
+    if (starPositions.length === 0) return;
+
+    const interval = setInterval(() => {
+      setStarPositions((prev) =>
+        prev.map((star, idx) => ({
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * window.innerHeight,
+          delay: Math.random() * 1.5,
+        }))
+      );
+    }, 3000); // Move all stars every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [starPositions.length]);
+
   // Animation variants
   const sectionVariant = {
     hidden: { opacity: 0, y: 40 },
@@ -207,6 +240,50 @@ const PortfolioTab = () => {
               animation: "gradientMove 8s ease-in-out infinite alternate",
             }}
           />
+          {/* Blinking background stars */}
+          {starPositions.length === BLINKING_STARS && (
+            <MotionDiv
+              style={{
+                position: "fixed",
+                zIndex: 1,
+                pointerEvents: "none",
+                top: 0,
+                left: 0,
+              }}
+            >
+              {starPositions.map((star, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0.7, scale: 1 }}
+                  animate={{
+                    opacity: [0.7, 1, 0.7],
+                    scale: [1, 1.3, 1],
+                  }}
+                  transition={{
+                    duration: 1.8 + Math.random(),
+                    repeat: Infinity,
+                    repeatType: "loop",
+                    ease: "easeInOut",
+                    delay: star.delay,
+                  }}
+                  style={{
+                    position: "absolute",
+                    left: star.x - BLINKING_STAR_SIZE,
+                    top: star.y - BLINKING_STAR_SIZE,
+                    width: BLINKING_STAR_SIZE * 2,
+                    height: BLINKING_STAR_SIZE * 2,
+                    borderRadius: "50%",
+                    background:
+                      "radial-gradient(circle, #fffbe6 0%, #e2b714 60%, #e2b71400 100%)",
+                    boxShadow:
+                      "0 0 16px 4px #fffbe6, 0 0 32px 8px #e2b71499, 0 0 4px 1px #fffbe6",
+                    border: "1.5px solid #fffbe6",
+                    pointerEvents: "none",
+                  }}
+                />
+              ))}
+            </MotionDiv>
+          )}
           {/* Majestic light trail following mouse */}
           <MotionDiv
             style={{
