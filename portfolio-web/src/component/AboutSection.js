@@ -210,18 +210,7 @@ const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
           <Box position="relative">
             <Box
               position="relative"
-              _before={{
-                content: '""',
-                position: "absolute",
-                top: "-6px",
-                left: "-6px",
-                right: "-6px",
-                bottom: "-6px",
-                background: "linear-gradient(45deg, #e2b714, #f7d794, #e2b714)",
-                borderRadius: "50%",
-                zIndex: "-1",
-                animation: "rotate 4s linear infinite",
-              }}
+              /* Removed the rotating gradient border */
             >
               <Skeleton
                 isLoaded={imageLoaded}
@@ -243,7 +232,7 @@ const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
                   transition="opacity 0.5s ease-in-out"
                   showBorder={false}
                   bg="transparent"
-                  boxShadow="0 0 0 6px #191919, 0 0 0 9px #e2b714, 0 8px 32px rgba(226,183,20,0.2)"
+                  boxShadow="0 8px 32px rgba(226,183,20,0.2)"
                 />
               </Skeleton>
             </Box>
