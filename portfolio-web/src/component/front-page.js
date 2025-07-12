@@ -99,11 +99,11 @@ const FrontPage = () => {
           Software Developer & Web Developer
         </Text>
         <Divider borderColor="#232323" mb={6} />
-        <Text color="#fff" textAlign="center" fontSize={17} maxW={600} mb={8}>
+        {/* <Text color="#fff" textAlign="center" fontSize={17} maxW={600} mb={8}>
           I build efficient, user-friendly systems that solve problems and
           improve workflows. I'm driven to learn, grow, and contribute to
           impactful tech projects.
-        </Text>
+        </Text> */}
         <MotionBox
           whileHover={{
             scale: 1.04,

@@ -106,8 +106,18 @@ const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.3 }}
-      transition={{ duration: 0.6, delay: 0.1 }}
       position="relative"
+      whileHover={{
+        y: -8,
+        boxShadow: "0 8px 32px 0 rgba(226,183,20,0.18)",
+        borderColor: "#e2b714",
+      }}
+      transition={{
+        duration: 0.6,
+        delay: 0.1,
+        type: "spring",
+        stiffness: 300,
+      }}
     >
       {/* Mute/Unmute Button - Mobile Only */}
       <IconButton
