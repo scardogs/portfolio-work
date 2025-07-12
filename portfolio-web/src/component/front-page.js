@@ -1,5 +1,13 @@
-import React from "react";
-import { Box, Avatar, Text, Button, Heading, Divider } from "@chakra-ui/react";
+import React, { useState, useEffect } from "react";
+import {
+  Box,
+  Avatar,
+  Text,
+  Button,
+  Heading,
+  Divider,
+  Skeleton,
+} from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 
@@ -7,6 +15,18 @@ const MotionBox = motion(Box);
 
 const FrontPage = () => {
   const router = useRouter();
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+  };
+
+  const handleImageError = () => {
+    setImageError(true);
+    setImageLoaded(true); // Stop loading state even if image fails
+  };
+
   return (
     <Box
       minH="100vh"
@@ -32,14 +52,31 @@ const FrontPage = () => {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.7, ease: "easeOut" }}
       >
-        <Avatar
-          src="/profile.png"
-          boxSize="250px"
-          border="4px solid #e2b714"
-          mb={4}
-          name="John Michael T. Escarlan"
-          boxShadow="0 0 0 6px #191919, 0 0 0 10px #e2b714"
-        />
+        <Box position="relative">
+          <Skeleton
+            isLoaded={imageLoaded}
+            startColor="#232323"
+            endColor="#e2b714"
+            borderRadius="full"
+            boxSize="250px"
+            fadeDuration={0.8}
+          >
+            <Avatar
+              src="/profile.png"
+              boxSize="250px"
+              border="4px solid #e2b714"
+              mb={4}
+              name="John Michael T. Escarlan"
+              boxShadow="0 0 0 6px #191919, 0 0 0 10px #e2b714"
+              onLoad={handleImageLoad}
+              onError={handleImageError}
+              opacity={imageLoaded ? 1 : 0}
+              transition="opacity 0.5s ease-in-out"
+              showBorder={false}
+              bg="transparent"
+            />
+          </Skeleton>
+        </Box>
         <Heading
           as="h1"
           size="xl"
