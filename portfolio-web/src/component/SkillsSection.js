@@ -135,7 +135,6 @@ const SkillsSection = ({ sectionRef, sectionVariant }) => {
                 p={5}
                 bg="#232323"
                 borderRadius="xl"
-                border="2px solid #e2b714"
                 display="flex"
                 flexDirection="column"
                 alignItems="center"
@@ -157,7 +156,6 @@ const SkillsSection = ({ sectionRef, sectionVariant }) => {
                   transition: "left 0.5s",
                 }}
                 _hover={{
-                  borderColor: "#f7d794",
                   boxShadow: "0 8px 24px 0 rgba(226,183,20,0.2)",
                   _before: {
                     left: "100%",

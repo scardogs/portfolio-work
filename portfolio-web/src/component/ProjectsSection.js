@@ -125,14 +125,12 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
             p={[6, 8, 10]}
             bg="#232323"
             borderRadius="xl"
-            border="2px solid #e2b714"
             boxShadow="0 4px 20px 0 rgba(226,183,20,0.1)"
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             whileInView={{ scale: 1, opacity: 1, y: 0 }}
             whileHover={{
               y: -8,
               boxShadow: "0 12px 32px 0 rgba(226,183,20,0.2)",
-              borderColor: "#f7d794",
             }}
             transition={{
               duration: 0.6,
