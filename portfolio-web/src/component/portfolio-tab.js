@@ -8,6 +8,7 @@ import {
   useClipboard,
   useToast,
   IconButton,
+  Divider,
 } from "@chakra-ui/react";
 import { motion, useAnimation } from "framer-motion";
 import AboutSection from "./AboutSection";
@@ -469,6 +470,24 @@ const PortfolioTab = () => {
                 ))}
               </TabList>
             </Tabs>
+
+            {/* Divider between tabs and sections */}
+            <MotionBox
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: 0.8, delay: 0.5 }}
+              my={8}
+              display="flex"
+              justifyContent="center"
+            >
+              <Divider
+                borderColor="#e2b714"
+                borderWidth="2px"
+                opacity="0.6"
+                w="200px"
+                borderRadius="full"
+              />
+            </MotionBox>
 
             {/* Imported Section Components */}
             <AboutSection
