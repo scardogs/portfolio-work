@@ -201,6 +201,9 @@ const PortfolioTab = () => {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            /* Ensure scrolling is not blocked */
+            overflow: "auto",
+            touchAction: "pan-y",
           }}
         >
           <motion.div
@@ -224,7 +227,14 @@ const PortfolioTab = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8 }}
-          style={{ position: "relative", minHeight: "100vh", cursor: "none" }}
+          style={{
+            position: "relative",
+            minHeight: "100vh",
+            cursor: "none",
+            /* Ensure scrolling is always enabled */
+            overflow: "auto",
+            touchAction: "pan-y",
+          }}
         >
           {/* Animated Gradient Background */}
           <MotionDiv

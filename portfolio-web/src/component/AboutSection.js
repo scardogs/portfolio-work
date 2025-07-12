@@ -43,7 +43,7 @@ const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
       } else {
         clearInterval(timer);
       }
-    }, 20); // Speed of typing
+    }, 5); // Speed of typing
 
     return () => clearInterval(timer);
   }, []);
