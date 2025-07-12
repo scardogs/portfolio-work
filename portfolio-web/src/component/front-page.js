@@ -90,18 +90,7 @@ const FrontPage = () => {
         >
           <Box
             position="relative"
-            _before={{
-              content: '""',
-              position: "absolute",
-              top: "-8px",
-              left: "-8px",
-              right: "-8px",
-              bottom: "-8px",
-              background: "linear-gradient(45deg, #e2b714, #f7d794, #e2b714)",
-              borderRadius: "50%",
-              zIndex: "-1",
-              animation: "rotate 3s linear infinite",
-            }}
+            /* Removed the rotating gradient border */
           >
             <Skeleton
               isLoaded={imageLoaded}
@@ -116,7 +105,7 @@ const FrontPage = () => {
                 boxSize="280px"
                 border="4px solid #e2b714"
                 name="John Michael T. Escarlan"
-                boxShadow="0 0 0 8px #191919, 0 0 0 12px #e2b714, 0 8px 32px rgba(226,183,20,0.3)"
+                boxShadow="0 8px 32px rgba(226,183,20,0.3)"
                 onLoad={handleImageLoad}
                 onError={handleImageError}
                 opacity={imageLoaded ? 1 : 0}
