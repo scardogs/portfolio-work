@@ -8,6 +8,8 @@ import {
   Heading,
   IconButton,
   Skeleton,
+  Button,
+  Collapse,
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import { FaVolumeUp, FaVolumeMute } from "react-icons/fa";
@@ -18,8 +20,17 @@ const AboutSection = ({ sectionRef, isMuted, setIsMuted, sectionVariant }) => {
   const [displayText, setDisplayText] = useState("");
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [showLanguages, setShowLanguages] = useState(false);
+  const [showEducation, setShowEducation] = useState(false);
+  const [languagesText, setLanguagesText] = useState("");
+  const [educationText, setEducationText] = useState("");
+
   const fullText =
     "I have a passion for building reliable and efficient systems. I enjoy solving technical challenges and finding ways to improve processes and make technology work better. My goal is to create user-friendly solutions that help people accomplish their tasks more easily. I am always eager to learn new skills, explore new technologies, and contribute to meaningful projects. I am committed to delivering high-quality work and continuously growing in the field of technology.";
+
+  const languagesFullText =
+    "English (Intermediate)\nTagalog (Fluent)\nHiligaynon (Fluent)";
+  const educationFullText = "Bachelor of Science in Information Technology";
 
   useEffect(() => {
     let index = 0;
@@ -42,6 +53,38 @@ const AboutSection = ({ sectionRef, isMuted, setIsMuted, sectionVariant }) => {
   const handleImageError = () => {
     setImageError(true);
     setImageLoaded(true); // Stop loading state even if image fails
+  };
+
+  const handleLanguagesToggle = () => {
+    if (!showLanguages) {
+      setLanguagesText("");
+      let index = 0;
+      const timer = setInterval(() => {
+        if (index < languagesFullText.length) {
+          setLanguagesText(languagesFullText.slice(0, index + 1));
+          index++;
+        } else {
+          clearInterval(timer);
+        }
+      }, 30);
+    }
+    setShowLanguages(!showLanguages);
+  };
+
+  const handleEducationToggle = () => {
+    if (!showEducation) {
+      setEducationText("");
+      let index = 0;
+      const timer = setInterval(() => {
+        if (index < educationFullText.length) {
+          setEducationText(educationFullText.slice(0, index + 1));
+          index++;
+        } else {
+          clearInterval(timer);
+        }
+      }, 30);
+    }
+    setShowEducation(!showEducation);
   };
 
   return (
@@ -153,6 +196,79 @@ const AboutSection = ({ sectionRef, isMuted, setIsMuted, sectionVariant }) => {
             {displayText}
             <span style={{ animation: "blink 1s infinite" }}>|</span>
           </Text>
+
+          {/* Languages Section */}
+          <Box mt={6}>
+            <Button
+              onClick={handleLanguagesToggle}
+              colorScheme="yellow"
+              variant="outline"
+              borderColor="#e2b714"
+              color="#e2b714"
+              fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+              size="sm"
+              _hover={{
+                bg: "#191919",
+                color: "#e2b714",
+                borderColor: "#e2b714",
+              }}
+            >
+              {showLanguages ? "Hide Languages" : "Show Languages"}
+            </Button>
+            <Collapse in={showLanguages} animateOpacity>
+              <Box
+                mt={3}
+                p={4}
+                bg="#232323"
+                borderRadius="md"
+                border="1px solid #e2b714"
+                color="#fff"
+                fontSize={15}
+                textAlign="left"
+                fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+                whiteSpace="pre-line"
+              >
+                {languagesText}
+                <span style={{ animation: "blink 1s infinite" }}>|</span>
+              </Box>
+            </Collapse>
+          </Box>
+
+          {/* Educational Attainment Section */}
+          <Box mt={4}>
+            <Button
+              onClick={handleEducationToggle}
+              colorScheme="yellow"
+              variant="outline"
+              borderColor="#e2b714"
+              color="#e2b714"
+              fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+              size="sm"
+              _hover={{
+                bg: "#191919",
+                color: "#e2b714",
+                borderColor: "#e2b714",
+              }}
+            >
+              {showEducation ? "Hide Education" : "Show Education"}
+            </Button>
+            <Collapse in={showEducation} animateOpacity>
+              <Box
+                mt={3}
+                p={4}
+                bg="#232323"
+                borderRadius="md"
+                border="1px solid #e2b714"
+                color="#fff"
+                fontSize={15}
+                textAlign="left"
+                fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+              >
+                {educationText}
+                <span style={{ animation: "blink 1s infinite" }}>|</span>
+              </Box>
+            </Collapse>
+          </Box>
         </Box>
       </Box>
       <style jsx>{`

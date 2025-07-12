@@ -103,7 +103,7 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
                     width: "110px",
                     height: "110px",
                     objectFit: "contain",
-                    background: "#191919",
+                    background: "#ffffff",
                     borderRadius: "8px",
                     marginBottom: 16,
                     border: "1px solid #e2b714",
