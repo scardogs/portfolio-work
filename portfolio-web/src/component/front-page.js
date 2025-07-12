@@ -77,6 +77,7 @@ const FrontPage = () => {
             />
           </Skeleton>
         </Box>
+        <Divider borderColor="#232323" mb={4} />
         <Heading
           as="h1"
           size="xl"
