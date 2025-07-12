@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Avatar,
@@ -7,6 +7,7 @@ import {
   Divider,
   Heading,
   IconButton,
+  Skeleton,
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import { FaVolumeUp, FaVolumeMute } from "react-icons/fa";
@@ -14,6 +15,29 @@ import { FaVolumeUp, FaVolumeMute } from "react-icons/fa";
 const MotionBox = motion(Box);
 
 const AboutSection = ({ sectionRef, isMuted, setIsMuted, sectionVariant }) => {
+  const [displayText, setDisplayText] = useState("");
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const fullText =
+    "I have a passion for building reliable and efficient systems. I enjoy solving technical challenges and finding ways to improve processes and make technology work better. My goal is to create user-friendly solutions that help people accomplish their tasks more easily. I am always eager to learn new skills, explore new technologies, and contribute to meaningful projects. I am committed to delivering high-quality work and continuously growing in the field of technology.";
+
+  useEffect(() => {
+    let index = 0;
+    const timer = setInterval(() => {
+      if (index < fullText.length) {
+        setDisplayText(fullText.slice(0, index + 1));
+        index++;
+      } else {
+        clearInterval(timer);
+      }
+    }, 5); // Speed of typing
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+  };
+
   return (
     <MotionBox
       ref={sectionRef}
@@ -71,13 +95,27 @@ const AboutSection = ({ sectionRef, isMuted, setIsMuted, sectionVariant }) => {
         maxW={800}
       >
         <Box display="flex" justifyContent="center" alignItems="center">
-          <Avatar
-            src="/profile.png"
-            name="John Michael T. Escarlan"
-            boxSize={["180px", "220px", "260px"]}
-            border="2px solid #e2b714"
-            mb={[4, 0]}
-          />
+          <Box position="relative">
+            <Skeleton
+              isLoaded={imageLoaded}
+              startColor="#232323"
+              endColor="#e2b714"
+              borderRadius="full"
+              boxSize={["180px", "220px", "260px"]}
+              fadeDuration={0.8}
+            >
+              <Avatar
+                src="/profile.png"
+                name="John Michael T. Escarlan"
+                boxSize={["180px", "220px", "260px"]}
+                border="2px solid #e2b714"
+                mb={[4, 0]}
+                onLoad={handleImageLoad}
+                opacity={imageLoaded ? 1 : 0}
+                transition="opacity 0.5s ease-in-out"
+              />
+            </Skeleton>
+          </Box>
         </Box>
         <Box flex={1} textAlign={["center", "left"]}>
           <Tooltip
@@ -101,18 +139,25 @@ const AboutSection = ({ sectionRef, isMuted, setIsMuted, sectionVariant }) => {
             fontSize={16}
             maxW={600}
             mt={2}
+            fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
           >
-            I have a passion for building reliable and efficient systems. I
-            enjoy solving technical challenges and finding ways to improve
-            processes and make technology work better. My goal is to create
-            user-friendly solutions that help people accomplish their tasks more
-            easily. I am always eager to learn new skills, explore new
-            technologies, and contribute to meaningful projects. I am committed
-            to delivering high-quality work and continuously growing in the
-            field of technology.
+            {displayText}
+            <span style={{ animation: "blink 1s infinite" }}>|</span>
           </Text>
         </Box>
       </Box>
+      <style jsx>{`
+        @keyframes blink {
+          0%,
+          50% {
+            opacity: 1;
+          }
+          51%,
+          100% {
+            opacity: 0;
+          }
+        }
+      `}</style>
     </MotionBox>
   );
 };
