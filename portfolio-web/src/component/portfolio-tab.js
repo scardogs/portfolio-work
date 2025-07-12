@@ -8,7 +8,7 @@ import {
   useClipboard,
   useToast,
 } from "@chakra-ui/react";
-import { motion, useMotionValue, useSpring, useAnimation } from "framer-motion";
+import { motion, useAnimation } from "framer-motion";
 import AboutSection from "./AboutSection";
 import SkillsSection from "./SkillsSection";
 import ProjectsSection from "./ProjectsSection";
@@ -34,6 +34,7 @@ const tabUnderline = {
 const TRAIL_LENGTH = 22;
 const LIGHT_RADIUS = 12;
 const TRAIL_MAX_RADIUS = 18;
+const INTRO_STAR_SIZE = 60;
 
 const PortfolioTab = () => {
   const sectionRefs = {
@@ -56,13 +57,13 @@ const PortfolioTab = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  // Majestic light trail logic
-  const [trail, setTrail] = useState([]); // [{x, y}]
-  const [mouse, setMouse] = useState({ x: 0, y: 0 });
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const springX = useSpring(x, { stiffness: 120, damping: 18 });
-  const springY = useSpring(y, { stiffness: 120, damping: 18 });
+  // Intro animation state
+  const [showIntro, setShowIntro] = useState(true);
+
+  // Majestic light trail logic (lag-free)
+  const mouseRef = useRef({ x: 0, y: 0 });
+  const trailRef = useRef([]); // [{x, y}]
+  const [dummy, setDummy] = useState(0); // to trigger re-render
 
   // Star pulse animation
   const starControls = useAnimation();
@@ -78,20 +79,48 @@ const PortfolioTab = () => {
     });
   }, [starControls]);
 
+  // Intro star animation controls
+  const introStarControls = useAnimation();
+  useEffect(() => {
+    if (showIntro) {
+      introStarControls
+        .start({
+          scale: [1, 1.2, 2.5, 6],
+          opacity: [1, 1, 0.7, 0],
+          transition: { duration: 1.2, ease: "easeInOut" },
+        })
+        .then(() => {
+          setShowIntro(false);
+        });
+    }
+  }, [showIntro, introStarControls]);
+
+  useEffect(() => {
+    let running = true;
+    let frame;
+    const update = () => {
+      // Add current mouse to trail
+      const pos = { ...mouseRef.current };
+      const prev = trailRef.current;
+      const next = [...prev, pos];
+      trailRef.current =
+        next.length > TRAIL_LENGTH ? next.slice(-TRAIL_LENGTH) : next;
+      setDummy((d) => d + 1); // trigger re-render
+      if (running) frame = requestAnimationFrame(update);
+    };
+    frame = requestAnimationFrame(update);
+    return () => {
+      running = false;
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+
   useEffect(() => {
     const handleMouseMove = (e) => {
-      const pos = { x: e.clientX, y: e.clientY };
-      setMouse(pos);
-      setTrail((prev) => {
-        const next = [...prev, pos];
-        return next.length > TRAIL_LENGTH ? next.slice(-TRAIL_LENGTH) : next;
-      });
-      x.set(e.clientX);
-      y.set(e.clientY);
+      mouseRef.current = { x: e.clientX, y: e.clientY };
     };
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
-    // eslint-disable-next-line
   }, []);
 
   useEffect(() => {
@@ -113,206 +142,248 @@ const PortfolioTab = () => {
     visible: { opacity: 1, y: 0 },
   };
 
+  // Use refs for trail and mouse
+  const trail = trailRef.current;
+  const mouse = mouseRef.current;
+
   return (
-    <MotionDiv
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.8 }}
-      style={{ position: "relative", minHeight: "100vh" }}
-    >
-      {/* Animated Gradient Background */}
-      <MotionDiv
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.7 }}
-        transition={{ duration: 1.2, delay: 1.2 }}
-        style={{
-          position: "fixed",
-          zIndex: 0,
-          top: 0,
-          left: 0,
-          width: "100vw",
-          height: "100vh",
-          background: "linear-gradient(120deg, #191919 60%, #e2b714 100%)",
-          backgroundSize: "200% 200%",
-          animation: "gradientMove 8s ease-in-out infinite alternate",
-        }}
-      />
-      {/* Majestic light trail following mouse */}
-      <MotionDiv
-        style={{
-          position: "fixed",
-          zIndex: 2,
-          pointerEvents: "none",
-          top: 0,
-          left: 0,
-        }}
-        animate={{}}
-      >
-        <svg
-          width="100vw"
-          height="100vh"
+    <>
+      {/* Intro Animation Overlay */}
+      {showIntro && (
+        <motion.div
+          initial={{ opacity: 1 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
           style={{
-            position: "absolute",
+            position: "fixed",
+            zIndex: 9999,
             top: 0,
             left: 0,
             width: "100vw",
             height: "100vh",
-            overflow: "visible",
+            background: "#191919",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          {trail.map((p, i) => {
-            // Fade and shrink as the point gets older
-            const t = i / TRAIL_LENGTH;
-            const radius = TRAIL_MAX_RADIUS * (1 - t) + 4;
-            const opacity = 0.18 + 0.32 * (1 - t);
-            const blur = 16 + 32 * (1 - t);
-            const color = `rgba(226,183,20,${0.5 + 0.5 * (1 - t)})`;
-            const white = `rgba(255,255,220,${0.18 + 0.32 * (1 - t)})`;
-            return (
-              <g key={i}>
-                <circle
-                  cx={p.x}
-                  cy={p.y}
-                  r={radius}
-                  fill={`url(#majestic-glow-${i})`}
-                  style={{
-                    filter: `blur(${blur}px) drop-shadow(0 0 24px #fffbe6)`,
-                    opacity,
-                  }}
-                />
-                <defs>
-                  <radialGradient
-                    id={`majestic-glow-${i}`}
-                    cx="50%"
-                    cy="50%"
-                    r="50%"
+          <motion.div
+            animate={introStarControls}
+            style={{
+              width: INTRO_STAR_SIZE,
+              height: INTRO_STAR_SIZE,
+              borderRadius: "50%",
+              background:
+                "radial-gradient(circle, #fffbe6 0%, #e2b714 60%, #e2b71400 100%)",
+              boxShadow:
+                "0 0 32px 8px #fffbe6, 0 0 64px 16px #e2b71499, 0 0 8px 2px #fffbe6",
+              border: "2px solid #fffbe6",
+            }}
+          />
+        </motion.div>
+      )}
+      {/* Main Portfolio Tab */}
+      {!showIntro && (
+        <MotionDiv
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8 }}
+          style={{ position: "relative", minHeight: "100vh", cursor: "none" }}
+        >
+          {/* Animated Gradient Background */}
+          <MotionDiv
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.7 }}
+            transition={{ duration: 1.2, delay: 1.2 }}
+            style={{
+              position: "fixed",
+              zIndex: 0,
+              top: 0,
+              left: 0,
+              width: "100vw",
+              height: "100vh",
+              background: "linear-gradient(120deg, #191919 60%, #e2b714 100%)",
+              backgroundSize: "200% 200%",
+              animation: "gradientMove 8s ease-in-out infinite alternate",
+            }}
+          />
+          {/* Majestic light trail following mouse */}
+          <MotionDiv
+            style={{
+              position: "fixed",
+              zIndex: 2,
+              pointerEvents: "none",
+              top: 0,
+              left: 0,
+            }}
+            animate={{}}
+          >
+            <svg
+              width="100vw"
+              height="100vh"
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100vw",
+                height: "100vh",
+                overflow: "visible",
+              }}
+            >
+              {trail.map((p, i) => {
+                // Fade and shrink as the point gets older
+                const t = i / TRAIL_LENGTH;
+                const radius = TRAIL_MAX_RADIUS * (1 - t) + 4;
+                const opacity = 0.18 + 0.32 * (1 - t);
+                const blur = 16 + 32 * (1 - t);
+                const color = `rgba(226,183,20,${0.5 + 0.5 * (1 - t)})`;
+                return (
+                  <g key={i}>
+                    <circle
+                      cx={p.x}
+                      cy={p.y}
+                      r={radius}
+                      fill={`url(#majestic-glow-${i})`}
+                      style={{
+                        filter: `blur(${blur}px) drop-shadow(0 0 24px #fffbe6)`,
+                        opacity,
+                      }}
+                    />
+                    <defs>
+                      <radialGradient
+                        id={`majestic-glow-${i}`}
+                        cx="50%"
+                        cy="50%"
+                        r="50%"
+                      >
+                        <stop
+                          offset="0%"
+                          stopColor="#fffbe6"
+                          stopOpacity={0.8 + 0.2 * (1 - t)}
+                        />
+                        <stop
+                          offset="60%"
+                          stopColor={color}
+                          stopOpacity={0.7 + 0.3 * (1 - t)}
+                        />
+                        <stop offset="100%" stopColor={color} stopOpacity={0} />
+                      </radialGradient>
+                    </defs>
+                  </g>
+                );
+              })}
+            </svg>
+            {/* Glowing, pulsing star at cursor */}
+            <motion.div
+              animate={starControls}
+              style={{
+                position: "absolute",
+                left: mouse.x - LIGHT_RADIUS,
+                top: mouse.y - LIGHT_RADIUS,
+                width: LIGHT_RADIUS * 2,
+                height: LIGHT_RADIUS * 2,
+                borderRadius: "50%",
+                background:
+                  "radial-gradient(circle, #fffbe6 0%, #e2b714 60%, #e2b71400 100%)",
+                boxShadow:
+                  "0 0 32px 8px #fffbe6, 0 0 64px 16px #e2b71499, 0 0 8px 2px #fffbe6",
+                pointerEvents: "none",
+                opacity: 0.95,
+                border: "2px solid #fffbe6",
+              }}
+            />
+          </MotionDiv>
+          <style>{`
+            @keyframes gradientMove {
+              0% { background-position: 0% 50%; }
+              100% { background-position: 100% 50%; }
+            }
+          `}</style>
+          <Box
+            w={["100%", "90%", "800px"]}
+            maxW="100%"
+            mx="auto"
+            mt={[4, 8]}
+            px={[2, 4, 0]}
+            position="relative"
+            zIndex={1}
+          >
+            {/* Audio element and mute button */}
+            <audio ref={audioRef} src="/song1.mp3" autoPlay loop />
+
+            <Tabs
+              variant="enclosed"
+              isFitted
+              colorScheme="brand"
+              position="relative"
+            >
+              <TabList position="relative">
+                {sections.map((section, idx) => (
+                  <MotionTab
+                    key={section.id}
+                    onClick={() => handleTabClick(section.id)}
+                    fontWeight="bold"
+                    fontSize={["sm", "md"]}
+                    fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+                    variants={tabUnderline}
+                    initial="rest"
+                    whileHover="hover"
+                    animate={
+                      sectionRefs[section.id].current &&
+                      sectionRefs[section.id].current.id ===
+                        document.activeElement?.id
+                        ? "selected"
+                        : "rest"
+                    }
+                    _selected={{
+                      color: "#e2b714",
+                      bg: "#272727",
+                      borderColor: "#e2b714",
+                      boxShadow: "none",
+                    }}
+                    _hover={{
+                      color: "#e2b714",
+                      bg: "#232323",
+                      transition: "all 0.2s",
+                    }}
+                    layout
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
                   >
-                    <stop
-                      offset="0%"
-                      stopColor="#fffbe6"
-                      stopOpacity={0.8 + 0.2 * (1 - t)}
-                    />
-                    <stop
-                      offset="60%"
-                      stopColor={color}
-                      stopOpacity={0.7 + 0.3 * (1 - t)}
-                    />
-                    <stop offset="100%" stopColor={color} stopOpacity={0} />
-                  </radialGradient>
-                </defs>
-              </g>
-            );
-          })}
-        </svg>
-        {/* Glowing, pulsing star at cursor */}
-        <motion.div
-          animate={starControls}
-          style={{
-            position: "absolute",
-            x: springX,
-            y: springY,
-            width: LIGHT_RADIUS * 2,
-            height: LIGHT_RADIUS * 2,
-            borderRadius: "50%",
-            background:
-              "radial-gradient(circle, #fffbe6 0%, #e2b714 60%, #e2b71400 100%)",
-            boxShadow:
-              "0 0 32px 8px #fffbe6, 0 0 64px 16px #e2b71499, 0 0 8px 2px #fffbe6",
-            pointerEvents: "none",
-            opacity: 0.95,
-            border: "2px solid #fffbe6",
-          }}
-        />
-      </MotionDiv>
-      <style>{`
-        @keyframes gradientMove {
-          0% { background-position: 0% 50%; }
-          100% { background-position: 100% 50%; }
-        }
-      `}</style>
-      <Box
-        w={["100%", "90%", "800px"]}
-        maxW="100%"
-        mx="auto"
-        mt={[4, 8]}
-        px={[2, 4, 0]}
-        position="relative"
-        zIndex={1}
-      >
-        {/* Audio element and mute button */}
-        <audio ref={audioRef} src="/song1.mp3" autoPlay loop />
+                    {section.label}
+                  </MotionTab>
+                ))}
+              </TabList>
+            </Tabs>
 
-        <Tabs
-          variant="enclosed"
-          isFitted
-          colorScheme="brand"
-          position="relative"
-        >
-          <TabList position="relative">
-            {sections.map((section, idx) => (
-              <MotionTab
-                key={section.id}
-                onClick={() => handleTabClick(section.id)}
-                fontWeight="bold"
-                fontSize={["sm", "md"]}
-                fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-                variants={tabUnderline}
-                initial="rest"
-                whileHover="hover"
-                animate={
-                  sectionRefs[section.id].current &&
-                  sectionRefs[section.id].current.id ===
-                    document.activeElement?.id
-                    ? "selected"
-                    : "rest"
-                }
-                _selected={{
-                  color: "#e2b714",
-                  bg: "#272727",
-                  borderColor: "#e2b714",
-                  boxShadow: "none",
-                }}
-                _hover={{
-                  color: "#e2b714",
-                  bg: "#232323",
-                  transition: "all 0.2s",
-                }}
-                layout
-                transition={{ type: "spring", stiffness: 400, damping: 30 }}
-              >
-                {section.label}
-              </MotionTab>
-            ))}
-          </TabList>
-        </Tabs>
+            {/* Imported Section Components */}
+            <AboutSection
+              sectionRef={sectionRefs.about}
+              isMuted={isMuted}
+              setIsMuted={setIsMuted}
+              sectionVariant={sectionVariant}
+            />
 
-        {/* Imported Section Components */}
-        <AboutSection
-          sectionRef={sectionRefs.about}
-          isMuted={isMuted}
-          setIsMuted={setIsMuted}
-          sectionVariant={sectionVariant}
-        />
+            <SkillsSection
+              sectionRef={sectionRefs.skills}
+              sectionVariant={sectionVariant}
+            />
 
-        <SkillsSection
-          sectionRef={sectionRefs.skills}
-          sectionVariant={sectionVariant}
-        />
+            <ProjectsSection
+              sectionRef={sectionRefs.projects}
+              sectionVariant={sectionVariant}
+            />
 
-        <ProjectsSection
-          sectionRef={sectionRefs.projects}
-          sectionVariant={sectionVariant}
-        />
-
-        <ContactSection
-          sectionRef={sectionRefs.contact}
-          sectionVariant={sectionVariant}
-          onCopy={onCopy}
-          hasCopied={hasCopied}
-          toast={toast}
-        />
-      </Box>
-    </MotionDiv>
+            <ContactSection
+              sectionRef={sectionRefs.contact}
+              sectionVariant={sectionVariant}
+              onCopy={onCopy}
+              hasCopied={hasCopied}
+              toast={toast}
+            />
+          </Box>
+        </MotionDiv>
+      )}
+    </>
   );
 };
 
