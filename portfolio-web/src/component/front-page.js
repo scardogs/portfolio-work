@@ -66,28 +66,35 @@ const FrontPage = () => {
           improve workflows. I'm driven to learn, grow, and contribute to
           impactful tech projects.
         </Text>
-        <Button
-          mt={2}
-          size="lg"
-          colorScheme="yellow"
-          variant="solid"
-          fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-          fontWeight="bold"
-          px={10}
-          py={6}
-          fontSize={20}
-          borderRadius="full"
-          boxShadow="0 2px 16px 0 rgba(226,183,20,0.10)"
-          _hover={{
-            bg: "#e2b714",
-            color: "#191919",
-            transform: "scale(1.04)",
-            boxShadow: "0 4px 32px 0 rgba(226,183,20,0.18)",
+        <MotionBox
+          whileHover={{
+            scale: 1.04,
+            rotate: [-3, 3, -3, 3, -3, 3, -3, 3, -2, 2, -2, 2, 0],
+            transition: { duration: 0.4 },
           }}
-          onClick={() => router.push("/portfolio-tab")}
         >
-          Proceed
-        </Button>
+          <Button
+            mt={2}
+            size="lg"
+            colorScheme="yellow"
+            variant="solid"
+            fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+            fontWeight="bold"
+            px={10}
+            py={6}
+            fontSize={20}
+            borderRadius="full"
+            boxShadow="0 2px 16px 0 rgba(226,183,20,0.10)"
+            _hover={{
+              bg: "#e2b714",
+              color: "#191919",
+              boxShadow: "0 4px 32px 0 rgba(226,183,20,0.18)",
+            }}
+            onClick={() => router.push("/portfolio-tab")}
+          >
+            Proceed
+          </Button>
+        </MotionBox>
       </MotionBox>
     </Box>
   );
