@@ -157,7 +157,7 @@ const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
       <Box
         display="flex"
         flexDirection={["column", "row"]}
-        alignItems="flex-start"
+        alignItems={["center", "flex-start"]}
         justifyContent="center"
         gap={[6, 10, 16]}
         w="100%"
@@ -166,8 +166,9 @@ const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
         <Box
           display="flex"
           justifyContent="center"
-          alignItems="flex-start"
+          alignItems="center"
           flexShrink={0}
+          w={["100%", "auto"]}
         >
           <Box position="relative">
             <Skeleton
@@ -194,7 +195,12 @@ const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
             </Skeleton>
           </Box>
         </Box>
-        <Box flex={1} textAlign={["center", "left"]} minW={0}>
+        <Box
+          flex={1}
+          textAlign={["center", "left"]}
+          minW={0}
+          w={["100%", "auto"]}
+        >
           <Tooltip
             label="John Michael T. Escarlan"
             fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
