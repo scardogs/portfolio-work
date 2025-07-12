@@ -17,6 +17,7 @@ const MotionBox = motion(Box);
 const AboutSection = ({ sectionRef, isMuted, setIsMuted, sectionVariant }) => {
   const [displayText, setDisplayText] = useState("");
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const fullText =
     "I have a passion for building reliable and efficient systems. I enjoy solving technical challenges and finding ways to improve processes and make technology work better. My goal is to create user-friendly solutions that help people accomplish their tasks more easily. I am always eager to learn new skills, explore new technologies, and contribute to meaningful projects. I am committed to delivering high-quality work and continuously growing in the field of technology.";
 
@@ -36,6 +37,11 @@ const AboutSection = ({ sectionRef, isMuted, setIsMuted, sectionVariant }) => {
 
   const handleImageLoad = () => {
     setImageLoaded(true);
+  };
+
+  const handleImageError = () => {
+    setImageError(true);
+    setImageLoaded(true); // Stop loading state even if image fails
   };
 
   return (
@@ -111,8 +117,11 @@ const AboutSection = ({ sectionRef, isMuted, setIsMuted, sectionVariant }) => {
                 border="2px solid #e2b714"
                 mb={[4, 0]}
                 onLoad={handleImageLoad}
+                onError={handleImageError}
                 opacity={imageLoaded ? 1 : 0}
                 transition="opacity 0.5s ease-in-out"
+                showBorder={false}
+                bg="transparent"
               />
             </Skeleton>
           </Box>
