@@ -6,17 +6,15 @@ import {
   Text,
   Divider,
   Heading,
-  IconButton,
   Skeleton,
   Button,
   Collapse,
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
-import { FaVolumeUp, FaVolumeMute } from "react-icons/fa";
 
 const MotionBox = motion(Box);
 
-const AboutSection = ({ sectionRef, isMuted, setIsMuted, sectionVariant }) => {
+const AboutSection = ({ sectionRef, sectionVariant }) => {
   const [displayText, setDisplayText] = useState("");
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -119,31 +117,22 @@ const AboutSection = ({ sectionRef, isMuted, setIsMuted, sectionVariant }) => {
       >
         About Me
       </Heading>
-      {/* Mute/Unmute Button in About upper left */}
-      <IconButton
-        aria-label={isMuted ? "Unmute" : "Mute"}
-        icon={isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
-        onClick={() => setIsMuted((m) => !m)}
-        position="absolute"
-        top={10}
-        left={2}
-        zIndex={10}
-        colorScheme="yellow"
-        variant="ghost"
-        size="lg"
-        fontSize="2xl"
-      />
       <Divider borderColor="#232323" mb={4} />
       <Box
         display="flex"
         flexDirection={["column", "row"]}
-        alignItems="center"
+        alignItems="flex-start"
         justifyContent="center"
         gap={[6, 10, 16]}
         w="100%"
         maxW={800}
       >
-        <Box display="flex" justifyContent="center" alignItems="center">
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="flex-start"
+          flexShrink={0}
+        >
           <Box position="relative">
             <Skeleton
               isLoaded={imageLoaded}
@@ -169,7 +158,7 @@ const AboutSection = ({ sectionRef, isMuted, setIsMuted, sectionVariant }) => {
             </Skeleton>
           </Box>
         </Box>
-        <Box flex={1} textAlign={["center", "left"]}>
+        <Box flex={1} textAlign={["center", "left"]} minW={0}>
           <Tooltip
             label="John Michael T. Escarlan"
             fontFamily="Geist Mono, Fira Mono, Menlo, monospace"

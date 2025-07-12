@@ -7,12 +7,14 @@ import {
   useDisclosure,
   useClipboard,
   useToast,
+  IconButton,
 } from "@chakra-ui/react";
 import { motion, useAnimation } from "framer-motion";
 import AboutSection from "./AboutSection";
 import SkillsSection from "./SkillsSection";
 import ProjectsSection from "./ProjectsSection";
 import ContactSection from "./ContactSection";
+import { FaVolumeUp, FaVolumeMute } from "react-icons/fa";
 
 const MotionBox = motion(Box);
 const MotionTab = motion(Tab);
@@ -388,6 +390,28 @@ const PortfolioTab = () => {
             {/* Audio element and mute button */}
             <audio ref={audioRef} src="/song1.mp3" autoPlay loop />
 
+            {/* Mute/Unmute Button - Top Left */}
+            <IconButton
+              aria-label={isMuted ? "Unmute" : "Mute"}
+              icon={isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
+              onClick={() => setIsMuted((m) => !m)}
+              position="fixed"
+              top={4}
+              left={4}
+              zIndex={1000}
+              colorScheme="yellow"
+              variant="ghost"
+              size="lg"
+              fontSize="3xl"
+              bg="#272727"
+              border="1px solid #e2b714"
+              _hover={{
+                bg: "#232323",
+                transform: "scale(1.1)",
+              }}
+              transition="all 0.2s"
+            />
+
             <Tabs
               variant="enclosed"
               isFitted
@@ -435,8 +459,6 @@ const PortfolioTab = () => {
             {/* Imported Section Components */}
             <AboutSection
               sectionRef={sectionRefs.about}
-              isMuted={isMuted}
-              setIsMuted={setIsMuted}
               sectionVariant={sectionVariant}
             />
 
