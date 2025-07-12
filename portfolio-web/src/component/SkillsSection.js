@@ -15,6 +15,8 @@ const SkillsSection = ({ sectionRef, sectionVariant }) => {
     { name: "PHP", icon: "/php.svg" },
     { name: ".NET", icon: "/dotnet.svg" },
     { name: "Python", icon: "/python.svg" },
+    { name: "C#", icon: "/csharp.svg" },
+    { name: "Chakra UI", icon: "/chakra-ui.svg" },
   ];
 
   return (
