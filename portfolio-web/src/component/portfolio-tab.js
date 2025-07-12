@@ -390,7 +390,7 @@ const PortfolioTab = () => {
             {/* Audio element and mute button */}
             <audio ref={audioRef} src="/song1.mp3" autoPlay loop />
 
-            {/* Mute/Unmute Button - Top Left */}
+            {/* Mute/Unmute Button - Top Left (Desktop) */}
             <IconButton
               aria-label={isMuted ? "Unmute" : "Mute"}
               icon={isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
@@ -410,6 +410,7 @@ const PortfolioTab = () => {
                 transform: "scale(1.1)",
               }}
               transition="all 0.2s"
+              display={["none", "none", "flex"]}
             />
 
             <Tabs
@@ -460,6 +461,8 @@ const PortfolioTab = () => {
             <AboutSection
               sectionRef={sectionRefs.about}
               sectionVariant={sectionVariant}
+              isMuted={isMuted}
+              setIsMuted={setIsMuted}
             />
 
             <SkillsSection

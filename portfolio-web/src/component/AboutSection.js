@@ -9,12 +9,14 @@ import {
   Skeleton,
   Button,
   Collapse,
+  IconButton,
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
+import { FaVolumeUp, FaVolumeMute } from "react-icons/fa";
 
 const MotionBox = motion(Box);
 
-const AboutSection = ({ sectionRef, sectionVariant }) => {
+const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
   const [displayText, setDisplayText] = useState("");
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -105,7 +107,31 @@ const AboutSection = ({ sectionRef, sectionVariant }) => {
       whileInView="visible"
       viewport={{ once: true, amount: 0.3 }}
       transition={{ duration: 0.6, delay: 0.1 }}
+      position="relative"
     >
+      {/* Mute/Unmute Button - Mobile Only */}
+      <IconButton
+        aria-label={isMuted ? "Unmute" : "Mute"}
+        icon={isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
+        onClick={() => setIsMuted((m) => !m)}
+        position="absolute"
+        top={2}
+        left={2}
+        zIndex={10}
+        colorScheme="yellow"
+        variant="ghost"
+        size="md"
+        fontSize="xl"
+        display={["flex", "flex", "none"]}
+        bg="#232323"
+        border="1px solid #e2b714"
+        _hover={{
+          bg: "#191919",
+          transform: "scale(1.05)",
+        }}
+        transition="all 0.2s"
+      />
+
       <Heading
         as="h2"
         size="md"
