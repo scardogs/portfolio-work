@@ -15,7 +15,7 @@ const projects = [
   {
     title: "Justine Cargo Services Integration System - WEB",
     description: `Developed a MERN stack system to automate and streamline company operations. The system includes modules for employee profiles, truck status tracking, delivery management, truck renewal scheduling, waybill verification, fuel monitoring, automated payroll, billing generation, and report creation. This reduces manual work, improves data accuracy, and helps the company manage information more efficiently.`,
-    github: "https://github.com/justines-cargo-services/JCS-System",
+    github: "https://github.com/scardogs/JustinesCargoServices-Web",
     img: "/LOGO.png",
   },
   {
