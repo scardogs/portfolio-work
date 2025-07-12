@@ -59,8 +59,6 @@ const FrontPage = () => {
         p={[8, 12, 16]}
         bg="#272727"
         borderRadius="2xl"
-        border="2px solid #e2b714"
-        boxShadow="0 8px 32px 0 rgba(226,183,20,0.15), 0 0 0 1px rgba(226,183,20,0.1)"
         display="flex"
         flexDirection="column"
         alignItems="center"
@@ -78,10 +76,9 @@ const FrontPage = () => {
           left: "-2px",
           right: "-2px",
           bottom: "-2px",
-          background: "linear-gradient(45deg, #e2b714, #f7d794, #e2b714)",
           borderRadius: "2xl",
           zIndex: "-1",
-          opacity: 0.3,
+          opacity: 0, // Hide the highlight background
         }}
       >
         {/* Profile Image with enhanced styling */}
