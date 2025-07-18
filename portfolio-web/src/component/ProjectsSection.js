@@ -22,7 +22,7 @@ const projects = [
   },
   {
     title: "Justine Cargo Services Integration System - Desktop Application",
-    description: `Developed a C#-based desktop application to automate and streamline company operations. The system features modules for managing employee profiles, tracking truck statuses, handling deliveries, scheduling truck renewals, verifying waybills, monitoring fuel consumption, automating payroll, generating billing statements, and producing detailed reports. It also integrates with other internal systems to enable smooth data exchange and centralized control. This reduces manual processes, improves data accuracy, and enhances overall operational efficiency.`,
+    description: `Developed a C#-based desktop application to automate and streamline company operations. The system features modules for managing employee profiles (with integrated biometric login and attendance tracking), tracking truck statuses, handling deliveries, scheduling truck renewals, verifying waybills, monitoring fuel consumption, automating payroll, generating billing statements, and producing detailed reports. It also integrates with other internal systems to enable smooth data exchange and centralized control. This reduces manual processes, improves data accuracy, and enhances overall operational efficiency.`,
     github: "https://github.com/scardogs/justines-cargo-services-desktop-app",
     img: "/LOGO.png",
   },
