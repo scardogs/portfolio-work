@@ -16,7 +16,7 @@ const MotionText = motion(Text);
 const projects = [
   {
     title: "StoryType",
-    description: `Built a MERN stack web app (StoryType) that merges typing practice with creative storytelling—users type to progress through AI-generated storylines across genres like fantasy, mystery, and sci-fi. Features include real-time typing feedback, progress tracking, and genre selection.`,
+    description: `Built a MERN stack web app (StoryType) that combines typing practice with creative storytelling—users type to progress through interactive storylines across genres like fantasy, mystery, and sci-fi. Features include real-time typing feedback, progress tracking, and genre selection.`,
     github: "https://github.com/scardogs/storytype-web",
     img: "/storytype.png",
   },
