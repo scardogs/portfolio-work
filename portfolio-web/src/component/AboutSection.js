@@ -28,7 +28,7 @@ const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
   const [educationText, setEducationText] = useState("");
 
   const fullText =
-    "I have a passion for building reliable and efficient systems. I enjoy solving technical challenges and finding ways to improve processes and make technology work better. My goal is to create user-friendly solutions that help people accomplish their tasks more easily. I am always eager to learn new skills, explore new technologies, and contribute to meaningful projects. I am committed to delivering high-quality work and continuously growing in the field of technology.";
+    "Passionate about building reliable, efficient, and user-friendly systems. Skilled in solving technical challenges, improving processes, and delivering high-quality solutions. Eager to learn new technologies and contribute to impactful projects.";
 
   const languagesFullText =
     "English (Intermediate)\nTagalog (Fluent)\nHiligaynon (Fluent)";
@@ -43,7 +43,7 @@ const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
       } else {
         clearInterval(timer);
       }
-    }, 30); // Speed of typing
+    }, 10); // Faster typing speed
 
     return () => clearInterval(timer);
   }, []);

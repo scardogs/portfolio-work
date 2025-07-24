@@ -15,6 +15,12 @@ const MotionText = motion(Text);
 
 const projects = [
   {
+    title: "StoryType",
+    description: `Built a MERN stack web app (StoryType) that merges typing practice with creative storytelling—users type to progress through AI-generated storylines across genres like fantasy, mystery, and sci-fi. Features include real-time typing feedback, progress tracking, and genre selection.`,
+    github: "https://github.com/scardogs/storytype-web",
+    img: "/storytype.png",
+  },
+  {
     title: "Justine Cargo Services Integration System - WEB",
     description: `Developed a MERN stack system to automate and streamline company operations. The system includes modules for employee profiles, truck status tracking, delivery management, truck renewal scheduling, waybill verification, fuel monitoring, automated payroll, billing generation, and report creation. This reduces manual work, improves data accuracy, and helps the company manage information more efficiently.`,
     github: "https://github.com/scardogs/JustinesCargoServices-Web",
@@ -296,6 +302,83 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
                       View Project
                     </a>
                   </MotionText>
+                  {project.title === "StoryType" && (
+                    <MotionText
+                      as="span"
+                      color="#f7d794"
+                      fontSize={16}
+                      mb={3}
+                      display="block"
+                      mt={2}
+                      fontWeight="bold"
+                      letterSpacing="1px"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5, delay: 0.3 }}
+                    >
+                      Website:{" "}
+                      <a
+                        href="https://storytype-jjscrl.vercel.app/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          color: "#e2b714",
+                          textDecoration: "underline",
+                          transition: "all 0.2s",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.color = "#f7d794";
+                          e.target.style.textShadow =
+                            "0 2px 4px rgba(226,183,20,0.3)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.color = "#e2b714";
+                          e.target.style.textShadow = "none";
+                        }}
+                      >
+                        View Website
+                      </a>
+                    </MotionText>
+                  )}
+                  {project.title ===
+                    "Justine Cargo Services Integration System - WEB" && (
+                    <MotionText
+                      as="span"
+                      color="#f7d794"
+                      fontSize={16}
+                      mb={3}
+                      display="block"
+                      mt={2}
+                      fontWeight="bold"
+                      letterSpacing="1px"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5, delay: 0.3 }}
+                    >
+                      Website:{" "}
+                      <a
+                        href="https://apps.justinescargo.com/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          color: "#e2b714",
+                          textDecoration: "underline",
+                          transition: "all 0.2s",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.color = "#f7d794";
+                          e.target.style.textShadow =
+                            "0 2px 4px rgba(226,183,20,0.3)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.color = "#e2b714";
+                          e.target.style.textShadow = "none";
+                        }}
+                      >
+                        View Website
+                      </a>
+                    </MotionText>
+                  )}
                 </MotionBox>
               </Collapse>
             </MotionBox>
