@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useMemo } from "react";
 import {
   Box,
   Tabs,
@@ -10,7 +10,7 @@ import {
   IconButton,
   Divider,
 } from "@chakra-ui/react";
-import { motion, useAnimation } from "framer-motion";
+import { motion } from "framer-motion";
 import AboutSection from "./AboutSection";
 import SkillsSection from "./SkillsSection";
 import ProjectsSection from "./ProjectsSection";
@@ -28,16 +28,7 @@ const sections = [
   { label: "Contact", id: "contact" },
 ];
 
-const tabUnderline = {
-  rest: { scale: 1, borderBottom: "4px solid rgba(0,0,0,0)" },
-  hover: { scale: 1.08, borderBottom: "4px solid #e2b714" },
-  selected: { scale: 1.12, borderBottom: "4px solid #e2b714" },
-};
-
-const TRAIL_LENGTH = 22;
-const LIGHT_RADIUS = 12;
-const TRAIL_MAX_RADIUS = 18;
-const INTRO_STAR_SIZE = 60;
+const INTRO_STAR_SIZE = 40;
 const BLINKING_STARS = 5;
 const BLINKING_STAR_SIZE = 5;
 
@@ -65,68 +56,15 @@ const PortfolioTab = () => {
   // Intro animation state
   const [showIntro, setShowIntro] = useState(true);
 
-  // Majestic light trail logic (lag-free)
-  const mouseRef = useRef({ x: 0, y: 0 });
-  const trailRef = useRef([]); // [{x, y}]
-  const [dummy, setDummy] = useState(0); // to trigger re-render
-
-  // Star pulse animation
-  const starControls = useAnimation();
-  useEffect(() => {
-    starControls.start({
-      scale: [1, 1.25, 1],
-      filter: [
-        "drop-shadow(0 0 12px #fffbe6) drop-shadow(0 0 24px #e2b71499)",
-        "drop-shadow(0 0 24px #fffbe6) drop-shadow(0 0 48px #e2b714)",
-        "drop-shadow(0 0 12px #fffbe6) drop-shadow(0 0 24px #e2b71499)",
-      ],
-      transition: { duration: 1.2, repeat: Infinity, ease: "easeInOut" },
-    });
-  }, [starControls]);
-
-  // Intro star animation controls
-  const introStarControls = useAnimation();
+  // Simplified intro animation - no continuous animations
   useEffect(() => {
     if (showIntro) {
-      introStarControls
-        .start({
-          scale: [1, 1.2, 2.5, 6],
-          opacity: [1, 1, 0.7, 0],
-          transition: { duration: 1.2, ease: "easeInOut" },
-        })
-        .then(() => {
-          setShowIntro(false);
-        });
+      const timer = setTimeout(() => {
+        setShowIntro(false);
+      }, 800); // Faster intro
+      return () => clearTimeout(timer);
     }
-  }, [showIntro, introStarControls]);
-
-  useEffect(() => {
-    let running = true;
-    let frame;
-    const update = () => {
-      // Add current mouse to trail
-      const pos = { ...mouseRef.current };
-      const prev = trailRef.current;
-      const next = [...prev, pos];
-      trailRef.current =
-        next.length > TRAIL_LENGTH ? next.slice(-TRAIL_LENGTH) : next;
-      setDummy((d) => d + 1); // trigger re-render
-      if (running) frame = requestAnimationFrame(update);
-    };
-    frame = requestAnimationFrame(update);
-    return () => {
-      running = false;
-      cancelAnimationFrame(frame);
-    };
-  }, []);
-
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      mouseRef.current = { x: e.clientX, y: e.clientY };
-    };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
+  }, [showIntro]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -161,7 +99,7 @@ const PortfolioTab = () => {
 
     const interval = setInterval(() => {
       setStarPositions((prev) =>
-        prev.map((star, idx) => ({
+        prev.map(() => ({
           x: Math.random() * window.innerWidth,
           y: Math.random() * window.innerHeight,
           delay: Math.random() * 1.5,
@@ -172,24 +110,23 @@ const PortfolioTab = () => {
     return () => clearInterval(interval);
   }, [starPositions.length]);
 
-  // Animation variants
-  const sectionVariant = {
-    hidden: { opacity: 0, y: 40 },
-    visible: { opacity: 1, y: 0 },
-  };
-
-  // Use refs for trail and mouse
-  const trail = trailRef.current;
-  const mouse = mouseRef.current;
+  // Animation variants - simplified
+  const sectionVariant = useMemo(
+    () => ({
+      hidden: { opacity: 0, y: 20 },
+      visible: { opacity: 1, y: 0 },
+    }),
+    []
+  );
 
   return (
     <>
-      {/* Intro Animation Overlay */}
+      {/* Intro Animation Overlay - Simplified */}
       {showIntro && (
         <motion.div
           initial={{ opacity: 1 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          animate={{ opacity: 0 }}
+          transition={{ duration: 0.5 }}
           style={{
             position: "fixed",
             zIndex: 9999,
@@ -201,22 +138,20 @@ const PortfolioTab = () => {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            /* Ensure scrolling is not blocked */
-            overflow: "auto",
-            touchAction: "pan-y",
+            pointerEvents: "none",
           }}
         >
           <motion.div
-            animate={introStarControls}
+            initial={{ scale: 1, opacity: 1 }}
+            animate={{ scale: 3, opacity: 0 }}
+            transition={{ duration: 0.5 }}
             style={{
               width: INTRO_STAR_SIZE,
               height: INTRO_STAR_SIZE,
               borderRadius: "50%",
               background:
-                "radial-gradient(circle, #fffbe6 0%, #e2b714 60%, #e2b71400 100%)",
-              boxShadow:
-                "0 0 32px 8px #fffbe6, 0 0 64px 16px #e2b71499, 0 0 8px 2px #fffbe6",
-              border: "2px solid #fffbe6",
+                "radial-gradient(circle, #e2b714 0%, #e2b714 60%, #e2b71400 100%)",
+              boxShadow: "0 0 20px 4px #e2b714",
             }}
           />
         </motion.div>
@@ -226,21 +161,17 @@ const PortfolioTab = () => {
         <MotionDiv
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.5 }}
           style={{
             position: "relative",
             minHeight: "100vh",
-            cursor: "none",
-            /* Ensure scrolling is always enabled */
-            overflow: "auto",
-            touchAction: "pan-y",
           }}
         >
           {/* Animated Gradient Background */}
           <MotionDiv
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.7 }}
-            transition={{ duration: 1.2, delay: 1.2 }}
+            transition={{ duration: 1.2, delay: 0.3 }}
             style={{
               position: "fixed",
               zIndex: 0,
@@ -297,92 +228,6 @@ const PortfolioTab = () => {
               ))}
             </MotionDiv>
           )}
-          {/* Majestic light trail following mouse */}
-          <MotionDiv
-            style={{
-              position: "fixed",
-              zIndex: 2,
-              pointerEvents: "none",
-              top: 0,
-              left: 0,
-            }}
-            animate={{}}
-          >
-            <svg
-              width="100vw"
-              height="100vh"
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100vw",
-                height: "100vh",
-                overflow: "visible",
-              }}
-            >
-              {trail.map((p, i) => {
-                // Fade and shrink as the point gets older
-                const t = i / TRAIL_LENGTH;
-                const radius = TRAIL_MAX_RADIUS * (1 - t) + 4;
-                const opacity = 0.18 + 0.32 * (1 - t);
-                const blur = 16 + 32 * (1 - t);
-                const color = `rgba(226,183,20,${0.5 + 0.5 * (1 - t)})`;
-                return (
-                  <g key={i}>
-                    <circle
-                      cx={p.x}
-                      cy={p.y}
-                      r={radius}
-                      fill={`url(#majestic-glow-${i})`}
-                      style={{
-                        filter: `blur(${blur}px) drop-shadow(0 0 24px #fffbe6)`,
-                        opacity,
-                      }}
-                    />
-                    <defs>
-                      <radialGradient
-                        id={`majestic-glow-${i}`}
-                        cx="50%"
-                        cy="50%"
-                        r="50%"
-                      >
-                        <stop
-                          offset="0%"
-                          stopColor="#fffbe6"
-                          stopOpacity={0.8 + 0.2 * (1 - t)}
-                        />
-                        <stop
-                          offset="60%"
-                          stopColor={color}
-                          stopOpacity={0.7 + 0.3 * (1 - t)}
-                        />
-                        <stop offset="100%" stopColor={color} stopOpacity={0} />
-                      </radialGradient>
-                    </defs>
-                  </g>
-                );
-              })}
-            </svg>
-            {/* Glowing, pulsing star at cursor */}
-            <motion.div
-              animate={starControls}
-              style={{
-                position: "absolute",
-                left: mouse.x - LIGHT_RADIUS,
-                top: mouse.y - LIGHT_RADIUS,
-                width: LIGHT_RADIUS * 2,
-                height: LIGHT_RADIUS * 2,
-                borderRadius: "50%",
-                background:
-                  "radial-gradient(circle, #fffbe6 0%, #e2b714 60%, #e2b71400 100%)",
-                boxShadow:
-                  "0 0 32px 8px #fffbe6, 0 0 64px 16px #e2b71499, 0 0 8px 2px #fffbe6",
-                pointerEvents: "none",
-                opacity: 0.95,
-                border: "2px solid #fffbe6",
-              }}
-            />
-          </MotionDiv>
           <style>{`
             @keyframes gradientMove {
               0% { background-position: 0% 50%; }
@@ -396,7 +241,7 @@ const PortfolioTab = () => {
             mt={[4, 8]}
             px={[2, 4, 0]}
             position="relative"
-            zIndex={1}
+            zIndex={2}
           >
             {/* Audio element and mute button */}
             <audio ref={audioRef} src="/song1.mp3" autoPlay loop />
@@ -418,7 +263,7 @@ const PortfolioTab = () => {
               border="1px solid #e2b714"
               _hover={{
                 bg: "#232323",
-                transform: "scale(1.1)",
+                transform: "scale(1.05)",
               }}
               transition="all 0.2s"
               display={["none", "none", "flex"]}
@@ -431,65 +276,43 @@ const PortfolioTab = () => {
               position="relative"
               bg="#232323"
               borderRadius="xl"
-              boxShadow="0 8px 32px 0 rgba(226,183,20,0.1)"
+              boxShadow="0 4px 16px 0 rgba(226,183,20,0.1)"
               overflow="hidden"
             >
               <TabList position="relative" bg="transparent" border="none" p={2}>
-                {sections.map((section, idx) => (
-                  <MotionTab
+                {sections.map((section) => (
+                  <Tab
                     key={section.id}
                     onClick={() => handleTabClick(section.id)}
                     fontWeight="bold"
                     fontSize={["sm", "md"]}
                     fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-                    variants={tabUnderline}
-                    initial="rest"
-                    whileHover="hover"
-                    animate={
-                      sectionRefs[section.id].current &&
-                      sectionRefs[section.id].current.id ===
-                        document.activeElement?.id
-                        ? "selected"
-                        : "rest"
-                    }
                     _selected={{
                       color: "#e2b714",
                       bg: "#191919",
                       borderColor: "#e2b714",
                       boxShadow: "0 4px 16px rgba(226,183,20,0.2)",
-                      transform: "translateY(-2px)",
                     }}
                     _hover={{
                       color: "#e2b714",
                       bg: "#1a1a1a",
-                      transition: "all 0.2s",
-                      transform: "translateY(-1px)",
                     }}
-                    layout
-                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                    transition="all 0.2s"
                     borderRadius="lg"
                     border="1px solid transparent"
                     mx={1}
                     py={3}
                     px={4}
                     letterSpacing="1px"
-                    textShadow="0 1px 2px rgba(226,183,20,0.3)"
                   >
                     {section.label}
-                  </MotionTab>
+                  </Tab>
                 ))}
               </TabList>
             </Tabs>
 
             {/* Divider between tabs and sections */}
-            <MotionBox
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: 1 }}
-              transition={{ duration: 0.8, delay: 0.5 }}
-              my={8}
-              display="flex"
-              justifyContent="center"
-            >
+            <Box my={8} display="flex" justifyContent="center">
               <Divider
                 borderColor="#e2b714"
                 borderWidth="2px"
@@ -497,7 +320,7 @@ const PortfolioTab = () => {
                 w="200px"
                 borderRadius="full"
               />
-            </MotionBox>
+            </Box>
 
             {/* Imported Section Components */}
             <AboutSection

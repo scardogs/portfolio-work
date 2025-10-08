@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import {
   Box,
   Button,
@@ -14,6 +14,12 @@ const MotionHeading = motion(Heading);
 const MotionText = motion(Text);
 
 const projects = [
+  {
+    title: "LJIM - WEB",
+    description: `Developed a MERN stack website for Lift Jesus International Ministries (LJIM), a global faith-based organization dedicated to spiritual growth and community service. The platform includes a dynamic music management system with full CRUD functionality for songs, an interactive events module for outreach coordination, and an information hub for the ministry’s story, mission, and giving opportunities. Integrated an intelligent dual-role chat assistant for technical support and Bible Q&A, enhancing user engagement and accessibility. Designed with Chakra UI for a modern, responsive interface that delivers a seamless experience across all devices.`,
+    github: "https://github.com/scardogs/ljim-app",
+    img: "/LJIM.png",
+  },
   {
     title: "StoryType",
     description: `Built a MERN stack web app (StoryType) that combines typing practice with creative storytelling—users type to progress through interactive storylines across genres like fantasy, mystery, and sci-fi. Features include real-time typing feedback, progress tracking, and genre selection.`,
@@ -37,9 +43,9 @@ const projects = [
 const ProjectsSection = ({ sectionRef, sectionVariant }) => {
   const [openIndex, setOpenIndex] = useState(null);
 
-  const handleToggle = (idx) => {
-    setOpenIndex(openIndex === idx ? null : idx);
-  };
+  const handleToggle = useCallback((idx) => {
+    setOpenIndex((current) => (current === idx ? null : idx));
+  }, []);
 
   return (
     <MotionBox
@@ -56,33 +62,18 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.3 }}
-      whileHover={{
-        y: -8,
-        boxShadow:
-          "0 12px 40px 0 rgba(226,183,20,0.15), 0 0 0 1px rgba(226,183,20,0.1)",
-        borderColor: "#e2b714",
-      }}
       transition={{
-        duration: 0.6,
-        delay: 0.1,
-        type: "spring",
-        stiffness: 300,
+        duration: 0.4,
       }}
-      backdropFilter="blur(10px)"
-      _before={{
-        content: '""',
-        position: "absolute",
-        top: "-2px",
-        left: "-2px",
-        right: "-2px",
-        bottom: "-2px",
-        background: "linear-gradient(45deg, #e2b714, #f7d794, #e2b714)",
-        borderRadius: "2xl",
-        zIndex: "-1",
-        opacity: 0.1,
+      _hover={{
+        borderColor: "#e2b714",
+        boxShadow: "0 8px 20px 0 rgba(226,183,20,0.15)",
+      }}
+      sx={{
+        transition: "all 0.3s ease",
       }}
     >
-      <MotionHeading
+      <Heading
         as="h2"
         size="lg"
         color="#e2b714"
@@ -90,38 +81,22 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
         mb={4}
         fontWeight="bold"
         letterSpacing="2px"
-        textShadow="0 2px 4px rgba(226,183,20,0.3)"
-        initial={{ y: -20, opacity: 0 }}
-        whileInView={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
       >
         Projects
-      </MotionHeading>
+      </Heading>
 
-      <MotionBox
-        initial={{ scaleX: 0 }}
-        whileInView={{ scaleX: 1 }}
-        transition={{ duration: 0.8, delay: 0.3 }}
-        mb={8}
-      >
+      <Box mb={8}>
         <Divider
           borderColor="#e2b714"
           borderWidth="2px"
           opacity="0.6"
           w="150px"
         />
-      </MotionBox>
+      </Box>
 
-      <MotionBox
-        display="flex"
-        flexDirection="column"
-        gap={10}
-        initial={{ y: 20, opacity: 0 }}
-        whileInView={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, delay: 0.4 }}
-      >
+      <Box display="flex" flexDirection="column" gap={10}>
         {projects.map((project, idx) => (
-          <MotionBox
+          <Box
             key={project.title}
             display="flex"
             flexDirection={["column", "row"]}
@@ -132,51 +107,18 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
             bg="#232323"
             borderRadius="xl"
             boxShadow="0 4px 20px 0 rgba(226,183,20,0.1)"
-            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-            whileInView={{ scale: 1, opacity: 1, y: 0 }}
-            whileHover={{
-              y: -8,
-              boxShadow: "0 12px 32px 0 rgba(226,183,20,0.2)",
+            _hover={{
+              boxShadow: "0 8px 24px 0 rgba(226,183,20,0.2)",
             }}
-            transition={{
-              duration: 0.6,
-              delay: 0.1 * (idx + 1),
-              type: "spring",
-              stiffness: 300,
-            }}
+            transition="all 0.3s ease"
           >
-            <motion.div
-              whileHover={{
-                scale: 1.05,
-                y: -5,
-                boxShadow: "0 8px 24px 0 rgba(226,183,20,0.25)",
-              }}
-              transition={{ type: "spring", stiffness: 300 }}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
+            <Box display="flex" alignItems="center" justifyContent="center">
               <Box
                 minW="140px"
                 display="flex"
                 alignItems="center"
                 justifyContent="center"
                 position="relative"
-                _before={{
-                  content: '""',
-                  position: "absolute",
-                  top: "-4px",
-                  left: "-4px",
-                  right: "-4px",
-                  bottom: "-4px",
-                  background:
-                    "linear-gradient(45deg, #e2b714, #f7d794, #e2b714)",
-                  borderRadius: "12px",
-                  zIndex: "-1",
-                  opacity: 0.3,
-                }}
               >
                 <img
                   src={project.img}
@@ -189,36 +131,25 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
                     borderRadius: "12px",
                     padding: "12px",
                     border: "2px solid #e2b714",
-                    boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                   }}
                 />
               </Box>
-            </motion.div>
+            </Box>
 
-            <MotionBox
-              textAlign={["center", "left"]}
-              flex={1}
-              initial={{ x: 20, opacity: 0 }}
-              whileInView={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.1 * (idx + 1) + 0.2 }}
-            >
-              <MotionText
+            <Box textAlign={["center", "left"]} flex={1}>
+              <Text
                 color="#e2b714"
                 fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
                 fontSize={[16, 18, 20]}
                 fontWeight="bold"
                 mb={3}
                 letterSpacing="1px"
-                textShadow="0 2px 4px rgba(226,183,20,0.3)"
               >
                 {project.title}
-              </MotionText>
+              </Text>
 
-              <MotionBox
-                initial={{ scale: 0.9, opacity: 0 }}
-                whileInView={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.1 * (idx + 1) + 0.3 }}
-              >
+              <Box>
                 <Button
                   onClick={() => handleToggle(idx)}
                   colorScheme="yellow"
@@ -245,10 +176,10 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
                 >
                   {openIndex === idx ? "Hide Description" : "Show Description"}
                 </Button>
-              </MotionBox>
+              </Box>
 
               <Collapse in={openIndex === idx} animateOpacity>
-                <MotionBox
+                <Box
                   mt={4}
                   p={6}
                   bg="#1a1a1a"
@@ -261,12 +192,9 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
                   fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
                   lineHeight="1.8"
                   boxShadow="0 4px 16px rgba(226,183,20,0.1)"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
                 >
                   {project.description}
-                  <MotionText
+                  <Text
                     as="span"
                     color="#f7d794"
                     fontSize={16}
@@ -275,9 +203,6 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
                     mt={4}
                     fontWeight="bold"
                     letterSpacing="1px"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
                   >
                     GitHub:{" "}
                     <a
@@ -301,9 +226,9 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
                     >
                       View Project
                     </a>
-                  </MotionText>
-                  {project.title === "StoryType" && (
-                    <MotionText
+                  </Text>
+                  {project.title === "LJIM - WEB" && (
+                    <Text
                       as="span"
                       color="#f7d794"
                       fontSize={16}
@@ -312,9 +237,41 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
                       mt={2}
                       fontWeight="bold"
                       letterSpacing="1px"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.3 }}
+                    >
+                      Website:{" "}
+                      <a
+                        href="https://ljim.vercel.app/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          color: "#e2b714",
+                          textDecoration: "underline",
+                          transition: "all 0.2s",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.color = "#f7d794";
+                          e.target.style.textShadow =
+                            "0 2px 4px rgba(226,183,20,0.3)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.color = "#e2b714";
+                          e.target.style.textShadow = "none";
+                        }}
+                      >
+                        View Website
+                      </a>
+                    </Text>
+                  )}
+                  {project.title === "StoryType" && (
+                    <Text
+                      as="span"
+                      color="#f7d794"
+                      fontSize={16}
+                      mb={3}
+                      display="block"
+                      mt={2}
+                      fontWeight="bold"
+                      letterSpacing="1px"
                     >
                       Website:{" "}
                       <a
@@ -338,11 +295,11 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
                       >
                         View Website
                       </a>
-                    </MotionText>
+                    </Text>
                   )}
                   {project.title ===
                     "Justine Cargo Services Integration System - WEB" && (
-                    <MotionText
+                    <Text
                       as="span"
                       color="#f7d794"
                       fontSize={16}
@@ -351,9 +308,6 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
                       mt={2}
                       fontWeight="bold"
                       letterSpacing="1px"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.3 }}
                     >
                       Website:{" "}
                       <a
@@ -377,14 +331,14 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
                       >
                         View Website
                       </a>
-                    </MotionText>
+                    </Text>
                   )}
-                </MotionBox>
+                </Box>
               </Collapse>
-            </MotionBox>
-          </MotionBox>
+            </Box>
+          </Box>
         ))}
-      </MotionBox>
+      </Box>
     </MotionBox>
   );
 };

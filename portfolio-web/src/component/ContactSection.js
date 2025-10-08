@@ -1,10 +1,8 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Box, Tooltip, Button, Text, Divider, Heading } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 
 const MotionBox = motion(Box);
-const MotionHeading = motion(Heading);
-const MotionText = motion(Text);
 
 const ContactSection = ({
   sectionRef,
@@ -28,33 +26,18 @@ const ContactSection = ({
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.3 }}
-      whileHover={{
-        y: -8,
-        boxShadow:
-          "0 12px 40px 0 rgba(226,183,20,0.15), 0 0 0 1px rgba(226,183,20,0.1)",
-        borderColor: "#e2b714",
-      }}
       transition={{
-        duration: 0.6,
-        delay: 0.1,
-        type: "spring",
-        stiffness: 300,
+        duration: 0.4,
       }}
-      backdropFilter="blur(10px)"
-      _before={{
-        content: '""',
-        position: "absolute",
-        top: "-2px",
-        left: "-2px",
-        right: "-2px",
-        bottom: "-2px",
-        background: "linear-gradient(45deg, #e2b714, #f7d794, #e2b714)",
-        borderRadius: "2xl",
-        zIndex: "-1",
-        opacity: 0.1,
+      _hover={{
+        borderColor: "#e2b714",
+        boxShadow: "0 8px 20px 0 rgba(226,183,20,0.15)",
+      }}
+      sx={{
+        transition: "all 0.3s ease",
       }}
     >
-      <MotionHeading
+      <Heading
         as="h2"
         size="lg"
         color="#e2b714"
@@ -62,41 +45,21 @@ const ContactSection = ({
         mb={4}
         fontWeight="bold"
         letterSpacing="2px"
-        textShadow="0 2px 4px rgba(226,183,20,0.3)"
-        initial={{ y: -20, opacity: 0 }}
-        whileInView={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
       >
         Contact
-      </MotionHeading>
+      </Heading>
 
-      <MotionBox
-        initial={{ scaleX: 0 }}
-        whileInView={{ scaleX: 1 }}
-        transition={{ duration: 0.8, delay: 0.3 }}
-        mb={8}
-      >
+      <Box mb={8}>
         <Divider
           borderColor="#e2b714"
           borderWidth="2px"
           opacity="0.6"
           w="150px"
         />
-      </MotionBox>
+      </Box>
 
-      <MotionBox
-        mt={6}
-        textAlign="center"
-        initial={{ y: 20, opacity: 0 }}
-        whileInView={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, delay: 0.4 }}
-      >
-        <MotionBox
-          initial={{ y: 20, opacity: 0 }}
-          whileInView={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
-          mb={6}
-        >
+      <Box mt={6} textAlign="center">
+        <Box mb={6}>
           <Tooltip
             label="Visit Facebook Profile"
             hasArrow
@@ -104,7 +67,7 @@ const ContactSection = ({
             color="#e2b714"
             fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
           >
-            <MotionText
+            <Text
               as="span"
               color="#fff"
               fontSize={[16, 18]}
@@ -112,7 +75,6 @@ const ContactSection = ({
               display="block"
               fontWeight="medium"
               letterSpacing="1px"
-              textShadow="0 1px 2px rgba(255,255,255,0.1)"
             >
               FB:{" "}
               <a
@@ -135,16 +97,11 @@ const ContactSection = ({
               >
                 @johnmichael.escarlan
               </a>
-            </MotionText>
+            </Text>
           </Tooltip>
-        </MotionBox>
+        </Box>
 
-        <MotionBox
-          initial={{ y: 20, opacity: 0 }}
-          whileInView={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
-          mb={6}
-        >
+        <Box mb={6}>
           <Tooltip
             label="Send Email"
             hasArrow
@@ -152,7 +109,7 @@ const ContactSection = ({
             color="#e2b714"
             fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
           >
-            <MotionText
+            <Text
               as="span"
               color="#fff"
               fontSize={[16, 18]}
@@ -160,7 +117,6 @@ const ContactSection = ({
               display="block"
               fontWeight="medium"
               letterSpacing="1px"
-              textShadow="0 1px 2px rgba(255,255,255,0.1)"
             >
               Gmail:{" "}
               <a
@@ -181,15 +137,11 @@ const ContactSection = ({
               >
                 johnmichael.escarlan14@gmail.com
               </a>
-            </MotionText>
+            </Text>
           </Tooltip>
-        </MotionBox>
+        </Box>
 
-        <MotionBox
-          initial={{ y: 20, opacity: 0 }}
-          whileInView={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.7 }}
-        >
+        <Box>
           <Tooltip
             label="Copy Mobile Number"
             hasArrow
@@ -197,11 +149,7 @@ const ContactSection = ({
             color="#e2b714"
             fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
           >
-            <MotionBox
-              initial={{ scale: 0.9, opacity: 0 }}
-              whileInView={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.8 }}
-            >
+            <Box>
               <Button
                 size="md"
                 colorScheme="yellow"
@@ -236,8 +184,8 @@ const ContactSection = ({
               >
                 {hasCopied ? "Copied!" : "Copy Mobile Number"}
               </Button>
-            </MotionBox>
-            <MotionText
+            </Box>
+            <Text
               as="span"
               color="#e2b714"
               fontSize={[16, 18]}
@@ -245,16 +193,12 @@ const ContactSection = ({
               display="block"
               fontWeight="bold"
               letterSpacing="2px"
-              textShadow="0 2px 4px rgba(226,183,20,0.3)"
-              initial={{ y: 10, opacity: 0 }}
-              whileInView={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.9 }}
             >
               09946760366
-            </MotionText>
+            </Text>
           </Tooltip>
-        </MotionBox>
-      </MotionBox>
+        </Box>
+      </Box>
     </MotionBox>
   );
 };
