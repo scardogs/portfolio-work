@@ -18,6 +18,7 @@ import {
   Spinner,
   IconButton,
   Input,
+  Progress,
 } from "@chakra-ui/react";
 import { ViewIcon, DeleteIcon } from "@chakra-ui/icons";
 
@@ -27,6 +28,7 @@ export default function ImageUploader({
   label = "Image",
 }) {
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [loadingGallery, setLoadingGallery] = useState(false);
   const [gallery, setGallery] = useState([]);
   const [selectedImage, setSelectedImage] = useState(currentImage || "");
@@ -85,6 +87,18 @@ export default function ImageUploader({
     }
 
     setUploading(true);
+    setUploadProgress(0);
+
+    // Simulate progress for reading file
+    const progressInterval = setInterval(() => {
+      setUploadProgress((prev) => {
+        if (prev >= 90) {
+          clearInterval(progressInterval);
+          return 90;
+        }
+        return prev + 10;
+      });
+    }, 100);
 
     try {
       // Convert to base64
@@ -92,8 +106,12 @@ export default function ImageUploader({
       reader.readAsDataURL(file);
       reader.onloadend = async () => {
         const base64Image = reader.result;
+        setUploadProgress(50);
 
         const token = localStorage.getItem("token");
+
+        setUploadProgress(70);
+
         const response = await fetch("/api/cloudinary/upload", {
           method: "POST",
           headers: {
@@ -103,9 +121,11 @@ export default function ImageUploader({
           body: JSON.stringify({ image: base64Image }),
         });
 
+        setUploadProgress(90);
         const data = await response.json();
 
         if (data.success) {
+          setUploadProgress(100);
           setSelectedImage(data.data.url);
           onImageSelect(data.data.url);
           toast({
@@ -117,6 +137,8 @@ export default function ImageUploader({
           // Refresh gallery
           fetchGallery();
         } else {
+          clearInterval(progressInterval);
+          setUploadProgress(0);
           toast({
             title: "Upload failed",
             description: data.message || "Failed to upload image",
@@ -126,6 +148,8 @@ export default function ImageUploader({
         }
       };
     } catch (error) {
+      clearInterval(progressInterval);
+      setUploadProgress(0);
       toast({
         title: "Error",
         description: "An error occurred during upload",
@@ -133,7 +157,11 @@ export default function ImageUploader({
         duration: 3000,
       });
     } finally {
-      setUploading(false);
+      clearInterval(progressInterval);
+      setTimeout(() => {
+        setUploading(false);
+        setUploadProgress(0);
+      }, 500);
     }
   };
 
@@ -175,6 +203,58 @@ export default function ImageUploader({
               w="100%"
               h="200px"
             />
+          </Box>
+        )}
+
+        {/* Upload Progress Bar */}
+        {uploading && (
+          <Box
+            bg="rgba(35, 35, 35, 0.8)"
+            p={4}
+            borderRadius="lg"
+            border="1px solid #e2b714"
+            boxShadow="0 4px 16px rgba(226, 183, 20, 0.2)"
+          >
+            <Text
+              color="#f7d794"
+              fontSize="sm"
+              mb={2}
+              fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+              fontWeight="medium"
+            >
+              Uploading... {uploadProgress}%
+            </Text>
+            <Progress
+              value={uploadProgress}
+              size="sm"
+              colorScheme="yellow"
+              borderRadius="full"
+              hasStripe
+              isAnimated
+              bg="#191919"
+              sx={{
+                "& > div": {
+                  background:
+                    "linear-gradient(90deg, #e2b714 0%, #f7d794 50%, #e2b714 100%)",
+                  boxShadow: "0 0 10px rgba(226, 183, 20, 0.5)",
+                },
+              }}
+            />
+            <Text
+              color="#e2b714"
+              fontSize="xs"
+              mt={2}
+              fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+              textAlign="center"
+            >
+              {uploadProgress < 30
+                ? "Preparing image..."
+                : uploadProgress < 70
+                ? "Uploading to cloud..."
+                : uploadProgress < 100
+                ? "Finalizing..."
+                : "Complete!"}
+            </Text>
           </Box>
         )}
 

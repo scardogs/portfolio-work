@@ -189,20 +189,6 @@ export default function AdminLogin() {
             >
               Login
             </Button>
-
-            <Text color="#f7d794" fontSize="sm" mt={4} textAlign="center">
-              Don't have an account?{" "}
-              <Text
-                as="span"
-                color="#e2b714"
-                cursor="pointer"
-                textDecoration="underline"
-                onClick={() => router.push("/admin/register")}
-                _hover={{ color: "#f7d794" }}
-              >
-                Register here
-              </Text>
-            </Text>
           </VStack>
         </form>
       </Box>

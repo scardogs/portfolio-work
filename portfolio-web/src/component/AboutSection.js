@@ -24,9 +24,11 @@ const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
   const [showLanguages, setShowLanguages] = useState(false);
   const [showEducation, setShowEducation] = useState(false);
   const [aboutData, setAboutData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchAboutData = async () => {
+      setLoading(true);
       try {
         const response = await fetch("/api/about");
         const data = await response.json();
@@ -35,6 +37,8 @@ const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
         }
       } catch (error) {
         console.error("Failed to fetch about data:", error);
+      } finally {
+        setTimeout(() => setLoading(false), 500); // Smooth transition
       }
     };
 
@@ -129,15 +133,49 @@ const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
         />
       </Box>
 
-      <Box
-        display="flex"
-        flexDirection={["column", "row"]}
-        alignItems={["center", "flex-start"]}
-        justifyContent="center"
-        gap={[8, 12, 16]}
-        w="100%"
-        maxW={800}
-      >
+      {loading ? (
+        /* Loading State */
+        <Box
+          display="flex"
+          flexDirection={["column", "row"]}
+          alignItems={["center", "flex-start"]}
+          justifyContent="center"
+          gap={[8, 12, 16]}
+          w="100%"
+          maxW={800}
+        >
+          <Box display="flex" justifyContent="center" alignItems="center" flexShrink={0} w={["100%", "auto"]}>
+            <Skeleton
+              startColor="#232323"
+              endColor="#e2b714"
+              borderRadius="full"
+              boxSize={["200px", "240px", "280px"]}
+              fadeDuration={1}
+            />
+          </Box>
+          <Box flex={1} textAlign={["center", "left"]} minW={0} w={["100%", "auto"]}>
+            <Skeleton height="30px" width="60%" mb={3} startColor="#232323" endColor="#e2b714" borderRadius="md" />
+            <Skeleton height="20px" width="40%" mb={6} startColor="#232323" endColor="#e2b714" borderRadius="md" />
+            <Skeleton height="15px" width="100%" mb={2} startColor="#232323" endColor="#e2b714" borderRadius="md" />
+            <Skeleton height="15px" width="100%" mb={2} startColor="#232323" endColor="#e2b714" borderRadius="md" />
+            <Skeleton height="15px" width="90%" mb={2} startColor="#232323" endColor="#e2b714" borderRadius="md" />
+            <Skeleton height="15px" width="85%" mb={6} startColor="#232323" endColor="#e2b714" borderRadius="md" />
+            <Box display="flex" gap={4} justifyContent={["center", "flex-start"]} flexWrap="wrap" mt={6}>
+              <Skeleton height="40px" width="120px" startColor="#232323" endColor="#e2b714" borderRadius="md" />
+              <Skeleton height="40px" width="120px" startColor="#232323" endColor="#e2b714" borderRadius="md" />
+            </Box>
+          </Box>
+        </Box>
+      ) : (
+        <Box
+          display="flex"
+          flexDirection={["column", "row"]}
+          alignItems={["center", "flex-start"]}
+          justifyContent="center"
+          gap={[8, 12, 16]}
+          w="100%"
+          maxW={800}
+        >
         <Box
           display="flex"
           justifyContent="center"
@@ -290,6 +328,7 @@ const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
           </Box>
         </Box>
       </Box>
+      )}
     </MotionBox>
   );
 };

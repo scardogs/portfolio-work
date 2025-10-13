@@ -6,6 +6,7 @@ import {
   Text,
   Divider,
   Heading,
+  Skeleton,
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 
@@ -16,9 +17,11 @@ const MotionText = motion(Text);
 const ProjectsSection = ({ sectionRef, sectionVariant }) => {
   const [openIndex, setOpenIndex] = useState(null);
   const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProjects = async () => {
+      setLoading(true);
       try {
         const response = await fetch("/api/projects");
         const data = await response.json();
@@ -27,6 +30,8 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
         }
       } catch (error) {
         console.error("Failed to fetch projects:", error);
+      } finally {
+        setTimeout(() => setLoading(false), 500);
       }
     };
 

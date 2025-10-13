@@ -81,7 +81,27 @@ export default function AdminRegister() {
       justifyContent="center"
       bg="#191919"
       fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+      position="relative"
     >
+      {/* Back Button */}
+      <Button
+        position="fixed"
+        top={4}
+        left={4}
+        leftIcon={<ArrowBackIcon />}
+        colorScheme="yellow"
+        variant="ghost"
+        onClick={() => router.push("/portfolio-tab")}
+        fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+        fontWeight="bold"
+        _hover={{
+          bg: "#272727",
+          transform: "translateX(-2px)",
+        }}
+      >
+        Back to Portfolio
+      </Button>
+
       <Box
         maxW="400px"
         w="full"

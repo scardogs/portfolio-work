@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Box, Tooltip, Text, Divider, Heading } from "@chakra-ui/react";
+import { Box, Tooltip, Text, Divider, Heading, Skeleton } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 
 const MotionBox = motion(Box);
 
 const SkillsSection = ({ sectionRef, sectionVariant }) => {
   const [technologies, setTechnologies] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchSkills = async () => {
+      setLoading(true);
       try {
         const response = await fetch("/api/skills");
         const data = await response.json();
@@ -17,6 +19,8 @@ const SkillsSection = ({ sectionRef, sectionVariant }) => {
         }
       } catch (error) {
         console.error("Failed to fetch skills:", error);
+      } finally {
+        setTimeout(() => setLoading(false), 500);
       }
     };
 
@@ -81,7 +85,44 @@ const SkillsSection = ({ sectionRef, sectionVariant }) => {
         mt={8}
         px={[2, 4]}
       >
-        {technologies.map((tech, idx) => (
+        {loading ? (
+          /* Loading State - Animated Skill Cards */
+          Array.from({ length: 8 }).map((_, idx) => (
+            <Box
+              key={idx}
+              p={5}
+              bg="#232323"
+              borderRadius="xl"
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              justifyContent="center"
+              minH="140px"
+              minW="120px"
+            >
+              <Skeleton
+                width="55px"
+                height="55px"
+                borderRadius="12px"
+                mb={3}
+                startColor="#232323"
+                endColor="#e2b714"
+                fadeDuration={1}
+                speed={0.8}
+              />
+              <Skeleton
+                height="20px"
+                width="80%"
+                borderRadius="md"
+                startColor="#232323"
+                endColor="#e2b714"
+                fadeDuration={1}
+                speed={0.8}
+              />
+            </Box>
+          ))
+        ) : (
+          technologies.map((tech, idx) => (
           <Tooltip
             key={tech.name}
             label={tech.name}
@@ -133,7 +174,8 @@ const SkillsSection = ({ sectionRef, sectionVariant }) => {
               </Text>
             </Box>
           </Tooltip>
-        ))}
+        ))
+        )}
       </Box>
     </MotionBox>
   );
