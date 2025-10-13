@@ -144,7 +144,13 @@ const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
           w="100%"
           maxW={800}
         >
-          <Box display="flex" justifyContent="center" alignItems="center" flexShrink={0} w={["100%", "auto"]}>
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            flexShrink={0}
+            w={["100%", "auto"]}
+          >
             <Skeleton
               startColor="#232323"
               endColor="#e2b714"
@@ -153,16 +159,81 @@ const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
               fadeDuration={1}
             />
           </Box>
-          <Box flex={1} textAlign={["center", "left"]} minW={0} w={["100%", "auto"]}>
-            <Skeleton height="30px" width="60%" mb={3} startColor="#232323" endColor="#e2b714" borderRadius="md" />
-            <Skeleton height="20px" width="40%" mb={6} startColor="#232323" endColor="#e2b714" borderRadius="md" />
-            <Skeleton height="15px" width="100%" mb={2} startColor="#232323" endColor="#e2b714" borderRadius="md" />
-            <Skeleton height="15px" width="100%" mb={2} startColor="#232323" endColor="#e2b714" borderRadius="md" />
-            <Skeleton height="15px" width="90%" mb={2} startColor="#232323" endColor="#e2b714" borderRadius="md" />
-            <Skeleton height="15px" width="85%" mb={6} startColor="#232323" endColor="#e2b714" borderRadius="md" />
-            <Box display="flex" gap={4} justifyContent={["center", "flex-start"]} flexWrap="wrap" mt={6}>
-              <Skeleton height="40px" width="120px" startColor="#232323" endColor="#e2b714" borderRadius="md" />
-              <Skeleton height="40px" width="120px" startColor="#232323" endColor="#e2b714" borderRadius="md" />
+          <Box
+            flex={1}
+            textAlign={["center", "left"]}
+            minW={0}
+            w={["100%", "auto"]}
+          >
+            <Skeleton
+              height="30px"
+              width="60%"
+              mb={3}
+              startColor="#232323"
+              endColor="#e2b714"
+              borderRadius="md"
+            />
+            <Skeleton
+              height="20px"
+              width="40%"
+              mb={6}
+              startColor="#232323"
+              endColor="#e2b714"
+              borderRadius="md"
+            />
+            <Skeleton
+              height="15px"
+              width="100%"
+              mb={2}
+              startColor="#232323"
+              endColor="#e2b714"
+              borderRadius="md"
+            />
+            <Skeleton
+              height="15px"
+              width="100%"
+              mb={2}
+              startColor="#232323"
+              endColor="#e2b714"
+              borderRadius="md"
+            />
+            <Skeleton
+              height="15px"
+              width="90%"
+              mb={2}
+              startColor="#232323"
+              endColor="#e2b714"
+              borderRadius="md"
+            />
+            <Skeleton
+              height="15px"
+              width="85%"
+              mb={6}
+              startColor="#232323"
+              endColor="#e2b714"
+              borderRadius="md"
+            />
+            <Box
+              display="flex"
+              gap={4}
+              justifyContent={["center", "flex-start"]}
+              flexWrap="wrap"
+              mt={6}
+            >
+              <Skeleton
+                height="40px"
+                width="120px"
+                startColor="#232323"
+                endColor="#e2b714"
+                borderRadius="md"
+              />
+              <Skeleton
+                height="40px"
+                width="120px"
+                startColor="#232323"
+                endColor="#e2b714"
+                borderRadius="md"
+              />
             </Box>
           </Box>
         </Box>
@@ -176,158 +247,158 @@ const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
           w="100%"
           maxW={800}
         >
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          flexShrink={0}
-          w={["100%", "auto"]}
-        >
-          <Box position="relative">
-            <Skeleton
-              isLoaded={imageLoaded}
-              startColor="#232323"
-              endColor="#e2b714"
-              borderRadius="full"
-              boxSize={["200px", "240px", "280px"]}
-              fadeDuration={0.4}
-            >
-              <Avatar
-                src={aboutData?.profileImage || "/profile.png"}
-                name={aboutData?.name || "John Michael T. Escarlan"}
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            flexShrink={0}
+            w={["100%", "auto"]}
+          >
+            <Box position="relative">
+              <Skeleton
+                isLoaded={imageLoaded}
+                startColor="#232323"
+                endColor="#e2b714"
+                borderRadius="full"
                 boxSize={["200px", "240px", "280px"]}
-                border="3px solid #e2b714"
-                mb={[4, 0]}
-                onLoad={handleImageLoad}
-                onError={handleImageError}
-                opacity={imageLoaded ? 1 : 0}
-                transition="opacity 0.3s ease-in-out"
-                showBorder={false}
-                bg="transparent"
-                boxShadow="0 4px 16px rgba(226,183,20,0.2)"
-              />
-            </Skeleton>
+                fadeDuration={0.4}
+              >
+                <Avatar
+                  src={aboutData?.profileImage || "/profile.png"}
+                  name={aboutData?.name || "John Michael T. Escarlan"}
+                  boxSize={["200px", "240px", "280px"]}
+                  border="3px solid #e2b714"
+                  mb={[4, 0]}
+                  onLoad={handleImageLoad}
+                  onError={handleImageError}
+                  opacity={imageLoaded ? 1 : 0}
+                  transition="opacity 0.3s ease-in-out"
+                  showBorder={false}
+                  bg="transparent"
+                  boxShadow="0 4px 16px rgba(226,183,20,0.2)"
+                />
+              </Skeleton>
+            </Box>
           </Box>
-        </Box>
 
-        <Box
-          flex={1}
-          textAlign={["center", "left"]}
-          minW={0}
-          w={["100%", "auto"]}
-        >
-          <Tooltip
-            label={aboutData?.name || "John Michael T. Escarlan"}
-            fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-            hasArrow
-          >
-            <Text
-              color="#fff"
-              fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-              fontSize={[20, 24, 26]}
-              mb={3}
-              fontWeight="bold"
-            >
-              {aboutData?.name || "John Michael T. Escarlan"}
-            </Text>
-          </Tooltip>
-
-          <Text
-            color="#f7d794"
+          <Box
+            flex={1}
             textAlign={["center", "left"]}
-            fontSize={[15, 16, 17]}
-            maxW={600}
-            mt={3}
-            fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-            lineHeight="1.8"
+            minW={0}
+            w={["100%", "auto"]}
           >
-            {fullText}
-          </Text>
-
-          {/* Languages Section */}
-          <Box mt={8}>
-            <Button
-              onClick={handleLanguagesToggle}
-              colorScheme="yellow"
-              variant="outline"
-              borderColor="#e2b714"
-              color="#e2b714"
+            <Tooltip
+              label={aboutData?.name || "John Michael T. Escarlan"}
               fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-              size="md"
-              fontWeight="bold"
-              letterSpacing="1px"
-              _hover={{
-                bg: "#191919",
-                color: "#e2b714",
-                borderColor: "#e2b714",
-                transform: "translateY(-2px)",
-                boxShadow: "0 4px 12px rgba(226,183,20,0.2)",
-              }}
-              transition="all 0.2s"
+              hasArrow
             >
-              {showLanguages ? "Hide Languages" : "Show Languages"}
-            </Button>
-            <Collapse in={showLanguages} animateOpacity>
-              <Box
-                mt={4}
-                p={5}
-                bg="#232323"
-                borderRadius="xl"
-                border="1px solid #e2b714"
+              <Text
                 color="#fff"
-                fontSize={15}
-                textAlign="left"
                 fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-                whiteSpace="pre-line"
-                boxShadow="0 4px 16px rgba(226,183,20,0.1)"
+                fontSize={[20, 24, 26]}
+                mb={3}
+                fontWeight="bold"
               >
-                {languagesFullText}
-              </Box>
-            </Collapse>
-          </Box>
+                {aboutData?.name || "John Michael T. Escarlan"}
+              </Text>
+            </Tooltip>
 
-          {/* Educational Attainment Section */}
-          <Box mt={6}>
-            <Button
-              onClick={handleEducationToggle}
-              colorScheme="yellow"
-              variant="outline"
-              borderColor="#e2b714"
-              color="#e2b714"
+            <Text
+              color="#f7d794"
+              textAlign={["center", "left"]}
+              fontSize={[15, 16, 17]}
+              maxW={600}
+              mt={3}
               fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-              size="md"
-              fontWeight="bold"
-              letterSpacing="1px"
-              _hover={{
-                bg: "#191919",
-                color: "#e2b714",
-                borderColor: "#e2b714",
-                transform: "translateY(-2px)",
-                boxShadow: "0 4px 12px rgba(226,183,20,0.2)",
-              }}
-              transition="all 0.2s"
+              lineHeight="1.8"
             >
-              {showEducation ? "Hide Education" : "Show Education"}
-            </Button>
-            <Collapse in={showEducation} animateOpacity>
-              <Box
-                mt={4}
-                p={5}
-                bg="#232323"
-                borderRadius="xl"
-                border="1px solid #e2b714"
-                color="#fff"
-                fontSize={15}
-                textAlign="left"
+              {fullText}
+            </Text>
+
+            {/* Languages Section */}
+            <Box mt={8}>
+              <Button
+                onClick={handleLanguagesToggle}
+                colorScheme="yellow"
+                variant="outline"
+                borderColor="#e2b714"
+                color="#e2b714"
                 fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-                boxShadow="0 4px 16px rgba(226,183,20,0.1)"
+                size="md"
+                fontWeight="bold"
+                letterSpacing="1px"
+                _hover={{
+                  bg: "#191919",
+                  color: "#e2b714",
+                  borderColor: "#e2b714",
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 4px 12px rgba(226,183,20,0.2)",
+                }}
+                transition="all 0.2s"
               >
-                {educationFullText}
-              </Box>
-            </Collapse>
+                {showLanguages ? "Hide Languages" : "Show Languages"}
+              </Button>
+              <Collapse in={showLanguages} animateOpacity>
+                <Box
+                  mt={4}
+                  p={5}
+                  bg="#232323"
+                  borderRadius="xl"
+                  border="1px solid #e2b714"
+                  color="#fff"
+                  fontSize={15}
+                  textAlign="left"
+                  fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+                  whiteSpace="pre-line"
+                  boxShadow="0 4px 16px rgba(226,183,20,0.1)"
+                >
+                  {languagesFullText}
+                </Box>
+              </Collapse>
+            </Box>
+
+            {/* Educational Attainment Section */}
+            <Box mt={6}>
+              <Button
+                onClick={handleEducationToggle}
+                colorScheme="yellow"
+                variant="outline"
+                borderColor="#e2b714"
+                color="#e2b714"
+                fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+                size="md"
+                fontWeight="bold"
+                letterSpacing="1px"
+                _hover={{
+                  bg: "#191919",
+                  color: "#e2b714",
+                  borderColor: "#e2b714",
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 4px 12px rgba(226,183,20,0.2)",
+                }}
+                transition="all 0.2s"
+              >
+                {showEducation ? "Hide Education" : "Show Education"}
+              </Button>
+              <Collapse in={showEducation} animateOpacity>
+                <Box
+                  mt={4}
+                  p={5}
+                  bg="#232323"
+                  borderRadius="xl"
+                  border="1px solid #e2b714"
+                  color="#fff"
+                  fontSize={15}
+                  textAlign="left"
+                  fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+                  boxShadow="0 4px 16px rgba(226,183,20,0.1)"
+                >
+                  {educationFullText}
+                </Box>
+              </Collapse>
+            </Box>
           </Box>
         </Box>
-      </Box>
       )}
     </MotionBox>
   );

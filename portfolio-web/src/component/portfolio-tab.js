@@ -267,103 +267,98 @@ const PortfolioTab = () => {
             {/* Audio element and mute button */}
             <audio ref={audioRef} src="/song1.mp3" autoPlay loop />
 
-            {/* Mute/Unmute Button - Top Left (Always Visible) */}
-            <IconButton
-              aria-label={isMuted ? "Unmute" : "Mute"}
-              icon={isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
-              onClick={() => setIsMuted((m) => !m)}
-              position="fixed"
-              top={4}
-              left={4}
-              zIndex={1000}
-              colorScheme="yellow"
-              variant="ghost"
-              size={["md", "lg"]}
-              fontSize={["2xl", "3xl"]}
-              bg="#272727"
-              border="1px solid #e2b714"
-              _hover={{
-                bg: "#232323",
-                transform: "scale(1.05)",
-              }}
-              transition="all 0.2s"
-              display="flex"
-            />
-
-            {/* Admin Login Button - Top Right */}
-            <Tooltip
-              label="Admin Login"
-              hasArrow
-              bg="#232323"
-              color="#e2b714"
-              fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-            >
-              <IconButton
-                icon={<FaUserShield />}
-                aria-label="Admin Login"
-                onClick={() => router.push("/admin/login")}
-                position="fixed"
-                top={4}
-                right={4}
-                zIndex={1000}
-                colorScheme="yellow"
-                variant="ghost"
-                size={["md", "lg"]}
-                fontSize={["xl", "2xl"]}
-                bg="#272727"
-                border="1px solid #e2b714"
-                _hover={{
-                  bg: "#232323",
-                  transform: "scale(1.05)",
-                }}
-                transition="all 0.2s"
-                display="flex"
-              />
-            </Tooltip>
-
-            <Tabs
-              variant="enclosed"
-              isFitted
-              colorScheme="brand"
-              position="relative"
+            {/* Header with Navigation and Control Buttons */}
+            <Box
               bg="#232323"
               borderRadius="xl"
               boxShadow="0 4px 16px 0 rgba(226,183,20,0.1)"
               overflow="hidden"
+              p={2}
             >
-              <TabList position="relative" bg="transparent" border="none" p={2}>
-                {sections.map((section) => (
-                  <Tab
-                    key={section.id}
-                    onClick={() => handleTabClick(section.id)}
-                    fontWeight="bold"
-                    fontSize={["sm", "md"]}
-                    fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-                    color="#f7d794"
-                    bg="#232323"
-                    _selected={{
-                      color: "#e2b714",
-                      bg: "#191919",
-                      borderColor: "#e2b714",
-                      boxShadow: "0 4px 16px rgba(226,183,20,0.2)",
-                    }}
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+                w="100%"
+              >
+                {/* Left Side - Mute Button */}
+                <Box flex="0 0 auto">
+                  <IconButton
+                    aria-label={isMuted ? "Unmute" : "Mute"}
+                    icon={isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
+                    onClick={() => setIsMuted((m) => !m)}
+                    colorScheme="yellow"
+                    variant="ghost"
+                    size="md"
+                    fontSize="lg"
+                    bg="transparent"
+                    color="#e2b714"
                     _hover={{
-                      color: "#e2b714",
-                      bg: "#1a1a1a",
+                      bg: "#191919",
+                      transform: "scale(1.05)",
                     }}
                     transition="all 0.2s"
-                    borderRadius="lg"
-                    border="1px solid transparent"
-                    mx={1}
-                    py={3}
-                    px={4}
-                    letterSpacing="1px"
-                  >
-                    {section.label}
-                  </Tab>
-                ))}
-              </TabList>
-            </Tabs>
+                  />
+                </Box>
+
+                {/* Center - Navigation Tabs */}
+                <Tabs variant="unstyled" flex="1" mx={2}>
+                  <TabList display="flex" justifyContent="center" gap={1}>
+                    {sections.map((section) => (
+                      <Tab
+                        key={section.id}
+                        onClick={() => handleTabClick(section.id)}
+                        fontWeight="bold"
+                        fontSize={["xs", "sm"]}
+                        fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+                        color="#f7d794"
+                        bg="transparent"
+                        _selected={{
+                          color: "#e2b714",
+                          bg: "#191919",
+                          borderColor: "#e2b714",
+                          boxShadow: "0 4px 16px rgba(226,183,20,0.2)",
+                        }}
+                        _hover={{
+                          color: "#e2b714",
+                          bg: "#1a1a1a",
+                        }}
+                        transition="all 0.2s"
+                        borderRadius="lg"
+                        border="1px solid transparent"
+                        py={2}
+                        px={3}
+                        letterSpacing="1px"
+                        minW="auto"
+                        flex="1"
+                      >
+                        {section.label}
+                      </Tab>
+                    ))}
+                  </TabList>
+                </Tabs>
+
+                {/* Right Side - Admin Login Button */}
+                <Box flex="0 0 auto">
+                  <IconButton
+                    icon={<FaUserShield />}
+                    aria-label="Admin Login"
+                    onClick={() => router.push("/admin/login")}
+                    colorScheme="yellow"
+                    variant="ghost"
+                    size="md"
+                    fontSize="lg"
+                    bg="transparent"
+                    color="#e2b714"
+                    _hover={{
+                      bg: "#191919",
+                      transform: "scale(1.05)",
+                    }}
+                    transition="all 0.2s"
+                  />
+                </Box>
+              </Box>
+            </Box>
 
             {/* Divider between tabs and sections */}
             <Box my={8} display="flex" justifyContent="center">

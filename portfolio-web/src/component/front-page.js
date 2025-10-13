@@ -14,7 +14,7 @@ import {
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
-import { FaUserShield } from "react-icons/fa";
+import { FaUserShield, FaChevronDown } from "react-icons/fa";
 
 const MotionBox = motion(Box);
 const MotionImage = motion(Image);
@@ -82,8 +82,8 @@ const FrontPage = () => {
 
   // Responsive message text
   const scrollMessage = useBreakpointValue({
-    base: "Hi, Pls Swipe",
-    md: "Hi, Please Scroll",
+    base: "Hi, Please Swipe to show the Button",
+    md: "Hi, Please Scroll to show the Button",
   });
 
   // Stage 1: Welcome message (fades out as user scrolls)
@@ -230,8 +230,9 @@ const FrontPage = () => {
       {/* Floating "Scroll More" Message */}
       <MotionText
         position="fixed"
-        bottom={["20px", "30px", "40px"]}
-        right={["20px", "30px", "40px"]}
+        top={["auto", "auto", "calc(50% - 320px)"]}
+        bottom={["20px", "30px", "auto"]}
+        right={["20px", "30px", "calc(50% - 370px)"]}
         color="#e2b714"
         fontSize={[14, 16, 18]}
         fontWeight="bold"
@@ -314,21 +315,46 @@ const FrontPage = () => {
         </Box>
 
         {/* Welcome Message - Stage 1 (fades out when scrolling) */}
-        <MotionText
-          color="#e2b714"
-          fontSize={[20, 24, 28]}
-          fontWeight="bold"
-          fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-          textAlign="center"
-          letterSpacing="2px"
-          mb={6}
+        <MotionBox
           style={{
             opacity: welcomeOpacity,
             y: welcomeY,
           }}
         >
-          {scrollMessage}
-        </MotionText>
+          <Text
+            color="#e2b714"
+            fontSize={[20, 24, 28]}
+            fontWeight="bold"
+            fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+            textAlign="center"
+            letterSpacing="2px"
+            mb={3}
+          >
+            {scrollMessage}
+          </Text>
+
+          {/* Animated Arrow Down */}
+          <MotionBox
+            display="flex"
+            justifyContent="center"
+            mb={6}
+            animate={{
+              y: [0, 10, 0],
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          >
+            <FaChevronDown
+              style={{
+                color: "#e2b714",
+                fontSize: "24px",
+              }}
+            />
+          </MotionBox>
+        </MotionBox>
 
         {/* Name - Stage 2 (appears on second scroll) */}
         <MotionHeading
@@ -340,6 +366,7 @@ const FrontPage = () => {
           fontWeight="bold"
           letterSpacing="2px"
           textAlign="center"
+          marginTop={-100}
           style={{
             opacity: nameOpacity,
             y: nameY,

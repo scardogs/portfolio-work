@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Box, Tooltip, Text, Divider, Heading, Skeleton } from "@chakra-ui/react";
+import {
+  Box,
+  Tooltip,
+  Text,
+  Divider,
+  Heading,
+  Skeleton,
+} from "@chakra-ui/react";
 import { motion } from "framer-motion";
 
 const MotionBox = motion(Box);
@@ -85,97 +92,95 @@ const SkillsSection = ({ sectionRef, sectionVariant }) => {
         mt={8}
         px={[2, 4]}
       >
-        {loading ? (
-          /* Loading State - Animated Skill Cards */
-          Array.from({ length: 8 }).map((_, idx) => (
-            <Box
-              key={idx}
-              p={5}
-              bg="#232323"
-              borderRadius="xl"
-              display="flex"
-              flexDirection="column"
-              alignItems="center"
-              justifyContent="center"
-              minH="140px"
-              minW="120px"
-            >
-              <Skeleton
-                width="55px"
-                height="55px"
-                borderRadius="12px"
-                mb={3}
-                startColor="#232323"
-                endColor="#e2b714"
-                fadeDuration={1}
-                speed={0.8}
-              />
-              <Skeleton
-                height="20px"
-                width="80%"
-                borderRadius="md"
-                startColor="#232323"
-                endColor="#e2b714"
-                fadeDuration={1}
-                speed={0.8}
-              />
-            </Box>
-          ))
-        ) : (
-          technologies.map((tech, idx) => (
-          <Tooltip
-            key={tech.name}
-            label={tech.name}
-            hasArrow
-            bg="#232323"
-            color="#e2b714"
-            fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-          >
-            <Box
-              p={5}
-              bg="#232323"
-              borderRadius="xl"
-              display="flex"
-              flexDirection="column"
-              alignItems="center"
-              justifyContent="center"
-              minH="140px"
-              minW="120px"
-              cursor="pointer"
-              _hover={{
-                boxShadow: "0 8px 24px 0 rgba(226,183,20,0.2)",
-              }}
-              transition="all 0.3s ease"
-            >
-              <img
-                src={tech.icon}
-                alt={`${tech.name} icon`}
-                style={{
-                  width: "55px",
-                  height: "55px",
-                  objectFit: "contain",
-                  marginBottom: "12px",
-                  backgroundColor: "white",
-                  borderRadius: "12px",
-                  padding: "10px",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                }}
-              />
-              <Text
-                color="#e2b714"
-                fontSize={["sm", "md"]}
-                fontWeight="bold"
-                textAlign="center"
-                fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-                mt={2}
-                letterSpacing="0.5px"
+        {loading
+          ? /* Loading State - Animated Skill Cards */
+            Array.from({ length: 8 }).map((_, idx) => (
+              <Box
+                key={idx}
+                p={5}
+                bg="#232323"
+                borderRadius="xl"
+                display="flex"
+                flexDirection="column"
+                alignItems="center"
+                justifyContent="center"
+                minH="140px"
+                minW="120px"
               >
-                {tech.name}
-              </Text>
-            </Box>
-          </Tooltip>
-        ))
-        )}
+                <Skeleton
+                  width="55px"
+                  height="55px"
+                  borderRadius="12px"
+                  mb={3}
+                  startColor="#232323"
+                  endColor="#e2b714"
+                  fadeDuration={1}
+                  speed={0.8}
+                />
+                <Skeleton
+                  height="20px"
+                  width="80%"
+                  borderRadius="md"
+                  startColor="#232323"
+                  endColor="#e2b714"
+                  fadeDuration={1}
+                  speed={0.8}
+                />
+              </Box>
+            ))
+          : technologies.map((tech, idx) => (
+              <Tooltip
+                key={tech.name}
+                label={tech.name}
+                hasArrow
+                bg="#232323"
+                color="#e2b714"
+                fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+              >
+                <Box
+                  p={5}
+                  bg="#232323"
+                  borderRadius="xl"
+                  display="flex"
+                  flexDirection="column"
+                  alignItems="center"
+                  justifyContent="center"
+                  minH="140px"
+                  minW="120px"
+                  cursor="pointer"
+                  _hover={{
+                    boxShadow: "0 8px 24px 0 rgba(226,183,20,0.2)",
+                  }}
+                  transition="all 0.3s ease"
+                >
+                  <img
+                    src={tech.icon}
+                    alt={`${tech.name} icon`}
+                    style={{
+                      width: "55px",
+                      height: "55px",
+                      objectFit: "contain",
+                      marginBottom: "12px",
+                      backgroundColor: "white",
+                      borderRadius: "12px",
+                      padding: "10px",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                    }}
+                  />
+                  <Text
+                    color="#e2b714"
+                    fontSize={["sm", "md"]}
+                    fontWeight="bold"
+                    textAlign="center"
+                    fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+                    mt={2}
+                    letterSpacing="0.5px"
+                  >
+                    {tech.name}
+                  </Text>
+                </Box>
+              </Tooltip>
+            ))}
       </Box>
     </MotionBox>
   );
