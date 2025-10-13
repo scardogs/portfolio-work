@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Box,
   Button,
@@ -13,35 +13,25 @@ const MotionBox = motion(Box);
 const MotionHeading = motion(Heading);
 const MotionText = motion(Text);
 
-const projects = [
-  {
-    title: "LJIM - WEB",
-    description: `Developed a MERN stack website for Lift Jesus International Ministries (LJIM), a global faith-based organization dedicated to spiritual growth and community service. The platform includes a dynamic music management system with full CRUD functionality for songs, an interactive events module for outreach coordination, and an information hub for the ministry’s story, mission, and giving opportunities. Integrated an intelligent dual-role chat assistant for technical support and Bible Q&A, enhancing user engagement and accessibility. Designed with Chakra UI for a modern, responsive interface that delivers a seamless experience across all devices.`,
-    github: "https://github.com/scardogs/ljim-app",
-    img: "/LJIM.png",
-  },
-  {
-    title: "StoryType",
-    description: `Built a MERN stack web app (StoryType) that combines typing practice with creative storytelling—users type to progress through interactive storylines across genres like fantasy, mystery, and sci-fi. Features include real-time typing feedback, progress tracking, and genre selection.`,
-    github: "https://github.com/scardogs/storytype-web",
-    img: "/storytype.png",
-  },
-  {
-    title: "Justine Cargo Services Integration System - WEB",
-    description: `Developed a MERN stack system to automate and streamline company operations. The system includes modules for employee profiles, truck status tracking, delivery management, truck renewal scheduling, waybill verification, fuel monitoring, automated payroll, billing generation, and report creation. This reduces manual work, improves data accuracy, and helps the company manage information more efficiently.`,
-    github: "https://github.com/scardogs/JustinesCargoServices-Web",
-    img: "/LOGO.png",
-  },
-  {
-    title: "Justine Cargo Services Integration System - Desktop Application",
-    description: `Developed a C#-based desktop application to automate and streamline company operations. The system features modules for managing employee profiles (with integrated biometric login and attendance tracking), tracking truck statuses, handling deliveries, scheduling truck renewals, verifying waybills, monitoring fuel consumption, automating payroll, generating billing statements, and producing detailed reports. It also integrates with other internal systems to enable smooth data exchange and centralized control. This reduces manual processes, improves data accuracy, and enhances overall operational efficiency.`,
-    github: "https://github.com/scardogs/justines-cargo-services-desktop-app",
-    img: "/LOGO.png",
-  },
-];
-
 const ProjectsSection = ({ sectionRef, sectionVariant }) => {
   const [openIndex, setOpenIndex] = useState(null);
+  const [projects, setProjects] = useState([]);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const response = await fetch("/api/projects");
+        const data = await response.json();
+        if (data.success) {
+          setProjects(data.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch projects:", error);
+      }
+    };
+
+    fetchProjects();
+  }, []);
 
   const handleToggle = useCallback((idx) => {
     setOpenIndex((current) => (current === idx ? null : idx));
@@ -227,7 +217,7 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
                       View Project
                     </a>
                   </Text>
-                  {project.title === "LJIM - WEB" && (
+                  {project.website && (
                     <Text
                       as="span"
                       color="#f7d794"
@@ -240,78 +230,7 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
                     >
                       Website:{" "}
                       <a
-                        href="https://ljim.vercel.app/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          color: "#e2b714",
-                          textDecoration: "underline",
-                          transition: "all 0.2s",
-                        }}
-                        onMouseEnter={(e) => {
-                          e.target.style.color = "#f7d794";
-                          e.target.style.textShadow =
-                            "0 2px 4px rgba(226,183,20,0.3)";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.target.style.color = "#e2b714";
-                          e.target.style.textShadow = "none";
-                        }}
-                      >
-                        View Website
-                      </a>
-                    </Text>
-                  )}
-                  {project.title === "StoryType" && (
-                    <Text
-                      as="span"
-                      color="#f7d794"
-                      fontSize={16}
-                      mb={3}
-                      display="block"
-                      mt={2}
-                      fontWeight="bold"
-                      letterSpacing="1px"
-                    >
-                      Website:{" "}
-                      <a
-                        href="https://storytype-jjscrl.vercel.app/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          color: "#e2b714",
-                          textDecoration: "underline",
-                          transition: "all 0.2s",
-                        }}
-                        onMouseEnter={(e) => {
-                          e.target.style.color = "#f7d794";
-                          e.target.style.textShadow =
-                            "0 2px 4px rgba(226,183,20,0.3)";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.target.style.color = "#e2b714";
-                          e.target.style.textShadow = "none";
-                        }}
-                      >
-                        View Website
-                      </a>
-                    </Text>
-                  )}
-                  {project.title ===
-                    "Justine Cargo Services Integration System - WEB" && (
-                    <Text
-                      as="span"
-                      color="#f7d794"
-                      fontSize={16}
-                      mb={3}
-                      display="block"
-                      mt={2}
-                      fontWeight="bold"
-                      letterSpacing="1px"
-                    >
-                      Website:{" "}
-                      <a
-                        href="https://apps.justinescargo.com/"
+                        href={project.website}
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{

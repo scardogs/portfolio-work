@@ -23,20 +23,41 @@ const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
   const [imageError, setImageError] = useState(false);
   const [showLanguages, setShowLanguages] = useState(false);
   const [showEducation, setShowEducation] = useState(false);
+  const [aboutData, setAboutData] = useState(null);
+
+  useEffect(() => {
+    const fetchAboutData = async () => {
+      try {
+        const response = await fetch("/api/about");
+        const data = await response.json();
+        if (data.success) {
+          setAboutData(data.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch about data:", error);
+      }
+    };
+
+    fetchAboutData();
+  }, []);
 
   const fullText = useMemo(
     () =>
+      aboutData?.description ||
       "Passionate about building reliable, efficient, and user-friendly systems. Skilled in solving technical challenges, improving processes, and delivering high-quality solutions. Eager to learn new technologies and contribute to impactful projects.",
-    []
+    [aboutData]
   );
 
   const languagesFullText = useMemo(
-    () => "English (Intermediate)\nTagalog (Fluent)\nHiligaynon (Fluent)",
-    []
+    () =>
+      aboutData?.languages?.join("\n") ||
+      "English (Intermediate)\nTagalog (Fluent)\nHiligaynon (Fluent)",
+    [aboutData]
   );
   const educationFullText = useMemo(
-    () => "Bachelor of Science in Information Technology",
-    []
+    () =>
+      aboutData?.education || "Bachelor of Science in Information Technology",
+    [aboutData]
   );
 
   const handleImageLoad = useCallback(() => {
@@ -87,29 +108,6 @@ const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
         transition: "all 0.3s ease",
       }}
     >
-      {/* Mute/Unmute Button - Mobile Only */}
-      <IconButton
-        aria-label={isMuted ? "Unmute" : "Mute"}
-        icon={isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
-        onClick={() => setIsMuted((m) => !m)}
-        position="absolute"
-        top={3}
-        left={3}
-        zIndex={10}
-        colorScheme="yellow"
-        variant="ghost"
-        size="md"
-        fontSize="xl"
-        display={["flex", "flex", "none"]}
-        bg="#232323"
-        border="1px solid #e2b714"
-        _hover={{
-          bg: "#191919",
-          transform: "scale(1.05)",
-        }}
-        transition="all 0.2s"
-      />
-
       <Heading
         as="h2"
         size="lg"
@@ -157,8 +155,8 @@ const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
               fadeDuration={0.4}
             >
               <Avatar
-                src="/profile.png"
-                name="John Michael T. Escarlan"
+                src={aboutData?.profileImage || "/profile.png"}
+                name={aboutData?.name || "John Michael T. Escarlan"}
                 boxSize={["200px", "240px", "280px"]}
                 border="3px solid #e2b714"
                 mb={[4, 0]}
@@ -181,7 +179,7 @@ const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
           w={["100%", "auto"]}
         >
           <Tooltip
-            label="John Michael T. Escarlan"
+            label={aboutData?.name || "John Michael T. Escarlan"}
             fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
             hasArrow
           >
@@ -192,7 +190,7 @@ const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
               mb={3}
               fontWeight="bold"
             >
-              John Michael T. Escarlan
+              {aboutData?.name || "John Michael T. Escarlan"}
             </Text>
           </Tooltip>
 

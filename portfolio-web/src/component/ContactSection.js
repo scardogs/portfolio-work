@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Box, Tooltip, Button, Text, Divider, Heading } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 
@@ -11,6 +11,24 @@ const ContactSection = ({
   hasCopied,
   toast,
 }) => {
+  const [contactData, setContactData] = useState(null);
+
+  useEffect(() => {
+    const fetchContactData = async () => {
+      try {
+        const response = await fetch("/api/contact");
+        const data = await response.json();
+        if (data.success) {
+          setContactData(data.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch contact data:", error);
+      }
+    };
+
+    fetchContactData();
+  }, []);
+
   return (
     <MotionBox
       ref={sectionRef}
@@ -78,7 +96,10 @@ const ContactSection = ({
             >
               FB:{" "}
               <a
-                href="https://www.facebook.com/johnmichael.escarlan"
+                href={
+                  contactData?.facebook ||
+                  "https://www.facebook.com/johnmichael.escarlan"
+                }
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
@@ -95,7 +116,7 @@ const ContactSection = ({
                   e.target.style.textShadow = "none";
                 }}
               >
-                @johnmichael.escarlan
+                {contactData?.facebookUsername || "@johnmichael.escarlan"}
               </a>
             </Text>
           </Tooltip>
@@ -120,7 +141,9 @@ const ContactSection = ({
             >
               Gmail:{" "}
               <a
-                href="mailto:johnmichael.escarlan14@gmail.com"
+                href={`mailto:${
+                  contactData?.email || "johnmichael.escarlan14@gmail.com"
+                }`}
                 style={{
                   color: "#e2b714",
                   textDecoration: "underline",
@@ -135,7 +158,7 @@ const ContactSection = ({
                   e.target.style.textShadow = "none";
                 }}
               >
-                johnmichael.escarlan14@gmail.com
+                {contactData?.email || "johnmichael.escarlan14@gmail.com"}
               </a>
             </Text>
           </Tooltip>
@@ -194,7 +217,7 @@ const ContactSection = ({
               fontWeight="bold"
               letterSpacing="2px"
             >
-              09946760366
+              {contactData?.mobile || "09946760366"}
             </Text>
           </Tooltip>
         </Box>

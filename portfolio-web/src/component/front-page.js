@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Avatar,
@@ -7,9 +7,12 @@ import {
   Heading,
   Divider,
   Skeleton,
+  IconButton,
+  Tooltip,
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
+import { FaUserShield } from "react-icons/fa";
 
 const MotionBox = motion(Box);
 
@@ -17,6 +20,23 @@ const FrontPage = () => {
   const router = useRouter();
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [aboutData, setAboutData] = useState(null);
+
+  useEffect(() => {
+    const fetchAboutData = async () => {
+      try {
+        const response = await fetch("/api/about");
+        const data = await response.json();
+        if (data.success) {
+          setAboutData(data.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch about data:", error);
+      }
+    };
+
+    fetchAboutData();
+  }, []);
 
   const handleImageLoad = useCallback(() => {
     setImageLoaded(true);
@@ -38,6 +58,36 @@ const FrontPage = () => {
       position="relative"
       overflow="hidden"
     >
+      {/* Admin Login Button - Top Right */}
+      <Tooltip
+        label="Admin Login"
+        hasArrow
+        bg="#232323"
+        color="#e2b714"
+        fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+      >
+        <IconButton
+          icon={<FaUserShield />}
+          aria-label="Admin Login"
+          onClick={() => router.push("/admin/login")}
+          position="fixed"
+          top={4}
+          right={4}
+          zIndex={1000}
+          colorScheme="yellow"
+          variant="ghost"
+          size={["md", "lg"]}
+          fontSize={["xl", "2xl"]}
+          bg="#272727"
+          border="1px solid #e2b714"
+          _hover={{
+            bg: "#232323",
+            transform: "scale(1.05)",
+          }}
+          transition="all 0.2s"
+        />
+      </Tooltip>
+
       {/* Elegant background pattern */}
       <Box
         position="absolute"
@@ -78,10 +128,10 @@ const FrontPage = () => {
             fadeDuration={0.4}
           >
             <Avatar
-              src="/profile.png"
+              src={aboutData?.profileImage || "/profile.png"}
               boxSize="280px"
               border="4px solid #e2b714"
-              name="John Michael T. Escarlan"
+              name={aboutData?.name || "John Michael T. Escarlan"}
               boxShadow="0 4px 16px rgba(226,183,20,0.3)"
               onLoad={handleImageLoad}
               onError={handleImageError}
@@ -114,7 +164,7 @@ const FrontPage = () => {
           letterSpacing="2px"
           textAlign="center"
         >
-          John Michael T. Escarlan
+          {aboutData?.name || "John Michael T. Escarlan"}
         </Heading>
 
         {/* Title */}

@@ -1,23 +1,27 @@
-import React, { useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Box, Tooltip, Text, Divider, Heading } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 
 const MotionBox = motion(Box);
 
 const SkillsSection = ({ sectionRef, sectionVariant }) => {
-  const technologies = [
-    { name: "MongoDB", icon: "/mongodb.svg" },
-    { name: "Express.js", icon: "/express.svg" },
-    { name: "React", icon: "/react.svg" },
-    { name: "Node.js", icon: "/nodejs.svg" },
-    { name: "Next.js", icon: "/next-js.svg" },
-    { name: "CSS", icon: "/css.svg" },
-    { name: "PHP", icon: "/php.svg" },
-    { name: ".NET", icon: "/dotnet.svg" },
-    { name: "Python", icon: "/python.svg" },
-    { name: "C#", icon: "/csharp.svg" },
-    { name: "Chakra UI", icon: "/chakra-ui.svg" },
-  ];
+  const [technologies, setTechnologies] = useState([]);
+
+  useEffect(() => {
+    const fetchSkills = async () => {
+      try {
+        const response = await fetch("/api/skills");
+        const data = await response.json();
+        if (data.success) {
+          setTechnologies(data.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch skills:", error);
+      }
+    };
+
+    fetchSkills();
+  }, []);
 
   return (
     <MotionBox

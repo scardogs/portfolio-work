@@ -9,13 +9,15 @@ import {
   useToast,
   IconButton,
   Divider,
+  Tooltip,
 } from "@chakra-ui/react";
+import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import AboutSection from "./AboutSection";
 import SkillsSection from "./SkillsSection";
 import ProjectsSection from "./ProjectsSection";
 import ContactSection from "./ContactSection";
-import { FaVolumeUp, FaVolumeMute } from "react-icons/fa";
+import { FaVolumeUp, FaVolumeMute, FaUserShield } from "react-icons/fa";
 
 const MotionBox = motion(Box);
 const MotionTab = motion(Tab);
@@ -33,6 +35,7 @@ const BLINKING_STARS = 5;
 const BLINKING_STAR_SIZE = 5;
 
 const PortfolioTab = () => {
+  const router = useRouter();
   const sectionRefs = {
     about: useRef(null),
     skills: useRef(null),
@@ -45,8 +48,26 @@ const PortfolioTab = () => {
   };
 
   const { isOpen, onToggle } = useDisclosure();
-  const { onCopy, hasCopied } = useClipboard("09946760366");
+  const [mobileNumber, setMobileNumber] = useState("09946760366");
+  const { onCopy, hasCopied } = useClipboard(mobileNumber);
   const toast = useToast();
+
+  // Fetch contact data to get the mobile number
+  useEffect(() => {
+    const fetchContactData = async () => {
+      try {
+        const response = await fetch("/api/contact");
+        const data = await response.json();
+        if (data.success && data.data?.mobile) {
+          setMobileNumber(data.data.mobile);
+        }
+      } catch (error) {
+        console.error("Failed to fetch contact data:", error);
+      }
+    };
+
+    fetchContactData();
+  }, []);
 
   // Audio player logic
   const audioRef = useRef(null);
@@ -246,7 +267,7 @@ const PortfolioTab = () => {
             {/* Audio element and mute button */}
             <audio ref={audioRef} src="/song1.mp3" autoPlay loop />
 
-            {/* Mute/Unmute Button - Top Left (Desktop) */}
+            {/* Mute/Unmute Button - Top Left (Always Visible) */}
             <IconButton
               aria-label={isMuted ? "Unmute" : "Mute"}
               icon={isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
@@ -257,8 +278,8 @@ const PortfolioTab = () => {
               zIndex={1000}
               colorScheme="yellow"
               variant="ghost"
-              size="lg"
-              fontSize="3xl"
+              size={["md", "lg"]}
+              fontSize={["2xl", "3xl"]}
               bg="#272727"
               border="1px solid #e2b714"
               _hover={{
@@ -266,8 +287,39 @@ const PortfolioTab = () => {
                 transform: "scale(1.05)",
               }}
               transition="all 0.2s"
-              display={["none", "none", "flex"]}
+              display="flex"
             />
+
+            {/* Admin Login Button - Top Right */}
+            <Tooltip
+              label="Admin Login"
+              hasArrow
+              bg="#232323"
+              color="#e2b714"
+              fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+            >
+              <IconButton
+                icon={<FaUserShield />}
+                aria-label="Admin Login"
+                onClick={() => router.push("/admin/login")}
+                position="fixed"
+                top={4}
+                right={4}
+                zIndex={1000}
+                colorScheme="yellow"
+                variant="ghost"
+                size={["md", "lg"]}
+                fontSize={["xl", "2xl"]}
+                bg="#272727"
+                border="1px solid #e2b714"
+                _hover={{
+                  bg: "#232323",
+                  transform: "scale(1.05)",
+                }}
+                transition="all 0.2s"
+                display="flex"
+              />
+            </Tooltip>
 
             <Tabs
               variant="enclosed"
@@ -287,6 +339,8 @@ const PortfolioTab = () => {
                     fontWeight="bold"
                     fontSize={["sm", "md"]}
                     fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+                    color="#f7d794"
+                    bg="#232323"
                     _selected={{
                       color: "#e2b714",
                       bg: "#191919",
