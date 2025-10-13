@@ -44,7 +44,7 @@ export default function AdminDashboard() {
       isClosable: true,
     });
 
-    router.push("/admin/login");
+    router.push("/");
   };
 
   if (!user) {

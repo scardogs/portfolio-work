@@ -87,16 +87,65 @@ const FrontPage = () => {
   });
 
   // Stage 1: Welcome message (fades out as user scrolls)
-  const welcomeOpacity = useTransform(scrollYProgress, [0, 0.1], [1, 0]);
-  const welcomeY = useTransform(scrollYProgress, [0, 0.1], [0, -20]);
+  const welcomeOpacityRaw = useTransform(scrollYProgress, [0, 0.1], [1, 0]);
+  const welcomeYRaw = useTransform(scrollYProgress, [0, 0.1], [0, -20]);
 
-  // Stage 2: Name and profession (appear on second scroll)
-  const nameOpacity = useTransform(scrollYProgress, [0.15, 0.35], [0, 1]);
-  const nameY = useTransform(scrollYProgress, [0.15, 0.35], [30, 0]);
+  // Stage 2: Name and profession (appear on second scroll with spring animation)
+  const nameOpacityRaw = useTransform(scrollYProgress, [0.15, 0.35], [0, 1]);
+  const nameYRaw = useTransform(scrollYProgress, [0.15, 0.35], [50, 0]);
+  const nameScaleRaw = useTransform(scrollYProgress, [0.15, 0.35], [0.8, 1]);
 
-  // Stage 3: Button (appears only at 100% scroll progress)
-  const buttonOpacity = useTransform(scrollYProgress, [0.9, 1], [0, 1]);
-  const buttonY = useTransform(scrollYProgress, [0.9, 1], [30, 0]);
+  // Stage 3: Button (appears at 90% scroll progress with spring animation)
+  const buttonOpacityRaw = useTransform(scrollYProgress, [0.85, 0.9], [0, 1]);
+  const buttonYRaw = useTransform(scrollYProgress, [0.85, 0.9], [50, 0]);
+  const buttonScaleRaw = useTransform(scrollYProgress, [0.85, 0.9], [0.8, 1]);
+
+  // Apply bouncy spring physics to each animation value
+  const welcomeOpacity = useSpring(welcomeOpacityRaw, {
+    stiffness: 120,
+    damping: 15,
+  });
+  const welcomeY = useSpring(welcomeYRaw, {
+    stiffness: 120,
+    damping: 15,
+  });
+
+  const nameOpacity = useSpring(nameOpacityRaw, {
+    stiffness: 150,
+    damping: 12,
+  });
+  const nameY = useSpring(nameYRaw, {
+    stiffness: 150,
+    damping: 12,
+  });
+  const nameScale = useSpring(nameScaleRaw, {
+    stiffness: 150,
+    damping: 12,
+  });
+
+  const buttonOpacity = useSpring(buttonOpacityRaw, {
+    stiffness: 200,
+    damping: 15,
+  });
+  const buttonY = useSpring(buttonYRaw, {
+    stiffness: 200,
+    damping: 15,
+  });
+  const buttonScale = useSpring(buttonScaleRaw, {
+    stiffness: 200,
+    damping: 15,
+  });
+
+  // Floating "Scroll more" message - appears after first scroll, disappears at 90%
+  const scrollMoreOpacityRaw = useTransform(
+    scrollYProgress,
+    [0.15, 0.25, 0.85, 0.9],
+    [0, 1, 1, 0]
+  );
+  const scrollMoreOpacity = useSpring(scrollMoreOpacityRaw, {
+    stiffness: 100,
+    damping: 20,
+  });
 
   // Background images configuration
   const backgroundImages = [
@@ -154,36 +203,6 @@ const FrontPage = () => {
 
   return (
     <Box minH="200vh" bg="#191919" position="relative">
-      {/* Admin Login Button - Top Right */}
-      <Tooltip
-        label="Admin Login"
-        hasArrow
-        bg="#232323"
-        color="#e2b714"
-        fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-      >
-        <IconButton
-          icon={<FaUserShield />}
-          aria-label="Admin Login"
-          onClick={() => router.push("/admin/login")}
-          position="fixed"
-          top={4}
-          right={4}
-          zIndex={1000}
-          colorScheme="yellow"
-          variant="ghost"
-          size={["md", "lg"]}
-          fontSize={["xl", "2xl"]}
-          bg="#272727"
-          border="1px solid #e2b714"
-          _hover={{
-            bg: "#232323",
-            transform: "scale(1.05)",
-          }}
-          transition="all 0.2s"
-        />
-      </Tooltip>
-
       {/* Elegant background pattern */}
       <Box
         position="fixed"
@@ -207,6 +226,33 @@ const FrontPage = () => {
           scrollYProgress={scrollYProgress}
         />
       ))}
+
+      {/* Floating "Scroll More" Message */}
+      <MotionText
+        position="fixed"
+        bottom={["20px", "30px", "40px"]}
+        right={["20px", "30px", "40px"]}
+        color="#e2b714"
+        fontSize={[14, 16, 18]}
+        fontWeight="bold"
+        fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+        letterSpacing="1px"
+        bg="rgba(39, 39, 39, 0.7)"
+        backdropFilter="blur(10px)"
+        WebkitBackdropFilter="blur(10px)"
+        px={4}
+        py={2}
+        borderRadius="full"
+        border="1px solid rgba(226, 183, 20, 0.4)"
+        boxShadow="0 4px 16px rgba(226, 183, 20, 0.2)"
+        zIndex="999"
+        pointerEvents="none"
+        style={{
+          opacity: scrollMoreOpacity,
+        }}
+      >
+        Pls, Scroll more ↓
+      </MotionText>
 
       <MotionBox
         w={["95%", "90%", "700px"]}
@@ -297,6 +343,7 @@ const FrontPage = () => {
           style={{
             opacity: nameOpacity,
             y: nameY,
+            scale: nameScale,
           }}
         >
           {aboutData?.name || "John Michael T. Escarlan"}
@@ -314,6 +361,7 @@ const FrontPage = () => {
           style={{
             opacity: nameOpacity,
             y: nameY,
+            scale: nameScale,
           }}
         >
           Software Developer & Web Developer
@@ -334,6 +382,7 @@ const FrontPage = () => {
           style={{
             opacity: buttonOpacity,
             y: buttonY,
+            scale: buttonScale,
           }}
         >
           <Button

@@ -14,7 +14,7 @@ import {
   IconButton,
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
-import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
+import { ViewIcon, ViewOffIcon, ArrowBackIcon } from "@chakra-ui/icons";
 
 export default function AdminRegister() {
   const [username, setUsername] = useState("");
