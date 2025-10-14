@@ -289,7 +289,7 @@ const FrontPage = () => {
             fadeDuration={0.4}
           >
             <Avatar
-              src={aboutData?.profileImage || "/profile.png"}
+              src={aboutData?.profileImage}
               boxSize="280px"
               border="4px solid #e2b714"
               name={aboutData?.name || "John Michael T. Escarlan"}
