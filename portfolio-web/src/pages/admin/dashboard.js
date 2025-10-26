@@ -10,8 +10,21 @@ import {
   Container,
   Flex,
   Divider,
+  Icon,
+  Grid,
+  GridItem,
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
+import {
+  FaUser,
+  FaFolderOpen,
+  FaLaptopCode,
+  FaEnvelope,
+  FaSignOutAlt,
+  FaEye,
+  FaHome,
+  FaBriefcase,
+} from "react-icons/fa";
 
 export default function AdminDashboard() {
   const [user, setUser] = useState(null);
@@ -54,174 +67,240 @@ export default function AdminDashboard() {
   return (
     <Box
       minH="100vh"
-      bg="#191919"
-      fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+      bg="#0a0a0a"
+      color="#e0e0e0"
+      fontFamily="system-ui, -apple-system, sans-serif"
       py={8}
     >
       <Container maxW="container.xl">
+        {/* Header */}
         <Flex
           justify="space-between"
           align="center"
           mb={8}
-          bg="#272727"
+          bg="#141414"
           p={6}
-          borderRadius="2xl"
-          border="2px solid #232323"
+          borderRadius="0"
+          border="1px solid #333333"
         >
           <Box>
             <Heading
               as="h1"
               size="xl"
-              color="#e2b714"
-              fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-              letterSpacing="2px"
+              color="#e0e0e0"
+              fontFamily="system-ui, -apple-system, sans-serif"
+              fontWeight="300"
+              letterSpacing="4px"
+              textTransform="uppercase"
+              fontSize="24px"
             >
               Admin Dashboard
             </Heading>
-            <Text color="#f7d794" mt={2}>
+            <Text color="#888888" mt={2} fontWeight="300">
               Welcome back, {user.username}!
             </Text>
           </Box>
-          <Button
-            colorScheme="red"
-            onClick={handleLogout}
-            fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-            fontWeight="bold"
-          >
-            Logout
-          </Button>
+          <HStack spacing={3}>
+            <Button
+              onClick={() => router.push("/")}
+              fontFamily="system-ui, -apple-system, sans-serif"
+              fontWeight="300"
+              bg="#1a1a1a"
+              color="#e0e0e0"
+              border="1px solid #333333"
+              borderRadius="0"
+              textTransform="uppercase"
+              letterSpacing="2px"
+              leftIcon={<Icon as={FaEye} />}
+              _hover={{
+                bg: "#2a2a2a",
+                borderColor: "#555555",
+              }}
+            >
+              View Portfolio
+            </Button>
+            <Button
+              onClick={handleLogout}
+              fontFamily="system-ui, -apple-system, sans-serif"
+              fontWeight="300"
+              bg="#1a1a1a"
+              color="#e0e0e0"
+              border="1px solid #333333"
+              borderRadius="0"
+              textTransform="uppercase"
+              letterSpacing="2px"
+              leftIcon={<Icon as={FaSignOutAlt} />}
+              _hover={{
+                bg: "#2a2a2a",
+                borderColor: "#555555",
+              }}
+            >
+              Logout
+            </Button>
+          </HStack>
         </Flex>
 
-        <Box
-          bg="#272727"
-          p={8}
-          borderRadius="2xl"
-          border="2px solid #232323"
-          boxShadow="0 8px 20px 0 rgba(226,183,20,0.15)"
+        {/* Content Cards Grid */}
+        <Grid
+          templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}
+          gap={6}
+          mb={6}
         >
-          <Heading
-            as="h2"
-            size="lg"
-            color="#e2b714"
-            mb={6}
-            fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-            letterSpacing="1px"
+          <Box
+            bg="#141414"
+            p={6}
+            borderRadius="0"
+            border="1px solid #333333"
+            _hover={{
+              borderColor: "#555555",
+              transform: "translateY(-2px)",
+            }}
+            transition="all 0.3s"
+            cursor="pointer"
+            onClick={() => router.push("/admin/manage/about")}
           >
-            Manage Portfolio Content
-          </Heading>
-
-          <Divider borderColor="#e2b714" mb={6} />
-
-          <VStack spacing={4} align="stretch">
-            <Button
-              size="lg"
-              colorScheme="yellow"
-              variant="outline"
-              borderColor="#e2b714"
-              color="#e2b714"
-              fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-              fontWeight="bold"
-              letterSpacing="1px"
-              _hover={{
-                bg: "#191919",
-                transform: "translateY(-2px)",
-                boxShadow: "0 4px 12px rgba(226,183,20,0.2)",
-              }}
-              onClick={() => router.push("/admin/manage/about")}
-            >
-              Manage About Section
-            </Button>
-
-            <Button
-              size="lg"
-              colorScheme="yellow"
-              variant="outline"
-              borderColor="#e2b714"
-              color="#e2b714"
-              fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-              fontWeight="bold"
-              letterSpacing="1px"
-              _hover={{
-                bg: "#191919",
-                transform: "translateY(-2px)",
-                boxShadow: "0 4px 12px rgba(226,183,20,0.2)",
-              }}
-              onClick={() => router.push("/admin/manage/projects")}
-            >
-              Manage Projects
-            </Button>
-
-            <Button
-              size="lg"
-              colorScheme="yellow"
-              variant="outline"
-              borderColor="#e2b714"
-              color="#e2b714"
-              fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-              fontWeight="bold"
-              letterSpacing="1px"
-              _hover={{
-                bg: "#191919",
-                transform: "translateY(-2px)",
-                boxShadow: "0 4px 12px rgba(226,183,20,0.2)",
-              }}
-              onClick={() => router.push("/admin/manage/skills")}
-            >
-              Manage Skills
-            </Button>
-
-            <Button
-              size="lg"
-              colorScheme="yellow"
-              variant="outline"
-              borderColor="#e2b714"
-              color="#e2b714"
-              fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-              fontWeight="bold"
-              letterSpacing="1px"
-              _hover={{
-                bg: "#191919",
-                transform: "translateY(-2px)",
-                boxShadow: "0 4px 12px rgba(226,183,20,0.2)",
-              }}
-              onClick={() => router.push("/admin/manage/contact")}
-            >
-              Manage Contact Information
-            </Button>
-          </VStack>
-
-          <Box mt={8} p={6} bg="#232323" borderRadius="xl">
+            <Icon as={FaUser} fontSize="32px" color="#888888" mb={4} />
             <Heading
               as="h3"
-              size="md"
-              color="#e2b714"
-              mb={4}
-              fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+              fontSize="16px"
+              color="#e0e0e0"
+              fontFamily="system-ui, -apple-system, sans-serif"
+              fontWeight="300"
+              letterSpacing="2px"
+              textTransform="uppercase"
+              mb={2}
             >
-              Quick Actions
+              About Section
             </Heading>
-            <HStack spacing={4}>
-              <Button
-                size="md"
-                colorScheme="yellow"
-                fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-                onClick={() => router.push("/")}
-              >
-                View Portfolio
-              </Button>
-              <Button
-                size="md"
-                variant="outline"
-                borderColor="#e2b714"
-                color="#e2b714"
-                fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-                onClick={() => window.location.reload()}
-              >
-                Refresh Dashboard
-              </Button>
-            </HStack>
+            <Text color="#888888" fontSize="13px" fontWeight="300">
+              Manage your personal information, job title, and social links
+            </Text>
           </Box>
-        </Box>
+
+          <Box
+            bg="#141414"
+            p={6}
+            borderRadius="0"
+            border="1px solid #333333"
+            _hover={{
+              borderColor: "#555555",
+              transform: "translateY(-2px)",
+            }}
+            transition="all 0.3s"
+            cursor="pointer"
+            onClick={() => router.push("/admin/manage/projects")}
+          >
+            <Icon as={FaFolderOpen} fontSize="32px" color="#888888" mb={4} />
+            <Heading
+              as="h3"
+              fontSize="16px"
+              color="#e0e0e0"
+              fontFamily="system-ui, -apple-system, sans-serif"
+              fontWeight="300"
+              letterSpacing="2px"
+              textTransform="uppercase"
+              mb={2}
+            >
+              Projects
+            </Heading>
+            <Text color="#888888" fontSize="13px" fontWeight="300">
+              Add, edit, or delete your featured projects and portfolio work
+            </Text>
+          </Box>
+
+          <Box
+            bg="#141414"
+            p={6}
+            borderRadius="0"
+            border="1px solid #333333"
+            _hover={{
+              borderColor: "#555555",
+              transform: "translateY(-2px)",
+            }}
+            transition="all 0.3s"
+            cursor="pointer"
+            onClick={() => router.push("/admin/manage/skills")}
+          >
+            <Icon as={FaLaptopCode} fontSize="32px" color="#888888" mb={4} />
+            <Heading
+              as="h3"
+              fontSize="16px"
+              color="#e0e0e0"
+              fontFamily="system-ui, -apple-system, sans-serif"
+              fontWeight="300"
+              letterSpacing="2px"
+              textTransform="uppercase"
+              mb={2}
+            >
+              Tech Stack
+            </Heading>
+            <Text color="#888888" fontSize="13px" fontWeight="300">
+              Update your skills and technologies used in your projects
+            </Text>
+          </Box>
+
+          <Box
+            bg="#141414"
+            p={6}
+            borderRadius="0"
+            border="1px solid #333333"
+            _hover={{
+              borderColor: "#555555",
+              transform: "translateY(-2px)",
+            }}
+            transition="all 0.3s"
+            cursor="pointer"
+            onClick={() => router.push("/admin/manage/contact")}
+          >
+            <Icon as={FaEnvelope} fontSize="32px" color="#888888" mb={4} />
+            <Heading
+              as="h3"
+              fontSize="16px"
+              color="#e0e0e0"
+              fontFamily="system-ui, -apple-system, sans-serif"
+              fontWeight="300"
+              letterSpacing="2px"
+              textTransform="uppercase"
+              mb={2}
+            >
+              Contact Information
+            </Heading>
+            <Text color="#888888" fontSize="13px" fontWeight="300">
+              Manage your email, phone, and social media contact details
+            </Text>
+          </Box>
+
+          <Box
+            bg="#141414"
+            p={6}
+            borderRadius="0"
+            border="1px solid #333333"
+            _hover={{
+              borderColor: "#555555",
+              transform: "translateY(-2px)",
+            }}
+            transition="all 0.3s"
+            cursor="pointer"
+            onClick={() => router.push("/admin/manage/work-experience")}
+          >
+            <Icon as={FaBriefcase} fontSize="32px" color="#888888" mb={4} />
+            <Heading
+              as="h3"
+              fontSize="16px"
+              color="#e0e0e0"
+              fontFamily="system-ui, -apple-system, sans-serif"
+              fontWeight="300"
+              letterSpacing="2px"
+              textTransform="uppercase"
+              mb={2}
+            >
+              Work Experience
+            </Heading>
+            <Text color="#888888" fontSize="13px" fontWeight="300">
+              Add and manage your professional work history and achievements
+            </Text>
+          </Box>
+        </Grid>
       </Container>
     </Box>
   );

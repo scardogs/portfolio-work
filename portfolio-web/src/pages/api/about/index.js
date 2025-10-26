@@ -37,8 +37,28 @@ async function getAbout(req, res) {
           "Hiligaynon (Fluent)",
         ],
         education: "Bachelor of Science in Information Technology",
+        jobTitle: "Software Engineer",
+        tagline: "Building thoughtful digital experiences",
+        quote: "Identify patterns that others might miss.",
+        currentJobTitle: "Software Developer",
+        currentCompany: "Current Company",
+        githubLink: "",
+        linkedinLink: "",
+        portfolioLink: "",
+        emailLink: "",
       });
     }
+
+    // Ensure all new fields exist with defaults
+    if (!about.jobTitle) about.jobTitle = "Software Engineer";
+    if (!about.tagline) about.tagline = "Building thoughtful digital experiences";
+    if (!about.quote) about.quote = "Identify patterns that others might miss.";
+    if (!about.currentJobTitle) about.currentJobTitle = "Software Developer";
+    if (!about.currentCompany) about.currentCompany = "Current Company";
+    if (!about.githubLink) about.githubLink = "";
+    if (!about.linkedinLink) about.linkedinLink = "";
+    if (!about.portfolioLink) about.portfolioLink = "";
+    if (!about.emailLink) about.emailLink = "";
 
     return res.status(200).json({ success: true, data: about });
   } catch (error) {

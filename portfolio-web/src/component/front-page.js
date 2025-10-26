@@ -202,8 +202,8 @@ const FrontPage = () => {
   }, []);
 
   return (
-    <Box minH="200vh" bg="#191919" position="relative">
-      {/* Elegant background pattern */}
+    <Box minH="200vh" bg="#ffffff" position="relative">
+      {/* Minimal grid background */}
       <Box
         position="fixed"
         top="0"
@@ -211,62 +211,65 @@ const FrontPage = () => {
         right="0"
         bottom="0"
         opacity="0.03"
-        backgroundImage="radial-gradient(circle at 25% 25%, #e2b714 0%, transparent 50%), radial-gradient(circle at 75% 75%, #e2b714 0%, transparent 50%)"
-        backgroundSize="400px 400px"
+        backgroundImage="linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)"
+        backgroundSize="40px 40px"
         zIndex="0"
       />
 
-      {/* Animated Background Images */}
-      {backgroundImages.map((img, index) => (
-        <AnimatedBackgroundImage
-          key={index}
-          src={img.src}
-          position={img.position}
-          delay={img.delay}
-          scrollYProgress={scrollYProgress}
-        />
-      ))}
+      {/* Geometric shapes - minimal */}
+      <Box
+        position="fixed"
+        top="15%"
+        right="10%"
+        width="300px"
+        height="300px"
+        border="1px solid #e5e5e5"
+        transform="rotate(45deg)"
+        zIndex="0"
+        opacity="0.3"
+      />
+      <Box
+        position="fixed"
+        bottom="20%"
+        left="8%"
+        width="200px"
+        height="200px"
+        border="1px solid #e5e5e5"
+        borderRadius="50%"
+        zIndex="0"
+        opacity="0.2"
+      />
 
-      {/* Floating "Scroll More" Message */}
+      {/* Minimal scroll indicator */}
       <MotionText
         position="fixed"
         top={["auto", "auto", "calc(50% - 320px)"]}
         bottom={["20px", "30px", "auto"]}
         right={["20px", "30px", "calc(50% - 370px)"]}
-        color="#e2b714"
-        fontSize={[14, 16, 18]}
-        fontWeight="bold"
-        fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-        letterSpacing="1px"
-        bg="rgba(39, 39, 39, 0.7)"
-        backdropFilter="blur(10px)"
-        WebkitBackdropFilter="blur(10px)"
-        px={4}
-        py={2}
-        borderRadius="full"
-        border="1px solid rgba(226, 183, 20, 0.4)"
-        boxShadow="0 4px 16px rgba(226, 183, 20, 0.2)"
+        color="#999999"
+        fontSize={[12, 13, 14]}
+        fontWeight="300"
+        fontFamily="system-ui, -apple-system, sans-serif"
+        letterSpacing="2px"
         zIndex="999"
         pointerEvents="none"
+        textTransform="uppercase"
         style={{
           opacity: scrollMoreOpacity,
         }}
       >
-        Pls, Scroll more ↓
+        Scroll
       </MotionText>
 
       <MotionBox
-        w={["95%", "90%", "700px"]}
+        w={["95%", "90%", "600px"]}
         maxW="100%"
-        p={[8, 12, 16]}
-        bg="rgba(39, 39, 39, 0.2)"
-        backdropFilter="blur(1px)"
-        WebkitBackdropFilter="blur(1px)"
-        borderRadius="2xl"
+        p={[8, 10, 12]}
+        bg="#ffffff"
         display="flex"
         flexDirection="column"
         alignItems="center"
-        fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+        fontFamily="system-ui, -apple-system, sans-serif"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
@@ -275,8 +278,8 @@ const FrontPage = () => {
         left="50%"
         transform="translate(-50%, -50%)"
         zIndex="1"
-        boxShadow="0 8px 32px 0 rgba(0, 0, 0, 0.6)"
-        border="1px solid rgba(226, 183, 20, 0.4)"
+        border="1px solid #e5e5e5"
+        boxShadow="0 1px 3px rgba(0,0,0,0.05)"
       >
         {/* Profile Image - Always visible */}
         <Box position="relative">
@@ -290,28 +293,22 @@ const FrontPage = () => {
           >
             <Avatar
               src={aboutData?.profileImage}
-              boxSize="280px"
-              border="4px solid #e2b714"
+              boxSize={["200px", "240px", "260px"]}
+              border="1px solid #e5e5e5"
               name={aboutData?.name || "John Michael T. Escarlan"}
-              boxShadow="0 4px 16px rgba(226,183,20,0.3)"
               onLoad={handleImageLoad}
               onError={handleImageError}
               opacity={imageLoaded ? 1 : 0}
               transition="opacity 0.3s ease-in-out"
               showBorder={false}
-              bg="transparent"
+              bg="#f5f5f5"
             />
           </Skeleton>
         </Box>
 
-        {/* Divider - Always visible */}
-        <Box mt={8} mb={6}>
-          <Divider
-            borderColor="#e2b714"
-            borderWidth="2px"
-            opacity="0.6"
-            w="200px"
-          />
+        {/* Minimal divider */}
+        <Box mt={6} mb={4}>
+          <Divider borderColor="#e5e5e5" borderWidth="1px" w="60px" />
         </Box>
 
         {/* Welcome Message - Stage 1 (fades out when scrolling) */}
@@ -322,35 +319,37 @@ const FrontPage = () => {
           }}
         >
           <Text
-            color="#e2b714"
-            fontSize={[20, 24, 28]}
-            fontWeight="bold"
-            fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+            color="#999999"
+            fontSize={[13, 14, 15]}
+            fontWeight="300"
+            fontFamily="system-ui, -apple-system, sans-serif"
             textAlign="center"
-            letterSpacing="2px"
-            mb={3}
+            letterSpacing="3px"
+            mb={4}
+            textTransform="uppercase"
           >
             {scrollMessage}
           </Text>
 
-          {/* Animated Arrow Down */}
+          {/* Minimal arrow */}
           <MotionBox
             display="flex"
             justifyContent="center"
             mb={6}
             animate={{
-              y: [0, 10, 0],
+              y: [0, 8, 0],
             }}
             transition={{
               duration: 1.5,
               repeat: Infinity,
+              repeatType: "loop",
               ease: "easeInOut",
             }}
           >
             <FaChevronDown
               style={{
-                color: "#e2b714",
-                fontSize: "24px",
+                color: "#cccccc",
+                fontSize: "20px",
               }}
             />
           </MotionBox>
@@ -360,13 +359,12 @@ const FrontPage = () => {
         <MotionHeading
           as="h1"
           size="2xl"
-          color="#e2b714"
-          fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-          mb={3}
-          fontWeight="bold"
-          letterSpacing="2px"
+          color="#1a1a1a"
+          fontFamily="system-ui, -apple-system, sans-serif"
+          mb={2}
+          fontWeight="300"
           textAlign="center"
-          marginTop={-100}
+          marginTop={-80}
           style={{
             opacity: nameOpacity,
             y: nameY,
@@ -378,11 +376,11 @@ const FrontPage = () => {
 
         {/* Title - Stage 2 (appears with name) */}
         <MotionText
-          color="#f7d794"
-          fontSize={[16, 18, 20]}
-          mb={4}
-          fontWeight="medium"
-          fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+          color="#666666"
+          fontSize={[14, 15, 16]}
+          mb={6}
+          fontWeight="300"
+          fontFamily="system-ui, -apple-system, sans-serif"
           textAlign="center"
           letterSpacing="1px"
           style={{
@@ -401,7 +399,7 @@ const FrontPage = () => {
             opacity: nameOpacity,
           }}
         >
-          <Divider borderColor="#232323" borderWidth="1px" w="150px" />
+          <Divider borderColor="#e5e5e5" borderWidth="1px" w="80px" />
         </MotionBox>
 
         {/* Proceed button - Stage 3 (appears on third scroll) */}
@@ -414,20 +412,22 @@ const FrontPage = () => {
         >
           <Button
             size="lg"
-            colorScheme="yellow"
-            variant="solid"
-            fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-            fontWeight="bold"
-            px={12}
-            py={7}
-            fontSize={22}
-            borderRadius="full"
-            boxShadow="0 4px 20px 0 rgba(226,183,20,0.2)"
+            colorScheme="gray"
+            variant="outline"
+            fontFamily="system-ui, -apple-system, sans-serif"
+            fontWeight="300"
+            px={10}
+            py={6}
+            fontSize={14}
+            borderRadius="0"
+            borderColor="#1a1a1a"
+            color="#1a1a1a"
+            letterSpacing="2px"
+            textTransform="uppercase"
             _hover={{
-              bg: "#e2b714",
-              color: "#191919",
-              boxShadow: "0 8px 32px 0 rgba(226,183,20,0.3)",
-              transform: "translateY(-2px)",
+              bg: "#1a1a1a",
+              color: "#ffffff",
+              transform: "translateY(-1px)",
             }}
             _active={{
               transform: "translateY(0px)",
@@ -435,7 +435,7 @@ const FrontPage = () => {
             onClick={() => router.push("/portfolio-tab")}
             transition="all 0.2s ease"
           >
-            Proceed
+            Enter Portfolio
           </Button>
         </MotionBox>
       </MotionBox>

@@ -27,6 +27,42 @@ const AboutSchema = new mongoose.Schema(
       type: String,
       default: "Bachelor of Science in Information Technology",
     },
+    jobTitle: {
+      type: String,
+      default: "Software Engineer",
+    },
+    tagline: {
+      type: String,
+      default: "Building thoughtful digital experiences",
+    },
+    quote: {
+      type: String,
+      default: "Identify patterns that others might miss.",
+    },
+    currentJobTitle: {
+      type: String,
+      default: "Software Developer",
+    },
+    currentCompany: {
+      type: String,
+      default: "Current Company",
+    },
+    githubLink: {
+      type: String,
+      default: "",
+    },
+    linkedinLink: {
+      type: String,
+      default: "",
+    },
+    portfolioLink: {
+      type: String,
+      default: "",
+    },
+    emailLink: {
+      type: String,
+      default: "",
+    },
     updatedAt: {
       type: Date,
       default: Date.now,

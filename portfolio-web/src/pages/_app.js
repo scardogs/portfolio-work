@@ -7,6 +7,19 @@ const svgPattern = `url('data:image/svg+xml;utf8,<svg width="40" height="40" vie
 export default function App({ Component, pageProps }) {
   return (
     <ChakraProvider>
+      <style jsx global>{`
+        @keyframes slide {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+        .infinite-slide {
+          animation: slide 30s linear infinite;
+        }
+      `}</style>
       <ScrollingBackground
         backgroundColor="#191919"
         backgroundImage={svgPattern}

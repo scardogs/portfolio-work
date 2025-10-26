@@ -119,7 +119,7 @@ export default function ManageContact() {
     return (
       <Box
         minH="100vh"
-        bg="#191919"
+        bg="#0a0a0a"
         display="flex"
         alignItems="center"
         justifyContent="center"
@@ -132,123 +132,168 @@ export default function ManageContact() {
   return (
     <Box
       minH="100vh"
-      bg="#191919"
-      fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+      bg="#0a0a0a"
+      color="#e0e0e0"
+      fontFamily="system-ui, -apple-system, sans-serif"
       py={8}
     >
       <Container maxW="container.md">
         <Flex align="center" mb={6}>
           <IconButton
             icon={<ArrowBackIcon />}
-            colorScheme="yellow"
+            colorScheme="gray"
             variant="outline"
             mr={4}
             onClick={() => router.push("/admin/dashboard")}
             aria-label="Back to dashboard"
+            borderColor="#333333"
+            color="#888888"
+            _hover={{ color: "#e0e0e0", borderColor: "#555555" }}
           />
           <Heading
             as="h1"
             size="xl"
-            color="#e2b714"
-            fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-            letterSpacing="2px"
+            color="#e0e0e0"
+            fontFamily="system-ui, -apple-system, sans-serif"
+            fontWeight="300"
+            letterSpacing="4px"
+            textTransform="uppercase"
+            fontSize="24px"
           >
             Manage Contact Information
           </Heading>
         </Flex>
 
-        <Box
-          bg="#272727"
-          p={8}
-          borderRadius="2xl"
-          border="2px solid #232323"
-          boxShadow="0 8px 20px 0 rgba(226,183,20,0.15)"
-        >
+        <Box bg="#141414" p={8} borderRadius="0" border="1px solid #333333">
           <form onSubmit={handleSubmit}>
             <VStack spacing={4}>
               <FormControl isRequired>
-                <FormLabel color="#f7d794">Facebook URL</FormLabel>
+                <FormLabel
+                  color="#888888"
+                  fontSize="11px"
+                  fontWeight="400"
+                  letterSpacing="2px"
+                  textTransform="uppercase"
+                >
+                  Facebook URL
+                </FormLabel>
                 <Input
                   name="facebook"
                   value={formData.facebook}
                   onChange={handleChange}
                   placeholder="https://www.facebook.com/username"
-                  bg="#232323"
-                  border="1px solid #e2b714"
-                  color="#fff"
-                  _hover={{ borderColor: "#f7d794" }}
+                  bg="#1a1a1a"
+                  border="1px solid #333333"
+                  color="#e0e0e0"
+                  borderRadius="0"
+                  _hover={{ borderColor: "#555555" }}
                   _focus={{
-                    borderColor: "#e2b714",
-                    boxShadow: "0 0 0 1px #e2b714",
+                    borderColor: "#888888",
+                    boxShadow: "0 0 0 1px #888888",
                   }}
                 />
               </FormControl>
 
               <FormControl isRequired>
-                <FormLabel color="#f7d794">Facebook Username</FormLabel>
+                <FormLabel
+                  color="#888888"
+                  fontSize="11px"
+                  fontWeight="400"
+                  letterSpacing="2px"
+                  textTransform="uppercase"
+                >
+                  Facebook Username
+                </FormLabel>
                 <Input
                   name="facebookUsername"
                   value={formData.facebookUsername}
                   onChange={handleChange}
                   placeholder="@username"
-                  bg="#232323"
-                  border="1px solid #e2b714"
-                  color="#fff"
-                  _hover={{ borderColor: "#f7d794" }}
+                  bg="#1a1a1a"
+                  border="1px solid #333333"
+                  color="#e0e0e0"
+                  borderRadius="0"
+                  _hover={{ borderColor: "#555555" }}
                   _focus={{
-                    borderColor: "#e2b714",
-                    boxShadow: "0 0 0 1px #e2b714",
+                    borderColor: "#888888",
+                    boxShadow: "0 0 0 1px #888888",
                   }}
                 />
               </FormControl>
 
               <FormControl isRequired>
-                <FormLabel color="#f7d794">Email</FormLabel>
+                <FormLabel
+                  color="#888888"
+                  fontSize="11px"
+                  fontWeight="400"
+                  letterSpacing="2px"
+                  textTransform="uppercase"
+                >
+                  Email
+                </FormLabel>
                 <Input
                   name="email"
                   type="email"
                   value={formData.email}
                   onChange={handleChange}
-                  bg="#232323"
-                  border="1px solid #e2b714"
-                  color="#fff"
-                  _hover={{ borderColor: "#f7d794" }}
+                  bg="#1a1a1a"
+                  border="1px solid #333333"
+                  color="#e0e0e0"
+                  borderRadius="0"
+                  _hover={{ borderColor: "#555555" }}
                   _focus={{
-                    borderColor: "#e2b714",
-                    boxShadow: "0 0 0 1px #e2b714",
+                    borderColor: "#888888",
+                    boxShadow: "0 0 0 1px #888888",
                   }}
                 />
               </FormControl>
 
               <FormControl isRequired>
-                <FormLabel color="#f7d794">Mobile Number</FormLabel>
+                <FormLabel
+                  color="#888888"
+                  fontSize="11px"
+                  fontWeight="400"
+                  letterSpacing="2px"
+                  textTransform="uppercase"
+                >
+                  Mobile Number
+                </FormLabel>
                 <Input
                   name="mobile"
                   value={formData.mobile}
                   onChange={handleChange}
-                  bg="#232323"
-                  border="1px solid #e2b714"
-                  color="#fff"
-                  _hover={{ borderColor: "#f7d794" }}
+                  bg="#1a1a1a"
+                  border="1px solid #333333"
+                  color="#e0e0e0"
+                  borderRadius="0"
+                  _hover={{ borderColor: "#555555" }}
                   _focus={{
-                    borderColor: "#e2b714",
-                    boxShadow: "0 0 0 1px #e2b714",
+                    borderColor: "#888888",
+                    boxShadow: "0 0 0 1px #888888",
                   }}
                 />
               </FormControl>
 
               <Button
                 type="submit"
-                colorScheme="yellow"
                 w="full"
                 mt={4}
                 isLoading={loading}
-                fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-                fontWeight="bold"
-                letterSpacing="1px"
+                fontFamily="system-ui, -apple-system, sans-serif"
+                fontWeight="300"
+                letterSpacing="2px"
+                textTransform="uppercase"
+                bg="#1a1a1a"
+                color="#e0e0e0"
+                border="1px solid #333333"
+                borderRadius="0"
                 _hover={{
-                  transform: "translateY(-2px)",
-                  boxShadow: "0 4px 12px rgba(226,183,20,0.3)",
+                  bg: "#2a2a2a",
+                  borderColor: "#555555",
+                  transform: "translateY(-1px)",
+                }}
+                _loading={{
+                  bg: "#1a1a1a",
                 }}
               >
                 Update Contact Information

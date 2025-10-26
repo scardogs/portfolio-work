@@ -39,12 +39,12 @@ const SkillsSection = ({ sectionRef, sectionVariant }) => {
       ref={sectionRef}
       id="skills"
       minH="200px"
-      mb={[10, 16]}
+      mb={[8, 12]}
       p={[6, 10, 12]}
-      bg="#272727"
-      borderRadius="2xl"
-      border="2px solid #232323"
-      fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+      bg="#ffffff"
+      borderRadius="0"
+      border="1px solid #e5e5e5"
+      fontFamily="system-ui, -apple-system, sans-serif"
       variants={sectionVariant}
       initial="hidden"
       whileInView="visible"
@@ -53,8 +53,8 @@ const SkillsSection = ({ sectionRef, sectionVariant }) => {
         duration: 0.4,
       }}
       _hover={{
-        borderColor: "#e2b714",
-        boxShadow: "0 8px 20px 0 rgba(226,183,20,0.15)",
+        borderColor: "#1a1a1a",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
       }}
       sx={{
         transition: "all 0.3s ease",
@@ -63,22 +63,19 @@ const SkillsSection = ({ sectionRef, sectionVariant }) => {
       <Heading
         as="h2"
         size="lg"
-        color="#e2b714"
-        fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+        color="#1a1a1a"
+        fontFamily="system-ui, -apple-system, sans-serif"
         mb={4}
-        fontWeight="bold"
-        letterSpacing="2px"
+        fontWeight="300"
+        letterSpacing="4px"
+        textTransform="uppercase"
+        fontSize="14px"
       >
         Skills
       </Heading>
 
       <Box mb={8}>
-        <Divider
-          borderColor="#e2b714"
-          borderWidth="2px"
-          opacity="0.6"
-          w="150px"
-        />
+        <Divider borderColor="#e5e5e5" borderWidth="1px" w="60px" />
       </Box>
 
       <Box
@@ -98,8 +95,9 @@ const SkillsSection = ({ sectionRef, sectionVariant }) => {
               <Box
                 key={idx}
                 p={5}
-                bg="#232323"
-                borderRadius="xl"
+                bg="#ffffff"
+                borderRadius="0"
+                border="1px solid #e5e5e5"
                 display="flex"
                 flexDirection="column"
                 alignItems="center"
@@ -133,14 +131,15 @@ const SkillsSection = ({ sectionRef, sectionVariant }) => {
                 key={tech.name}
                 label={tech.name}
                 hasArrow
-                bg="#232323"
-                color="#e2b714"
-                fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+                bg="#1a1a1a"
+                color="#ffffff"
+                fontFamily="system-ui, -apple-system, sans-serif"
               >
                 <Box
                   p={5}
-                  bg="#232323"
-                  borderRadius="xl"
+                  bg="#ffffff"
+                  borderRadius="0"
+                  border="1px solid #e5e5e5"
                   display="flex"
                   flexDirection="column"
                   alignItems="center"
@@ -149,7 +148,7 @@ const SkillsSection = ({ sectionRef, sectionVariant }) => {
                   minW="120px"
                   cursor="pointer"
                   _hover={{
-                    boxShadow: "0 8px 24px 0 rgba(226,183,20,0.2)",
+                    borderColor: "#1a1a1a",
                   }}
                   transition="all 0.3s ease"
                 >
@@ -162,17 +161,17 @@ const SkillsSection = ({ sectionRef, sectionVariant }) => {
                       objectFit: "contain",
                       marginBottom: "12px",
                       backgroundColor: "white",
-                      borderRadius: "12px",
+                      borderRadius: "0",
                       padding: "10px",
-                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      border: "1px solid #e5e5e5",
                     }}
                   />
                   <Text
-                    color="#e2b714"
+                    color="#1a1a1a"
                     fontSize={["sm", "md"]}
-                    fontWeight="bold"
+                    fontWeight="300"
                     textAlign="center"
-                    fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+                    fontFamily="system-ui, -apple-system, sans-serif"
                     mt={2}
                     letterSpacing="0.5px"
                   >

@@ -79,8 +79,8 @@ export default function AdminRegister() {
       display="flex"
       alignItems="center"
       justifyContent="center"
-      bg="#191919"
-      fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+      bg="#0a0a0a"
+      fontFamily="system-ui, -apple-system, sans-serif"
       position="relative"
     >
       {/* Back Button */}
@@ -89,13 +89,14 @@ export default function AdminRegister() {
         top={4}
         left={4}
         leftIcon={<ArrowBackIcon />}
-        colorScheme="yellow"
+        colorScheme="gray"
         variant="ghost"
-        onClick={() => router.push("/portfolio-tab")}
-        fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-        fontWeight="bold"
+        onClick={() => router.push("/")}
+        fontFamily="system-ui, -apple-system, sans-serif"
+        fontWeight="300"
+        color="#888888"
         _hover={{
-          bg: "#272727",
+          color: "#e0e0e0",
           transform: "translateX(-2px)",
         }}
       >
@@ -105,20 +106,22 @@ export default function AdminRegister() {
       <Box
         maxW="400px"
         w="full"
-        bg="#272727"
+        bg="#141414"
         p={8}
-        borderRadius="2xl"
-        border="2px solid #232323"
-        boxShadow="0 8px 20px 0 rgba(226,183,20,0.15)"
+        borderRadius="0"
+        border="1px solid #333333"
       >
         <Heading
           as="h1"
           size="lg"
-          color="#e2b714"
+          color="#e0e0e0"
           mb={6}
           textAlign="center"
-          fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-          letterSpacing="2px"
+          fontFamily="system-ui, -apple-system, sans-serif"
+          fontWeight="300"
+          letterSpacing="4px"
+          textTransform="uppercase"
+          fontSize="14px"
         >
           Admin Register
         </Heading>
@@ -126,53 +129,80 @@ export default function AdminRegister() {
         <form onSubmit={handleRegister}>
           <VStack spacing={4}>
             <FormControl isRequired>
-              <FormLabel color="#f7d794">Username</FormLabel>
+              <FormLabel
+                color="#888888"
+                fontSize="11px"
+                fontWeight="400"
+                letterSpacing="2px"
+                textTransform="uppercase"
+              >
+                Username
+              </FormLabel>
               <Input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                bg="#232323"
-                border="1px solid #e2b714"
-                color="#fff"
-                _hover={{ borderColor: "#f7d794" }}
+                bg="#1a1a1a"
+                border="1px solid #333333"
+                color="#e0e0e0"
+                borderRadius="0"
+                _hover={{ borderColor: "#555555" }}
                 _focus={{
-                  borderColor: "#e2b714",
-                  boxShadow: "0 0 0 1px #e2b714",
+                  borderColor: "#888888",
+                  boxShadow: "0 0 0 1px #888888",
                 }}
               />
             </FormControl>
 
             <FormControl isRequired>
-              <FormLabel color="#f7d794">Email</FormLabel>
+              <FormLabel
+                color="#888888"
+                fontSize="11px"
+                fontWeight="400"
+                letterSpacing="2px"
+                textTransform="uppercase"
+              >
+                Email
+              </FormLabel>
               <Input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                bg="#232323"
-                border="1px solid #e2b714"
-                color="#fff"
-                _hover={{ borderColor: "#f7d794" }}
+                bg="#1a1a1a"
+                border="1px solid #333333"
+                color="#e0e0e0"
+                borderRadius="0"
+                _hover={{ borderColor: "#555555" }}
                 _focus={{
-                  borderColor: "#e2b714",
-                  boxShadow: "0 0 0 1px #e2b714",
+                  borderColor: "#888888",
+                  boxShadow: "0 0 0 1px #888888",
                 }}
               />
             </FormControl>
 
             <FormControl isRequired>
-              <FormLabel color="#f7d794">Password</FormLabel>
+              <FormLabel
+                color="#888888"
+                fontSize="11px"
+                fontWeight="400"
+                letterSpacing="2px"
+                textTransform="uppercase"
+              >
+                Password
+              </FormLabel>
               <InputGroup>
                 <Input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  bg="#232323"
-                  border="1px solid #e2b714"
-                  color="#fff"
-                  _hover={{ borderColor: "#f7d794" }}
+                  bg="#1a1a1a"
+                  border="1px solid #333333"
+                  color="#e0e0e0"
+                  borderRadius="0"
+                  _hover={{ borderColor: "#555555" }}
                   _focus={{
-                    borderColor: "#e2b714",
-                    boxShadow: "0 0 0 1px #e2b714",
+                    borderColor: "#888888",
+                    boxShadow: "0 0 0 1px #888888",
                   }}
                   minLength={6}
                 />
@@ -184,8 +214,8 @@ export default function AdminRegister() {
                     icon={showPassword ? <ViewOffIcon /> : <ViewIcon />}
                     onClick={() => setShowPassword(!showPassword)}
                     variant="ghost"
-                    color="#e2b714"
-                    _hover={{ bg: "#191919" }}
+                    color="#888888"
+                    _hover={{ color: "#e0e0e0", bg: "#1a1a1a" }}
                     size="sm"
                   />
                 </InputRightElement>
@@ -194,30 +224,44 @@ export default function AdminRegister() {
 
             <Button
               type="submit"
-              colorScheme="yellow"
               w="full"
               mt={4}
               isLoading={loading}
-              fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-              fontWeight="bold"
-              letterSpacing="1px"
+              fontFamily="system-ui, -apple-system, sans-serif"
+              fontWeight="300"
+              letterSpacing="2px"
+              textTransform="uppercase"
+              bg="#1a1a1a"
+              color="#e0e0e0"
+              border="1px solid #333333"
+              borderRadius="0"
               _hover={{
-                transform: "translateY(-2px)",
-                boxShadow: "0 4px 12px rgba(226,183,20,0.3)",
+                bg: "#2a2a2a",
+                borderColor: "#555555",
+                transform: "translateY(-1px)",
+              }}
+              _loading={{
+                bg: "#1a1a1a",
               }}
             >
               Register
             </Button>
 
-            <Text color="#f7d794" fontSize="sm" mt={4} textAlign="center">
+            <Text
+              color="#888888"
+              fontSize="sm"
+              mt={4}
+              textAlign="center"
+              fontWeight="300"
+            >
               Already have an account?{" "}
               <Text
                 as="span"
-                color="#e2b714"
+                color="#e0e0e0"
                 cursor="pointer"
                 textDecoration="underline"
                 onClick={() => router.push("/admin/login")}
-                _hover={{ color: "#f7d794" }}
+                _hover={{ color: "#888888" }}
               >
                 Login here
               </Text>

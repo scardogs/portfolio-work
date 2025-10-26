@@ -1,8 +1,8 @@
 import React from "react";
-import FrontPage from "../component/front-page";
+import PortfolioTab from "../component/portfolio-tab";
 
-const FrontSPage = () => {
-  return <FrontPage />;
+const IndexPage = () => {
+  return <PortfolioTab />;
 };
 
-export default FrontSPage;
+export default IndexPage;

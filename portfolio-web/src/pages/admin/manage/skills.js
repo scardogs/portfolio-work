@@ -196,7 +196,8 @@ export default function ManageSkills() {
     return (
       <Box
         minH="100vh"
-        bg="#191919"
+        bg="#0a0a0a"
+        color="#e0e0e0"
         display="flex"
         alignItems="center"
         justifyContent="center"
@@ -209,8 +210,9 @@ export default function ManageSkills() {
   return (
     <Box
       minH="100vh"
-      bg="#191919"
-      fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+      bg="#0a0a0a"
+      color="#e0e0e0"
+      fontFamily="system-ui, -apple-system, sans-serif"
       py={8}
     >
       <Container maxW="container.xl">
@@ -227,8 +229,8 @@ export default function ManageSkills() {
             <Heading
               as="h1"
               size="xl"
-              color="#e2b714"
-              fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+              color="#e0e0e0"
+              fontFamily="system-ui, -apple-system, sans-serif"
               letterSpacing="2px"
             >
               Manage Skills
@@ -238,18 +240,17 @@ export default function ManageSkills() {
             leftIcon={<AddIcon />}
             colorScheme="yellow"
             onClick={onOpen}
-            fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+            fontFamily="system-ui, -apple-system, sans-serif"
           >
             Add Skill
           </Button>
         </Flex>
 
         <Box
-          bg="#272727"
+          bg="#141414"
           p={8}
-          borderRadius="2xl"
-          border="2px solid #232323"
-          boxShadow="0 8px 20px 0 rgba(226,183,20,0.15)"
+          borderRadius="0"
+          border="1px solid #333333"
           overflowX="auto"
         >
           {skills.length === 0 ? (
@@ -306,8 +307,8 @@ export default function ManageSkills() {
         <ModalOverlay />
         <ModalContent bg="#272727" border="2px solid #e2b714">
           <ModalHeader
-            color="#e2b714"
-            fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+            color="#e0e0e0"
+            fontFamily="system-ui, -apple-system, sans-serif"
           >
             {editingId ? "Edit Skill" : "Add Skill"}
           </ModalHeader>
@@ -356,17 +357,17 @@ export default function ManageSkills() {
                     colorScheme="yellow"
                     flex={1}
                     isLoading={loading}
-                    fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+                    fontFamily="system-ui, -apple-system, sans-serif"
                   >
                     {editingId ? "Update" : "Create"}
                   </Button>
                   <Button
                     variant="outline"
                     borderColor="#e2b714"
-                    color="#e2b714"
+                    color="#e0e0e0"
                     flex={1}
                     onClick={handleCloseModal}
-                    fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+                    fontFamily="system-ui, -apple-system, sans-serif"
                   >
                     Cancel
                   </Button>

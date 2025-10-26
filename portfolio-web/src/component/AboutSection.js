@@ -86,16 +86,16 @@ const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
       ref={sectionRef}
       id="about"
       minH="200px"
-      mb={[10, 16]}
+      mb={[8, 12]}
       p={[6, 10, 12]}
-      bg="#272727"
-      borderRadius="2xl"
-      border="2px solid #232323"
+      bg="#ffffff"
+      borderRadius="0"
+      border="1px solid #e5e5e5"
       display="flex"
       flexDirection="column"
       alignItems="center"
       justifyContent="center"
-      fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+      fontFamily="system-ui, -apple-system, sans-serif"
       variants={sectionVariant}
       initial="hidden"
       whileInView="visible"
@@ -105,8 +105,8 @@ const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
         duration: 0.4,
       }}
       _hover={{
-        borderColor: "#e2b714",
-        boxShadow: "0 8px 20px 0 rgba(226,183,20,0.15)",
+        borderColor: "#1a1a1a",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
       }}
       sx={{
         transition: "all 0.3s ease",
@@ -115,22 +115,19 @@ const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
       <Heading
         as="h2"
         size="lg"
-        color="#e2b714"
-        fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+        color="#1a1a1a"
+        fontFamily="system-ui, -apple-system, sans-serif"
         mb={4}
-        fontWeight="bold"
-        letterSpacing="2px"
+        fontWeight="300"
+        letterSpacing="4px"
+        textTransform="uppercase"
+        fontSize="14px"
       >
         About Me
       </Heading>
 
-      <Box mb={6}>
-        <Divider
-          borderColor="#e2b714"
-          borderWidth="2px"
-          opacity="0.6"
-          w="150px"
-        />
+      <Box mb={8}>
+        <Divider borderColor="#e5e5e5" borderWidth="1px" w="60px" />
       </Box>
 
       {loading ? (
@@ -266,16 +263,15 @@ const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
                 <Avatar
                   src={aboutData?.profileImage || "/profile.png"}
                   name={aboutData?.name || "John Michael T. Escarlan"}
-                  boxSize={["200px", "240px", "280px"]}
-                  border="3px solid #e2b714"
+                  boxSize={["200px", "240px", "260px"]}
+                  border="1px solid #e5e5e5"
                   mb={[4, 0]}
                   onLoad={handleImageLoad}
                   onError={handleImageError}
                   opacity={imageLoaded ? 1 : 0}
                   transition="opacity 0.3s ease-in-out"
                   showBorder={false}
-                  bg="transparent"
-                  boxShadow="0 4px 16px rgba(226,183,20,0.2)"
+                  bg="#f5f5f5"
                 />
               </Skeleton>
             </Box>
@@ -289,28 +285,29 @@ const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
           >
             <Tooltip
               label={aboutData?.name || "John Michael T. Escarlan"}
-              fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+              fontFamily="system-ui, -apple-system, sans-serif"
               hasArrow
             >
               <Text
-                color="#fff"
-                fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+                color="#1a1a1a"
+                fontFamily="system-ui, -apple-system, sans-serif"
                 fontSize={[20, 24, 26]}
                 mb={3}
-                fontWeight="bold"
+                fontWeight="300"
               >
                 {aboutData?.name || "John Michael T. Escarlan"}
               </Text>
             </Tooltip>
 
             <Text
-              color="#f7d794"
+              color="#666666"
               textAlign={["center", "left"]}
               fontSize={[15, 16, 17]}
               maxW={600}
               mt={3}
-              fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+              fontFamily="system-ui, -apple-system, sans-serif"
               lineHeight="1.8"
+              fontWeight="300"
             >
               {fullText}
             </Text>
@@ -319,20 +316,21 @@ const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
             <Box mt={8}>
               <Button
                 onClick={handleLanguagesToggle}
-                colorScheme="yellow"
+                colorScheme="gray"
                 variant="outline"
-                borderColor="#e2b714"
-                color="#e2b714"
-                fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+                borderColor="#1a1a1a"
+                color="#1a1a1a"
+                fontFamily="system-ui, -apple-system, sans-serif"
                 size="md"
-                fontWeight="bold"
-                letterSpacing="1px"
+                fontWeight="300"
+                letterSpacing="2px"
+                textTransform="uppercase"
+                borderRadius="0"
                 _hover={{
-                  bg: "#191919",
-                  color: "#e2b714",
-                  borderColor: "#e2b714",
-                  transform: "translateY(-2px)",
-                  boxShadow: "0 4px 12px rgba(226,183,20,0.2)",
+                  bg: "#1a1a1a",
+                  color: "#ffffff",
+                  borderColor: "#1a1a1a",
+                  transform: "translateY(-1px)",
                 }}
                 transition="all 0.2s"
               >
@@ -342,15 +340,15 @@ const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
                 <Box
                   mt={4}
                   p={5}
-                  bg="#232323"
-                  borderRadius="xl"
-                  border="1px solid #e2b714"
-                  color="#fff"
+                  bg="#f9f9f9"
+                  borderRadius="0"
+                  border="1px solid #e5e5e5"
+                  color="#666666"
                   fontSize={15}
                   textAlign="left"
-                  fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+                  fontFamily="system-ui, -apple-system, sans-serif"
                   whiteSpace="pre-line"
-                  boxShadow="0 4px 16px rgba(226,183,20,0.1)"
+                  fontWeight="300"
                 >
                   {languagesFullText}
                 </Box>
@@ -361,20 +359,21 @@ const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
             <Box mt={6}>
               <Button
                 onClick={handleEducationToggle}
-                colorScheme="yellow"
+                colorScheme="gray"
                 variant="outline"
-                borderColor="#e2b714"
-                color="#e2b714"
-                fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+                borderColor="#1a1a1a"
+                color="#1a1a1a"
+                fontFamily="system-ui, -apple-system, sans-serif"
                 size="md"
-                fontWeight="bold"
-                letterSpacing="1px"
+                fontWeight="300"
+                letterSpacing="2px"
+                textTransform="uppercase"
+                borderRadius="0"
                 _hover={{
-                  bg: "#191919",
-                  color: "#e2b714",
-                  borderColor: "#e2b714",
-                  transform: "translateY(-2px)",
-                  boxShadow: "0 4px 12px rgba(226,183,20,0.2)",
+                  bg: "#1a1a1a",
+                  color: "#ffffff",
+                  borderColor: "#1a1a1a",
+                  transform: "translateY(-1px)",
                 }}
                 transition="all 0.2s"
               >
@@ -384,14 +383,14 @@ const AboutSection = ({ sectionRef, sectionVariant, isMuted, setIsMuted }) => {
                 <Box
                   mt={4}
                   p={5}
-                  bg="#232323"
-                  borderRadius="xl"
-                  border="1px solid #e2b714"
-                  color="#fff"
+                  bg="#f9f9f9"
+                  borderRadius="0"
+                  border="1px solid #e5e5e5"
+                  color="#666666"
                   fontSize={15}
                   textAlign="left"
-                  fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
-                  boxShadow="0 4px 16px rgba(226,183,20,0.1)"
+                  fontFamily="system-ui, -apple-system, sans-serif"
+                  fontWeight="300"
                 >
                   {educationFullText}
                 </Box>

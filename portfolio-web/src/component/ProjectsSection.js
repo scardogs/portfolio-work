@@ -47,12 +47,12 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
       ref={sectionRef}
       id="projects"
       minH="200px"
-      mb={[10, 16]}
+      mb={[8, 12]}
       p={[6, 10, 12]}
-      bg="#272727"
-      borderRadius="2xl"
-      border="2px solid #232323"
-      fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+      bg="#ffffff"
+      borderRadius="0"
+      border="1px solid #e5e5e5"
+      fontFamily="system-ui, -apple-system, sans-serif"
       variants={sectionVariant}
       initial="hidden"
       whileInView="visible"
@@ -61,8 +61,8 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
         duration: 0.4,
       }}
       _hover={{
-        borderColor: "#e2b714",
-        boxShadow: "0 8px 20px 0 rgba(226,183,20,0.15)",
+        borderColor: "#1a1a1a",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
       }}
       sx={{
         transition: "all 0.3s ease",
@@ -71,22 +71,19 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
       <Heading
         as="h2"
         size="lg"
-        color="#e2b714"
-        fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+        color="#1a1a1a"
+        fontFamily="system-ui, -apple-system, sans-serif"
         mb={4}
-        fontWeight="bold"
-        letterSpacing="2px"
+        fontWeight="300"
+        letterSpacing="4px"
+        textTransform="uppercase"
+        fontSize="14px"
       >
         Projects
       </Heading>
 
       <Box mb={8}>
-        <Divider
-          borderColor="#e2b714"
-          borderWidth="2px"
-          opacity="0.6"
-          w="150px"
-        />
+        <Divider borderColor="#e5e5e5" borderWidth="1px" w="60px" />
       </Box>
 
       <Box display="flex" flexDirection="column" gap={10}>
@@ -99,11 +96,11 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
             justifyContent="center"
             gap={[6, 10, 14]}
             p={[6, 8, 10]}
-            bg="#232323"
-            borderRadius="xl"
-            boxShadow="0 4px 20px 0 rgba(226,183,20,0.1)"
+            bg="#ffffff"
+            borderRadius="0"
+            border="1px solid #e5e5e5"
             _hover={{
-              boxShadow: "0 8px 24px 0 rgba(226,183,20,0.2)",
+              borderColor: "#1a1a1a",
             }}
             transition="all 0.3s ease"
           >
@@ -123,10 +120,9 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
                     height: "120px",
                     objectFit: "contain",
                     background: "white",
-                    borderRadius: "12px",
+                    borderRadius: "0",
                     padding: "12px",
-                    border: "2px solid #e2b714",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                    border: "1px solid #e5e5e5",
                   }}
                 />
               </Box>
@@ -134,10 +130,10 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
 
             <Box textAlign={["center", "left"]} flex={1}>
               <Text
-                color="#e2b714"
-                fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+                color="#1a1a1a"
+                fontFamily="system-ui, -apple-system, sans-serif"
                 fontSize={[16, 18, 20]}
-                fontWeight="bold"
+                fontWeight="300"
                 mb={3}
                 letterSpacing="1px"
               >
@@ -147,22 +143,23 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
               <Box>
                 <Button
                   onClick={() => handleToggle(idx)}
-                  colorScheme="yellow"
+                  colorScheme="gray"
                   variant="outline"
-                  borderColor="#e2b714"
-                  color="#e2b714"
-                  fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+                  borderColor="#1a1a1a"
+                  color="#1a1a1a"
+                  fontFamily="system-ui, -apple-system, sans-serif"
                   mb={3}
                   mt={3}
                   size="md"
-                  fontWeight="bold"
-                  letterSpacing="1px"
+                  fontWeight="300"
+                  letterSpacing="2px"
+                  textTransform="uppercase"
+                  borderRadius="0"
                   _hover={{
-                    bg: "#191919",
-                    color: "#e2b714",
-                    borderColor: "#e2b714",
-                    transform: "translateY(-2px)",
-                    boxShadow: "0 4px 12px rgba(226,183,20,0.2)",
+                    bg: "#1a1a1a",
+                    color: "#ffffff",
+                    borderColor: "#1a1a1a",
+                    transform: "translateY(-1px)",
                   }}
                   _active={{
                     transform: "translateY(0px)",
@@ -177,26 +174,26 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
                 <Box
                   mt={4}
                   p={6}
-                  bg="#1a1a1a"
-                  borderRadius="xl"
-                  border="1px solid #e2b714"
-                  color="#fff"
+                  bg="#f9f9f9"
+                  borderRadius="0"
+                  border="1px solid #e5e5e5"
+                  color="#666666"
                   fontSize={15}
                   textAlign="left"
                   maxW={500}
-                  fontFamily="Geist Mono, Fira Mono, Menlo, monospace"
+                  fontFamily="system-ui, -apple-system, sans-serif"
                   lineHeight="1.8"
-                  boxShadow="0 4px 16px rgba(226,183,20,0.1)"
+                  fontWeight="300"
                 >
                   {project.description}
                   <Text
                     as="span"
-                    color="#f7d794"
-                    fontSize={16}
+                    color="#1a1a1a"
+                    fontSize={14}
                     mb={3}
                     display="block"
                     mt={4}
-                    fontWeight="bold"
+                    fontWeight="300"
                     letterSpacing="1px"
                   >
                     GitHub:{" "}
@@ -205,18 +202,18 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{
-                        color: "#e2b714",
-                        textDecoration: "underline",
+                        color: "#666666",
+                        textDecoration: "none",
+                        borderBottom: "1px solid #1a1a1a",
                         transition: "all 0.2s",
                       }}
                       onMouseEnter={(e) => {
-                        e.target.style.color = "#f7d794";
-                        e.target.style.textShadow =
-                          "0 2px 4px rgba(226,183,20,0.3)";
+                        e.target.style.color = "#1a1a1a";
+                        e.target.style.borderBottomColor = "#1a1a1a";
                       }}
                       onMouseLeave={(e) => {
-                        e.target.style.color = "#e2b714";
-                        e.target.style.textShadow = "none";
+                        e.target.style.color = "#666666";
+                        e.target.style.borderBottomColor = "#1a1a1a";
                       }}
                     >
                       View Project
@@ -225,12 +222,12 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
                   {project.website && (
                     <Text
                       as="span"
-                      color="#f7d794"
-                      fontSize={16}
+                      color="#1a1a1a"
+                      fontSize={14}
                       mb={3}
                       display="block"
                       mt={2}
-                      fontWeight="bold"
+                      fontWeight="300"
                       letterSpacing="1px"
                     >
                       Website:{" "}
@@ -239,18 +236,18 @@ const ProjectsSection = ({ sectionRef, sectionVariant }) => {
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{
-                          color: "#e2b714",
-                          textDecoration: "underline",
+                          color: "#666666",
+                          textDecoration: "none",
+                          borderBottom: "1px solid #1a1a1a",
                           transition: "all 0.2s",
                         }}
                         onMouseEnter={(e) => {
-                          e.target.style.color = "#f7d794";
-                          e.target.style.textShadow =
-                            "0 2px 4px rgba(226,183,20,0.3)";
+                          e.target.style.color = "#1a1a1a";
+                          e.target.style.borderBottomColor = "#1a1a1a";
                         }}
                         onMouseLeave={(e) => {
-                          e.target.style.color = "#e2b714";
-                          e.target.style.textShadow = "none";
+                          e.target.style.color = "#666666";
+                          e.target.style.borderBottomColor = "#1a1a1a";
                         }}
                       >
                         View Website

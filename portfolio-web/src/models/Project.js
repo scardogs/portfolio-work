@@ -28,6 +28,14 @@ const ProjectSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    type: {
+      type: String,
+      default: "Full-Stack Application",
+    },
+    technologies: {
+      type: [String],
+      default: [],
+    },
     createdAt: {
       type: Date,
       default: Date.now,
