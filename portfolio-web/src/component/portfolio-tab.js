@@ -415,8 +415,43 @@ const PortfolioTab = () => {
                 w="100%"
                 gap={8}
               >
-                {/* Left Side - Text Block */}
-                <Box flex="1" maxW="600px">
+                {/* Profile Picture - First on mobile, right side on desktop */}
+                <Box
+                  flex="0 0 auto"
+                  order={{ base: 0, md: 2 }}
+                  mb={{ base: 8, md: 0 }}
+                >
+                  <Box position="relative">
+                    <Skeleton
+                      isLoaded={imageLoaded}
+                      startColor="#1a1a1a"
+                      endColor="#2a2a2a"
+                      borderRadius="full"
+                      boxSize={["200px", "240px", "280px", "400px"]}
+                      fadeDuration={0.3}
+                    >
+                      <Avatar
+                        src={aboutData?.profileImage}
+                        boxSize={["200px", "240px", "280px", "400px"]}
+                        border="4px solid #333333"
+                        name={aboutData?.name || "John Michael T. Escarlan"}
+                        onLoad={handleImageLoad}
+                        onError={handleImageError}
+                        opacity={imageLoaded ? 1 : 0}
+                        transition="opacity 0.3s ease-in-out"
+                        bg="#1a1a1a"
+                      />
+                    </Skeleton>
+                  </Box>
+                </Box>
+
+                {/* Text Block - Second on mobile, left side on desktop */}
+                <Box
+                  flex="1"
+                  maxW="600px"
+                  order={{ base: 1, md: 0 }}
+                  textAlign={{ base: "center", md: "left" }}
+                >
                   <Heading
                     as="h1"
                     fontSize={[48, 56, 64, 72]}
@@ -452,7 +487,10 @@ const PortfolioTab = () => {
                   </Text>
 
                   {/* Social Icons */}
-                  <HStack spacing={6}>
+                  <HStack
+                    spacing={6}
+                    justify={{ base: "center", md: "flex-start" }}
+                  >
                     {aboutData?.githubLink && (
                       <IconButton
                         icon={<FaGithub />}
@@ -521,32 +559,6 @@ const PortfolioTab = () => {
                       />
                     )}
                   </HStack>
-                </Box>
-
-                {/* Right Side - Profile Picture */}
-                <Box flex="0 0 auto" display={{ base: "none", md: "block" }}>
-                  <Box position="relative">
-                    <Skeleton
-                      isLoaded={imageLoaded}
-                      startColor="#1a1a1a"
-                      endColor="#2a2a2a"
-                      borderRadius="full"
-                      boxSize={["200px", "280px", "350px", "400px"]}
-                      fadeDuration={0.3}
-                    >
-                      <Avatar
-                        src={aboutData?.profileImage}
-                        boxSize={["200px", "280px", "350px", "400px"]}
-                        border="4px solid #333333"
-                        name={aboutData?.name || "John Michael T. Escarlan"}
-                        onLoad={handleImageLoad}
-                        onError={handleImageError}
-                        opacity={imageLoaded ? 1 : 0}
-                        transition="opacity 0.3s ease-in-out"
-                        bg="#1a1a1a"
-                      />
-                    </Skeleton>
-                  </Box>
                 </Box>
               </Flex>
             </Box>
