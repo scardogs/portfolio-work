@@ -874,7 +874,16 @@ const PortfolioTab = () => {
                             letterSpacing="0.5px"
                           >
                             {project.projectDate
-                              ? project.projectDate.toUpperCase()
+                              ? isNaN(Date.parse(project.projectDate))
+                                ? project.projectDate.toUpperCase()
+                                : new Date(project.projectDate).toLocaleDateString(
+                                  "en-US",
+                                  {
+                                    month: "long",
+                                    year: "numeric",
+                                    day: "numeric"
+                                  }
+                                ).toUpperCase()
                               : new Date(project.createdAt).toLocaleDateString(
                                 "en-US",
                                 {

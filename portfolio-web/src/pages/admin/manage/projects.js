@@ -139,7 +139,12 @@ export default function ManageProjects() {
       github: project.github,
       img: project.img,
       website: project.website || "",
-      projectDate: project.projectDate || "",
+      projectDate: project.projectDate && !isNaN(Date.parse(project.projectDate))
+        ? (() => {
+          const d = new Date(project.projectDate);
+          return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        })()
+        : "",
       order: project.order || 0,
     });
     setEditingId(project._id);
@@ -518,9 +523,9 @@ export default function ManageProjects() {
                   </FormLabel>
                   <Input
                     name="projectDate"
+                    type="datetime-local"
                     value={formData.projectDate}
                     onChange={handleChange}
-                    placeholder="e.g., January 2024"
                     bg="#1a1a1a"
                     border="1px solid #333333"
                     color="#e0e0e0"
@@ -529,6 +534,12 @@ export default function ManageProjects() {
                     _focus={{
                       borderColor: "#888888",
                       boxShadow: "0 0 0 1px #888888",
+                    }}
+                    sx={{
+                      "&::-webkit-calendar-picker-indicator": {
+                        filter: "invert(1)",
+                        cursor: "pointer",
+                      },
                     }}
                   />
                 </FormControl>
