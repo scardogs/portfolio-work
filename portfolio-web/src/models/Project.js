@@ -36,6 +36,10 @@ const ProjectSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    projectDate: {
+      type: String,
+      default: "", // e.g., "January 2024"
+    },
     createdAt: {
       type: Date,
       default: Date.now,

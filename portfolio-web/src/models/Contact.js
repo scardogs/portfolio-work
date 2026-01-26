@@ -23,6 +23,21 @@ const ContactSchema = new mongoose.Schema(
       required: [true, "Please provide a mobile number"],
       trim: true,
     },
+    location: {
+      type: String,
+      default: "Cebu City, PH",
+      trim: true,
+    },
+    githubLink: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    linkedinLink: {
+      type: String,
+      default: "",
+      trim: true,
+    },
     updatedAt: {
       type: Date,
       default: Date.now,

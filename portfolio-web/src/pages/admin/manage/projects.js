@@ -12,12 +12,6 @@ import {
   Container,
   Flex,
   IconButton,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -27,6 +21,8 @@ import {
   useDisclosure,
   HStack,
   Text,
+  SimpleGrid,
+  Divider,
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import { ArrowBackIcon, EditIcon, DeleteIcon, AddIcon } from "@chakra-ui/icons";
@@ -40,6 +36,7 @@ export default function ManageProjects() {
     github: "",
     img: "",
     website: "",
+    projectDate: "",
     order: 0,
   });
   const [editingId, setEditingId] = useState(null);
@@ -142,6 +139,7 @@ export default function ManageProjects() {
       github: project.github,
       img: project.img,
       website: project.website || "",
+      projectDate: project.projectDate || "",
       order: project.order || 0,
     });
     setEditingId(project._id);
@@ -192,6 +190,7 @@ export default function ManageProjects() {
       github: "",
       img: "",
       website: "",
+      projectDate: "",
       order: 0,
     });
     setEditingId(null);
@@ -212,7 +211,7 @@ export default function ManageProjects() {
         alignItems="center"
         justifyContent="center"
       >
-        <Heading color="#e2b714">Loading...</Heading>
+        <Heading fontWeight="300">Loading...</Heading>
       </Box>
     );
   }
@@ -230,140 +229,244 @@ export default function ManageProjects() {
           <Flex align="center">
             <IconButton
               icon={<ArrowBackIcon />}
-              colorScheme="yellow"
+              colorScheme="gray"
               variant="outline"
               mr={4}
               onClick={() => router.push("/admin/dashboard")}
               aria-label="Back to dashboard"
+              borderColor="#333333"
+              color="#888888"
+              _hover={{ color: "#e0e0e0", borderColor: "#555555" }}
             />
             <Heading
               as="h1"
               size="xl"
               color="#e0e0e0"
               fontFamily="system-ui, -apple-system, sans-serif"
-              letterSpacing="2px"
+              fontWeight="300"
+              letterSpacing="4px"
+              textTransform="uppercase"
+              fontSize="24px"
             >
               Manage Projects
             </Heading>
           </Flex>
           <Button
             leftIcon={<AddIcon />}
-            colorScheme="yellow"
+            bg="#1a1a1a"
+            color="#e0e0e0"
+            border="1px solid #333333"
+            borderRadius="0"
+            fontWeight="300"
+            letterSpacing="2px"
+            textTransform="uppercase"
             onClick={onOpen}
-            fontFamily="system-ui, -apple-system, sans-serif"
+            _hover={{
+              bg: "#2a2a2a",
+              borderColor: "#555555",
+            }}
           >
             Add Project
           </Button>
         </Flex>
 
-        <Box
-          bg="#141414"
-          p={8}
-          borderRadius="0"
-          border="1px solid #333333"
-          overflowX="auto"
-        >
+        <Box bg="#141414" p={8} borderRadius="0" border="1px solid #333333">
           {projects.length === 0 ? (
-            <Text color="#f7d794" textAlign="center">
+            <Text color="#888888" textAlign="center">
               No projects found. Click "Add Project" to create one.
             </Text>
           ) : (
-            <Table variant="simple">
-              <Thead>
-                <Tr>
-                  <Th color="#e2b714">Title</Th>
-                  <Th color="#e2b714">GitHub</Th>
-                  <Th color="#e2b714">Website</Th>
-                  <Th color="#e2b714">Order</Th>
-                  <Th color="#e2b714">Actions</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {projects.map((project) => (
-                  <Tr key={project._id}>
-                    <Td color="#fff">{project.title}</Td>
-                    <Td color="#f7d794" fontSize="sm">
-                      {project.github}
-                    </Td>
-                    <Td color="#f7d794" fontSize="sm">
-                      {project.website || "N/A"}
-                    </Td>
-                    <Td color="#fff">{project.order}</Td>
-                    <Td>
-                      <HStack spacing={2}>
-                        <IconButton
-                          icon={<EditIcon />}
-                          colorScheme="yellow"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(project)}
-                          aria-label="Edit project"
-                        />
-                        <IconButton
-                          icon={<DeleteIcon />}
-                          colorScheme="red"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDelete(project._id)}
-                          aria-label="Delete project"
-                        />
-                      </HStack>
-                    </Td>
-                  </Tr>
-                ))}
-              </Tbody>
-            </Table>
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+              {projects.map((project) => (
+                <Box
+                  key={project._id}
+                  bg="#1a1a1a"
+                  borderRadius="0"
+                  border="1px solid #333333"
+                  overflow="hidden"
+                  _hover={{
+                    borderColor: "#555555",
+                    transform: "translateY(-4px)",
+                  }}
+                  transition="all 0.3s"
+                >
+                  <Box h="200px" bg="#0a0a0a" position="relative">
+                    <img
+                      src={project.img}
+                      alt={project.title}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "contain",
+                        padding: "20px",
+                        filter: "grayscale(100%)",
+                      }}
+                    />
+                  </Box>
+                  <Box p={6}>
+                    <Heading
+                      fontSize="18px"
+                      color="#e0e0e0"
+                      mb={2}
+                      fontWeight="600"
+                      noOfLines={1}
+                    >
+                      {project.title}
+                    </Heading>
+                    <Text color="#888888" fontSize="13px" mb={4} noOfLines={3}>
+                      {project.description}
+                    </Text>
+                    <HStack spacing={2} mb={4}>
+                      <Text
+                        fontSize="11px"
+                        color="#666666"
+                        fontWeight="400"
+                        letterSpacing="1px"
+                        textTransform="uppercase"
+                      >
+                        Order: {project.order}
+                      </Text>
+                      {project.projectDate && (
+                        <>
+                          <Text color="#333333">|</Text>
+                          <Text
+                            fontSize="11px"
+                            color="#666666"
+                            fontWeight="400"
+                            letterSpacing="1px"
+                            textTransform="uppercase"
+                          >
+                            {project.projectDate}
+                          </Text>
+                        </>
+                      )}
+                    </HStack>
+                    <Divider borderColor="#333333" mb={4} />
+                    <HStack spacing={2} justify="flex-end">
+                      <IconButton
+                        icon={<EditIcon />}
+                        aria-label="Edit project"
+                        size="sm"
+                        variant="ghost"
+                        color="#888888"
+                        _hover={{ color: "#e0e0e0", bg: "#2a2a2a" }}
+                        onClick={() => handleEdit(project)}
+                      />
+                      <IconButton
+                        icon={<DeleteIcon />}
+                        aria-label="Delete project"
+                        size="sm"
+                        variant="ghost"
+                        color="#ff4444"
+                        _hover={{ color: "#ff6666", bg: "#2a2a2a" }}
+                        onClick={() => handleDelete(project._id)}
+                      />
+                    </HStack>
+                  </Box>
+                </Box>
+              ))}
+            </SimpleGrid>
           )}
         </Box>
       </Container>
 
       <Modal isOpen={isOpen} onClose={handleCloseModal} size="xl">
-        <ModalOverlay />
-        <ModalContent bg="#272727" border="2px solid #e2b714">
+        <ModalOverlay bg="blackAlpha.800" />
+        <ModalContent
+          bg="#141414"
+          color="#e0e0e0"
+          border="1px solid #333333"
+          borderRadius="0"
+        >
           <ModalHeader
-            color="#e0e0e0"
             fontFamily="system-ui, -apple-system, sans-serif"
+            fontWeight="300"
+            letterSpacing="2px"
+            textTransform="uppercase"
+            fontSize="14px"
           >
-            {editingId ? "Edit Project" : "Add Project"}
+            {editingId ? "Edit" : "Add"} Project
           </ModalHeader>
-          <ModalCloseButton color="#e2b714" />
+          <ModalCloseButton color="#888888" _hover={{ color: "#e0e0e0" }} />
           <ModalBody pb={6}>
             <form onSubmit={handleSubmit}>
               <VStack spacing={4}>
                 <FormControl isRequired>
-                  <FormLabel color="#f7d794">Title</FormLabel>
+                  <FormLabel
+                    color="#888888"
+                    fontSize="11px"
+                    fontWeight="400"
+                    letterSpacing="2px"
+                    textTransform="uppercase"
+                  >
+                    Title
+                  </FormLabel>
                   <Input
                     name="title"
                     value={formData.title}
                     onChange={handleChange}
-                    bg="#232323"
-                    border="1px solid #e2b714"
-                    color="#fff"
+                    bg="#1a1a1a"
+                    border="1px solid #333333"
+                    color="#e0e0e0"
+                    borderRadius="0"
+                    _hover={{ borderColor: "#555555" }}
+                    _focus={{
+                      borderColor: "#888888",
+                      boxShadow: "0 0 0 1px #888888",
+                    }}
                   />
                 </FormControl>
 
                 <FormControl isRequired>
-                  <FormLabel color="#f7d794">Description</FormLabel>
+                  <FormLabel
+                    color="#888888"
+                    fontSize="11px"
+                    fontWeight="400"
+                    letterSpacing="2px"
+                    textTransform="uppercase"
+                  >
+                    Description
+                  </FormLabel>
                   <Textarea
                     name="description"
                     value={formData.description}
                     onChange={handleChange}
                     rows={6}
-                    bg="#232323"
-                    border="1px solid #e2b714"
-                    color="#fff"
+                    bg="#1a1a1a"
+                    border="1px solid #333333"
+                    color="#e0e0e0"
+                    borderRadius="0"
+                    _hover={{ borderColor: "#555555" }}
+                    _focus={{
+                      borderColor: "#888888",
+                      boxShadow: "0 0 0 1px #888888",
+                    }}
                   />
                 </FormControl>
 
                 <FormControl isRequired>
-                  <FormLabel color="#f7d794">GitHub Link</FormLabel>
+                  <FormLabel
+                    color="#888888"
+                    fontSize="11px"
+                    fontWeight="400"
+                    letterSpacing="2px"
+                    textTransform="uppercase"
+                  >
+                    GitHub Link
+                  </FormLabel>
                   <Input
                     name="github"
                     value={formData.github}
                     onChange={handleChange}
-                    bg="#232323"
-                    border="1px solid #e2b714"
-                    color="#fff"
+                    bg="#1a1a1a"
+                    border="1px solid #333333"
+                    color="#e0e0e0"
+                    borderRadius="0"
+                    _hover={{ borderColor: "#555555" }}
+                    _focus={{
+                      borderColor: "#888888",
+                      boxShadow: "0 0 0 1px #888888",
+                    }}
                   />
                 </FormControl>
 
@@ -378,51 +481,110 @@ export default function ManageProjects() {
                 </FormControl>
 
                 <FormControl>
-                  <FormLabel color="#f7d794">Website Link (optional)</FormLabel>
+                  <FormLabel
+                    color="#888888"
+                    fontSize="11px"
+                    fontWeight="400"
+                    letterSpacing="2px"
+                    textTransform="uppercase"
+                  >
+                    Website Link (optional)
+                  </FormLabel>
                   <Input
                     name="website"
                     value={formData.website}
                     onChange={handleChange}
-                    bg="#232323"
-                    border="1px solid #e2b714"
-                    color="#fff"
+                    bg="#1a1a1a"
+                    border="1px solid #333333"
+                    color="#e0e0e0"
+                    borderRadius="0"
+                    _hover={{ borderColor: "#555555" }}
+                    _focus={{
+                      borderColor: "#888888",
+                      boxShadow: "0 0 0 1px #888888",
+                    }}
                   />
                 </FormControl>
 
                 <FormControl>
-                  <FormLabel color="#f7d794">Order</FormLabel>
+                  <FormLabel
+                    color="#888888"
+                    fontSize="11px"
+                    fontWeight="400"
+                    letterSpacing="2px"
+                    textTransform="uppercase"
+                  >
+                    Project Date (optional)
+                  </FormLabel>
+                  <Input
+                    name="projectDate"
+                    value={formData.projectDate}
+                    onChange={handleChange}
+                    placeholder="e.g., January 2024"
+                    bg="#1a1a1a"
+                    border="1px solid #333333"
+                    color="#e0e0e0"
+                    borderRadius="0"
+                    _hover={{ borderColor: "#555555" }}
+                    _focus={{
+                      borderColor: "#888888",
+                      boxShadow: "0 0 0 1px #888888",
+                    }}
+                  />
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel
+                    color="#888888"
+                    fontSize="11px"
+                    fontWeight="400"
+                    letterSpacing="2px"
+                    textTransform="uppercase"
+                  >
+                    Order
+                  </FormLabel>
                   <Input
                     name="order"
                     type="number"
                     value={formData.order}
                     onChange={handleChange}
-                    bg="#232323"
-                    border="1px solid #e2b714"
-                    color="#fff"
+                    bg="#1a1a1a"
+                    border="1px solid #333333"
+                    color="#e0e0e0"
+                    borderRadius="0"
+                    _hover={{ borderColor: "#555555" }}
+                    _focus={{
+                      borderColor: "#888888",
+                      boxShadow: "0 0 0 1px #888888",
+                    }}
                   />
                 </FormControl>
 
-                <HStack spacing={4} w="full" pt={4}>
-                  <Button
-                    type="submit"
-                    colorScheme="yellow"
-                    flex={1}
-                    isLoading={loading}
-                    fontFamily="system-ui, -apple-system, sans-serif"
-                  >
-                    {editingId ? "Update" : "Create"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    borderColor="#e2b714"
-                    color="#e0e0e0"
-                    flex={1}
-                    onClick={handleCloseModal}
-                    fontFamily="system-ui, -apple-system, sans-serif"
-                  >
-                    Cancel
-                  </Button>
-                </HStack>
+                <Button
+                  type="submit"
+                  w="full"
+                  mt={4}
+                  isLoading={loading}
+                  bg="#1a1a1a"
+                  color="#e0e0e0"
+                  border="1px solid #333333"
+                  borderRadius="0"
+                  h="50px"
+                  fontWeight="300"
+                  letterSpacing="2px"
+                  textTransform="uppercase"
+                  fontSize="14px"
+                  _hover={{
+                    bg: "#2a2a2a",
+                    borderColor: "#555555",
+                    transform: "translateY(-1px)",
+                  }}
+                  _loading={{
+                    bg: "#1a1a1a",
+                  }}
+                >
+                  {editingId ? "Update" : "Create"} Project
+                </Button>
               </VStack>
             </form>
           </ModalBody>

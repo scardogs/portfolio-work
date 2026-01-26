@@ -31,6 +31,9 @@ async function getContact(req, res) {
         facebookUsername: "@johnmichael.escarlan",
         email: "johnmichael.escarlan14@gmail.com",
         mobile: "09946760366",
+        location: "Cebu City, PH",
+        githubLink: "https://github.com",
+        linkedinLink: "https://linkedin.com",
       });
     }
 

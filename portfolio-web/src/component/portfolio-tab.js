@@ -14,13 +14,29 @@ import {
   VStack,
   Flex,
   useToast,
+  useDisclosure,
+  Drawer,
+  DrawerBody,
+  DrawerHeader,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerCloseButton,
+  SimpleGrid,
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
-import { FaUserShield, FaGithub, FaLinkedin } from "react-icons/fa";
+import { FaUserShield, FaGithub, FaLinkedin, FaBars } from "react-icons/fa";
 
-const MotionBox = motion(Box);
+const MotionBox = motion.create(Box);
 const MotionDiv = motion.div;
+
+const ensureAbsoluteUrl = (url) => {
+  if (!url) return "";
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("mailto:") || url.startsWith("tel:")) {
+    return url;
+  }
+  return `https://${url}`;
+};
 
 const PortfolioTab = () => {
   const router = useRouter();
@@ -29,8 +45,10 @@ const PortfolioTab = () => {
   const [skills, setSkills] = useState([]);
   const [contactData, setContactData] = useState(null);
   const [workExperiences, setWorkExperiences] = useState([]);
+  const [years, setYears] = useState([]);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -89,12 +107,14 @@ const PortfolioTab = () => {
           skillsRes,
           contactRes,
           workExperienceRes,
+          yearsRes,
         ] = await Promise.all([
           fetch("/api/about"),
           fetch("/api/projects"),
           fetch("/api/skills"),
           fetch("/api/contact"),
           fetch("/api/work-experience"),
+          fetch("/api/years"),
         ]);
 
         const aboutData = await aboutRes.json();
@@ -102,6 +122,7 @@ const PortfolioTab = () => {
         const skillsData = await skillsRes.json();
         const contactData = await contactRes.json();
         const workExperienceData = await workExperienceRes.json();
+        const yearsData = await yearsRes.json();
 
         if (aboutData.success) {
           console.log("About data from API:", aboutData.data);
@@ -112,6 +133,7 @@ const PortfolioTab = () => {
         if (contactData.success) setContactData(contactData.data);
         if (workExperienceData.success)
           setWorkExperiences(workExperienceData.data);
+        if (yearsData.success) setYears(yearsData.data);
       } catch (error) {
         console.error("Failed to fetch data:", error);
       }
@@ -242,25 +264,25 @@ const PortfolioTab = () => {
                 >
                   {aboutData?.name
                     ? aboutData.name.split("").map((char, i) => (
-                        <motion.span
-                          key={i}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ duration: 0.08, delay: 0.3 + i * 0.03 }}
-                        >
-                          {char === " " ? "\u00A0" : char}
-                        </motion.span>
-                      ))
+                      <motion.span
+                        key={i}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.08, delay: 0.3 + i * 0.03 }}
+                      >
+                        {char === " " ? "\u00A0" : char}
+                      </motion.span>
+                    ))
                     : "John Michael T. Escarlan".split("").map((char, i) => (
-                        <motion.span
-                          key={i}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ duration: 0.08, delay: 0.3 + i * 0.03 }}
-                        >
-                          {char === " " ? "\u00A0" : char}
-                        </motion.span>
-                      ))}
+                      <motion.span
+                        key={i}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.08, delay: 0.3 + i * 0.03 }}
+                      >
+                        {char === " " ? "\u00A0" : char}
+                      </motion.span>
+                    ))}
                 </Text>
               </Box>
 
@@ -339,7 +361,7 @@ const PortfolioTab = () => {
               justify="space-between"
               align="center"
             >
-              <HStack spacing={8}>
+              <HStack spacing={8} display={{ base: "none", md: "flex" }}>
                 <Button
                   variant="link"
                   color="#888888"
@@ -387,15 +409,78 @@ const PortfolioTab = () => {
                 </Button>
               </HStack>
 
-              <IconButton
-                icon={<FaUserShield />}
-                aria-label="Admin Login"
-                onClick={() => router.push("/admin/login")}
-                variant="ghost"
-                size="sm"
-                color="#888888"
-                _hover={{ color: "#e0e0e0", bg: "#1a1a1a" }}
-              />
+              <HStack spacing={4}>
+                <IconButton
+                  display={{ base: "flex", md: "none" }}
+                  icon={<FaBars />}
+                  aria-label="Open Menu"
+                  onClick={onOpen}
+                  variant="ghost"
+                  color="#888888"
+                  _hover={{ color: "#e0e0e0", bg: "#1a1a1a" }}
+                />
+                <IconButton
+                  icon={<FaUserShield />}
+                  aria-label="Admin Login"
+                  onClick={() => router.push("/admin/login")}
+                  variant="ghost"
+                  size="sm"
+                  color="#888888"
+                  _hover={{ color: "#e0e0e0", bg: "#1a1a1a" }}
+                />
+              </HStack>
+
+              {/* Mobile Menu Drawer */}
+              <Drawer isOpen={isOpen} placement="right" onClose={onClose}>
+                <DrawerOverlay bg="blackAlpha.800" />
+                <DrawerContent bg="#141414" color="#e0e0e0" borderLeft="1px solid #333333">
+                  <DrawerCloseButton />
+                  <DrawerHeader borderBottomWidth="1px" borderColor="#333333" fontWeight="300" letterSpacing="2px">MENU</DrawerHeader>
+                  <DrawerBody py={8}>
+                    <VStack spacing={8} align="start">
+                      <Button
+                        variant="link"
+                        color="#888888"
+                        fontSize="18px"
+                        fontWeight="300"
+                        letterSpacing="1px"
+                        onClick={() => {
+                          onClose();
+                          document.getElementById("about-section")?.scrollIntoView({ behavior: "smooth" });
+                        }}
+                      >
+                        ABOUT
+                      </Button>
+                      <Button
+                        variant="link"
+                        color="#888888"
+                        fontSize="18px"
+                        fontWeight="300"
+                        letterSpacing="1px"
+                        onClick={() => {
+                          onClose();
+                          document.getElementById("projects-section")?.scrollIntoView({ behavior: "smooth" });
+                        }}
+                      >
+                        WORK
+                      </Button>
+                      <Button
+                        variant="link"
+                        color="#888888"
+                        fontSize="18px"
+                        fontWeight="300"
+                        letterSpacing="1px"
+                        onClick={() => {
+                          onClose();
+                          document.getElementById("contact-section")?.scrollIntoView({ behavior: "smooth" });
+                        }}
+                      >
+                        CONTACT
+                      </Button>
+                    </VStack>
+                  </DrawerBody>
+                </DrawerContent>
+              </Drawer>
             </Flex>
 
             {/* Hero Section - Full Screen */}
@@ -503,7 +588,7 @@ const PortfolioTab = () => {
                           transform: "translateY(-3px)",
                         }}
                         onClick={() =>
-                          window.open(aboutData.githubLink, "_blank")
+                          window.open(ensureAbsoluteUrl(aboutData.githubLink), "_blank")
                         }
                       />
                     )}
@@ -519,7 +604,7 @@ const PortfolioTab = () => {
                           transform: "translateY(-3px)",
                         }}
                         onClick={() =>
-                          window.open(aboutData.linkedinLink, "_blank")
+                          window.open(ensureAbsoluteUrl(aboutData.linkedinLink), "_blank")
                         }
                       />
                     )}
@@ -535,7 +620,7 @@ const PortfolioTab = () => {
                           transform: "translateY(-3px)",
                         }}
                         onClick={() =>
-                          window.open(aboutData.portfolioLink, "_blank")
+                          window.open(ensureAbsoluteUrl(aboutData.portfolioLink), "_blank")
                         }
                       />
                     )}
@@ -551,9 +636,8 @@ const PortfolioTab = () => {
                           transform: "translateY(-3px)",
                         }}
                         onClick={() =>
-                          (window.location.href = `mailto:${
-                            contactData?.email ||
-                            "johnmichael.escarlan14@gmail.com"
+                        (window.location.href = `mailto:${contactData?.email ||
+                          "johnmichael.escarlan14@gmail.com"
                           }`)
                         }
                       />
@@ -591,15 +675,14 @@ const PortfolioTab = () => {
                   My Professional Journey and Expertise
                 </Text>
 
-                <HStack spacing={8} align="stretch" flexWrap="wrap" mb={8}>
+                <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={8} mb={8} align="stretch">
                   {/* Quote Box */}
                   <Box
-                    flex="1"
-                    minW="300px"
-                    maxW="400px"
                     bg="#1a1a1a"
                     p={6}
                     border="1px solid #333333"
+                    display="flex"
+                    alignItems="center"
                   >
                     <Text
                       color="#e0e0e0"
@@ -614,64 +697,61 @@ const PortfolioTab = () => {
                     </Text>
                   </Box>
 
-                  {/* Education and Experience */}
-                  <VStack spacing={4} flex="1" minW="300px" align="stretch">
-                    {/* Education Box */}
-                    <Box border="1px solid #333333" p={6} bg="#141414">
-                      <Text
-                        fontSize={[16, 17]}
-                        fontWeight="600"
-                        color="#e0e0e0"
-                        mb={2}
-                      >
-                        {aboutData?.education ||
-                          "Bachelor of Science in Information Technology"}
-                      </Text>
-                      <Text
-                        fontSize={[13, 14]}
-                        fontWeight="400"
-                        color="#888888"
-                        mb={1}
-                      >
-                        {aboutData?.education || "University"}
-                      </Text>
-                      <Text
-                        fontSize={[12, 13]}
-                        fontWeight="300"
-                        color="#666666"
-                      >
-                        Graduated
-                      </Text>
-                    </Box>
+                  {/* Education Box */}
+                  <Box border="1px solid #333333" p={6} bg="#141414">
+                    <Text
+                      fontSize={[16, 17]}
+                      fontWeight="600"
+                      color="#e0e0e0"
+                      mb={2}
+                    >
+                      {aboutData?.education ||
+                        "Bachelor of Science in Information Technology"}
+                    </Text>
+                    <Text
+                      fontSize={[13, 14]}
+                      fontWeight="400"
+                      color="#888888"
+                      mb={1}
+                    >
+                      {aboutData?.education || "University"}
+                    </Text>
+                    <Text
+                      fontSize={[12, 13]}
+                      fontWeight="300"
+                      color="#666666"
+                    >
+                      Graduated
+                    </Text>
+                  </Box>
 
-                    {/* Experience Box */}
-                    <Box border="1px solid #333333" p={6} bg="#141414">
-                      <Text
-                        fontSize={[16, 17]}
-                        fontWeight="600"
-                        color="#e0e0e0"
-                        mb={2}
-                      >
-                        {aboutData?.currentJobTitle || "Software Developer"}
-                      </Text>
-                      <Text
-                        fontSize={[13, 14]}
-                        fontWeight="400"
-                        color="#888888"
-                        mb={1}
-                      >
-                        {aboutData?.currentCompany || "Current Company"}
-                      </Text>
-                      <Text
-                        fontSize={[12, 13]}
-                        fontWeight="300"
-                        color="#666666"
-                      >
-                        Present
-                      </Text>
-                    </Box>
-                  </VStack>
-                </HStack>
+                  {/* Experience Box */}
+                  <Box border="1px solid #333333" p={6} bg="#141414">
+                    <Text
+                      fontSize={[16, 17]}
+                      fontWeight="600"
+                      color="#e0e0e0"
+                      mb={2}
+                    >
+                      {aboutData?.currentJobTitle || "Software Developer"}
+                    </Text>
+                    <Text
+                      fontSize={[13, 14]}
+                      fontWeight="400"
+                      color="#888888"
+                      mb={1}
+                    >
+                      {aboutData?.currentCompany || "Current Company"}
+                    </Text>
+                    <Text
+                      fontSize={[12, 13]}
+                      fontWeight="300"
+                      color="#666666"
+                    >
+                      Present
+                    </Text>
+                  </Box>
+                </SimpleGrid>
 
                 {/* Tech Stack */}
                 <Text
@@ -761,8 +841,12 @@ const PortfolioTab = () => {
                 <VStack spacing={12} align="stretch">
                   {projects.slice(0, 5).map((project, index) => (
                     <Box key={project._id || index}>
-                      <HStack spacing={8} align="start" flexWrap="wrap">
-                        <Box flex="1" minW="400px">
+                      <Flex
+                        direction={{ base: "column-reverse", md: "row" }}
+                        gap={8}
+                        align="start"
+                      >
+                        <Box flex="1" w="100%">
                           <Text
                             fontSize={[18, 20, 22]}
                             fontWeight="600"
@@ -789,12 +873,15 @@ const PortfolioTab = () => {
                             mb={4}
                             letterSpacing="0.5px"
                           >
-                            {new Date()
-                              .toLocaleDateString("en-US", {
-                                month: "long",
-                                year: "numeric",
-                              })
-                              .toUpperCase()}
+                            {project.projectDate
+                              ? project.projectDate.toUpperCase()
+                              : new Date(project.createdAt).toLocaleDateString(
+                                "en-US",
+                                {
+                                  month: "long",
+                                  year: "numeric",
+                                }
+                              ).toUpperCase()}
                           </Text>
 
                           {/* Tech Stack */}
@@ -854,7 +941,7 @@ const PortfolioTab = () => {
                               textTransform="uppercase"
                               _hover={{ color: "#e0e0e0" }}
                               onClick={() =>
-                                window.open(project.github, "_blank")
+                                window.open(ensureAbsoluteUrl(project.github), "_blank")
                               }
                             >
                               GitHub
@@ -869,7 +956,7 @@ const PortfolioTab = () => {
                                 textTransform="uppercase"
                                 _hover={{ color: "#e0e0e0" }}
                                 onClick={() =>
-                                  window.open(project.website, "_blank")
+                                  window.open(ensureAbsoluteUrl(project.website), "_blank")
                                 }
                               >
                                 Preview
@@ -893,10 +980,88 @@ const PortfolioTab = () => {
                             }}
                           />
                         </Box>
-                      </HStack>
+                      </Flex>
                     </Box>
                   ))}
                 </VStack>
+              </Box>
+
+              <Box my={[12, 16, 20]}>
+                <Divider borderColor="#333333" borderWidth="1px" />
+              </Box>
+
+              {/* Milestones Section */}
+              <Box id="milestones-section" mb={[12, 16, 20]}>
+                <Heading
+                  as="h2"
+                  fontSize={[32, 36, 40]}
+                  fontWeight="600"
+                  color="#e0e0e0"
+                  mb={2}
+                  letterSpacing="-1px"
+                >
+                  Key Milestones
+                </Heading>
+                <Text
+                  fontSize={[11, 12, 13]}
+                  fontWeight="400"
+                  color="#888888"
+                  mb={8}
+                  letterSpacing="2px"
+                  textTransform="uppercase"
+                >
+                  Significant Years and Achievements
+                </Text>
+
+                <Flex
+                  gap={4}
+                  overflowX="auto"
+                  pb={4}
+                  css={{
+                    "&::-webkit-scrollbar": {
+                      height: "4px",
+                    },
+                    "&::-webkit-scrollbar-track": {
+                      background: "#0a0a0a",
+                    },
+                    "&::-webkit-scrollbar-thumb": {
+                      background: "#333333",
+                    },
+                  }}
+                >
+                  {years.map((y) => (
+                    <Box
+                      key={y._id}
+                      minW={["200px", "240px"]}
+                      bg="#141414"
+                      p={6}
+                      border="1px solid #333333"
+                      _hover={{
+                        borderColor: "#555555",
+                        transform: "translateY(-4px)",
+                      }}
+                      transition="all 0.3s"
+                    >
+                      <Text
+                        fontSize="28px"
+                        fontWeight="700"
+                        color="#e0e0e0"
+                        mb={2}
+                        letterSpacing="-1px"
+                      >
+                        {y.year}
+                      </Text>
+                      <Text
+                        fontSize="13px"
+                        color="#888888"
+                        fontWeight="300"
+                        lineHeight="1.5"
+                      >
+                        {y.label}
+                      </Text>
+                    </Box>
+                  ))}
+                </Flex>
               </Box>
 
               <Box my={[12, 16, 20]}>
@@ -1030,9 +1195,9 @@ const PortfolioTab = () => {
                   Want to Connect?
                 </Text>
 
-                <HStack spacing={12} align="start" flexWrap="wrap">
+                <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={12} align="start">
                   {/* Left column - Contact Form */}
-                  <Box flex="1" minW="300px">
+                  <Box>
                     <form onSubmit={handleSubmit}>
                       <VStack spacing={4} align="stretch">
                         <Box>
@@ -1162,7 +1327,7 @@ const PortfolioTab = () => {
                   </Box>
 
                   {/* Right column - Contact Info */}
-                  <Box flex="1" minW="300px">
+                  <Box>
                     <VStack spacing={6} align="start">
                       <HStack spacing={4}>
                         <Box
@@ -1218,7 +1383,7 @@ const PortfolioTab = () => {
                           color="#e0e0e0"
                           fontWeight="300"
                         >
-                          Cebu City, Central Visayas, PH
+                          {contactData?.location || "Cebu City, Central Visayas, PH"}
                         </Text>
                       </HStack>
 
@@ -1231,7 +1396,7 @@ const PortfolioTab = () => {
                           _hover={{ color: "#e0e0e0" }}
                           leftIcon={<FaGithub />}
                           onClick={() =>
-                            window.open("https://github.com", "_blank")
+                            window.open(ensureAbsoluteUrl(contactData?.githubLink || "https://github.com"), "_blank")
                           }
                         >
                           View Profile
@@ -1244,7 +1409,7 @@ const PortfolioTab = () => {
                           _hover={{ color: "#e0e0e0" }}
                           leftIcon={<FaLinkedin />}
                           onClick={() =>
-                            window.open("https://linkedin.com", "_blank")
+                            window.open(ensureAbsoluteUrl(contactData?.linkedinLink || "https://linkedin.com"), "_blank")
                           }
                         >
                           Connect
@@ -1252,7 +1417,7 @@ const PortfolioTab = () => {
                       </HStack>
                     </VStack>
                   </Box>
-                </HStack>
+                </SimpleGrid>
               </Box>
 
               {/* Footer */}
@@ -1269,7 +1434,7 @@ const PortfolioTab = () => {
               </Box>
             </Box>
           </Box>
-        </MotionDiv>
+        </MotionDiv >
       )}
     </>
   );

@@ -21,6 +21,9 @@ export default function ManageContact() {
     facebookUsername: "",
     email: "",
     mobile: "",
+    location: "",
+    githubLink: "",
+    linkedinLink: "",
   });
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
@@ -48,6 +51,9 @@ export default function ManageContact() {
           facebookUsername: data.data.facebookUsername || "",
           email: data.data.email || "",
           mobile: data.data.mobile || "",
+          location: data.data.location || "",
+          githubLink: data.data.githubLink || "",
+          linkedinLink: data.data.linkedinLink || "",
         });
       }
     } catch (error) {
@@ -124,7 +130,7 @@ export default function ManageContact() {
         alignItems="center"
         justifyContent="center"
       >
-        <Heading color="#e2b714">Loading...</Heading>
+        <Heading fontWeight="300">Loading...</Heading>
       </Box>
     );
   }
@@ -262,6 +268,87 @@ export default function ManageContact() {
                   name="mobile"
                   value={formData.mobile}
                   onChange={handleChange}
+                  bg="#1a1a1a"
+                  border="1px solid #333333"
+                  color="#e0e0e0"
+                  borderRadius="0"
+                  _hover={{ borderColor: "#555555" }}
+                  _focus={{
+                    borderColor: "#888888",
+                    boxShadow: "0 0 0 1px #888888",
+                  }}
+                />
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel
+                  color="#888888"
+                  fontSize="11px"
+                  fontWeight="400"
+                  letterSpacing="2px"
+                  textTransform="uppercase"
+                >
+                  Location
+                </FormLabel>
+                <Input
+                  name="location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  placeholder="e.g., Cebu City, PH"
+                  bg="#1a1a1a"
+                  border="1px solid #333333"
+                  color="#e0e0e0"
+                  borderRadius="0"
+                  _hover={{ borderColor: "#555555" }}
+                  _focus={{
+                    borderColor: "#888888",
+                    boxShadow: "0 0 0 1px #888888",
+                  }}
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel
+                  color="#888888"
+                  fontSize="11px"
+                  fontWeight="400"
+                  letterSpacing="2px"
+                  textTransform="uppercase"
+                >
+                  GitHub Link
+                </FormLabel>
+                <Input
+                  name="githubLink"
+                  value={formData.githubLink}
+                  onChange={handleChange}
+                  placeholder="https://github.com/username"
+                  bg="#1a1a1a"
+                  border="1px solid #333333"
+                  color="#e0e0e0"
+                  borderRadius="0"
+                  _hover={{ borderColor: "#555555" }}
+                  _focus={{
+                    borderColor: "#888888",
+                    boxShadow: "0 0 0 1px #888888",
+                  }}
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel
+                  color="#888888"
+                  fontSize="11px"
+                  fontWeight="400"
+                  letterSpacing="2px"
+                  textTransform="uppercase"
+                >
+                  LinkedIn Link
+                </FormLabel>
+                <Input
+                  name="linkedinLink"
+                  value={formData.linkedinLink}
+                  onChange={handleChange}
+                  placeholder="https://linkedin.com/in/username"
                   bg="#1a1a1a"
                   border="1px solid #333333"
                   color="#e0e0e0"

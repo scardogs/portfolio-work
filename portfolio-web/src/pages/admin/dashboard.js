@@ -24,6 +24,7 @@ import {
   FaEye,
   FaHome,
   FaBriefcase,
+  FaCalendarAlt,
 } from "react-icons/fa";
 
 export default function AdminDashboard() {
@@ -75,13 +76,15 @@ export default function AdminDashboard() {
       <Container maxW="container.xl">
         {/* Header */}
         <Flex
+          direction={{ base: "column", md: "row" }}
           justify="space-between"
-          align="center"
+          align={{ base: "start", md: "center" }}
           mb={8}
           bg="#141414"
           p={6}
           borderRadius="0"
           border="1px solid #333333"
+          gap={4}
         >
           <Box>
             <Heading
@@ -100,7 +103,7 @@ export default function AdminDashboard() {
               Welcome back, {user.username}!
             </Text>
           </Box>
-          <HStack spacing={3}>
+          <HStack spacing={3} w={{ base: "full", md: "auto" }} justify={{ base: "space-between", md: "flex-end" }}>
             <Button
               onClick={() => router.push("/")}
               fontFamily="system-ui, -apple-system, sans-serif"
@@ -112,12 +115,13 @@ export default function AdminDashboard() {
               textTransform="uppercase"
               letterSpacing="2px"
               leftIcon={<Icon as={FaEye} />}
+              flex={{ base: 1, md: "none" }}
               _hover={{
                 bg: "#2a2a2a",
                 borderColor: "#555555",
               }}
             >
-              View Portfolio
+              View
             </Button>
             <Button
               onClick={handleLogout}
@@ -130,6 +134,7 @@ export default function AdminDashboard() {
               textTransform="uppercase"
               letterSpacing="2px"
               leftIcon={<Icon as={FaSignOutAlt} />}
+              flex={{ base: 1, md: "none" }}
               _hover={{
                 bg: "#2a2a2a",
                 borderColor: "#555555",
@@ -298,6 +303,37 @@ export default function AdminDashboard() {
             </Heading>
             <Text color="#888888" fontSize="13px" fontWeight="300">
               Add and manage your professional work history and achievements
+            </Text>
+          </Box>
+
+          <Box
+            bg="#141414"
+            p={6}
+            borderRadius="0"
+            border="1px solid #333333"
+            _hover={{
+              borderColor: "#555555",
+              transform: "translateY(-2px)",
+            }}
+            transition="all 0.3s"
+            cursor="pointer"
+            onClick={() => router.push("/admin/manage/years")}
+          >
+            <Icon as={FaCalendarAlt} fontSize="32px" color="#888888" mb={4} />
+            <Heading
+              as="h3"
+              fontSize="16px"
+              color="#e0e0e0"
+              fontFamily="system-ui, -apple-system, sans-serif"
+              fontWeight="300"
+              letterSpacing="2px"
+              textTransform="uppercase"
+              mb={2}
+            >
+              Years / Milestones
+            </Heading>
+            <Text color="#888888" fontSize="13px" fontWeight="300">
+              Manage key years and milestones reflected in your timeline
             </Text>
           </Box>
         </Grid>
