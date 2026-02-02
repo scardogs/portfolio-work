@@ -148,15 +148,53 @@ const PortfolioTab = () => {
     setImageLoaded(true);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    toast({
-      title: "Message sent!",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
-    setFormData({ name: "", company: "", email: "", subject: "", message: "" });
+
+    // Basic validation
+    if (!formData.name || !formData.email || !formData.subject || !formData.message) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast({
+          title: "Message sent!",
+          description: "Thank you for reaching out. I'll get back to you soon.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+        setFormData({ name: "", company: "", email: "", subject: "", message: "" });
+      } else {
+        throw new Error(data.message || "Failed to send message");
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message || "Something went wrong. Please try again later.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   const handleChange = (e) => {

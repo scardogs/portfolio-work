@@ -12,7 +12,7 @@ export default async function handler(req, res) {
   try {
     await dbConnect();
 
-    const { username, password } = req.body;
+    const { username, password, remember } = req.body;
 
     if (!username || !password) {
       return res
@@ -42,7 +42,7 @@ export default async function handler(req, res) {
     }
 
     // Generate token
-    const token = generateToken(admin);
+    const token = generateToken(admin, remember ? "30d" : "7d");
 
     return res.status(200).json({
       success: true,

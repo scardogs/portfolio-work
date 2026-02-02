@@ -12,6 +12,7 @@ import {
   InputGroup,
   InputRightElement,
   IconButton,
+  Checkbox,
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import { ViewIcon, ViewOffIcon, ArrowBackIcon } from "@chakra-ui/icons";
@@ -21,8 +22,16 @@ export default function AdminLogin() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [remember, setRemember] = useState(true);
   const router = useRouter();
   const toast = useToast();
+
+  React.useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      router.push("/admin/dashboard");
+    }
+  }, [router]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -32,7 +41,7 @@ export default function AdminLogin() {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, remember }),
       });
 
       const data = await response.json();
@@ -193,6 +202,19 @@ export default function AdminLogin() {
                 </InputRightElement>
               </InputGroup>
             </FormControl>
+
+            <Box w="full">
+              <Checkbox
+                isChecked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
+                colorScheme="gray"
+                size="md"
+              >
+                <Text color="#888888" fontSize="13px" fontWeight="300">
+                  Remember this device
+                </Text>
+              </Checkbox>
+            </Box>
 
             <Button
               type="submit"

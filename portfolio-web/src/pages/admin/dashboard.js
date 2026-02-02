@@ -286,6 +286,37 @@ export default function AdminDashboard() {
             }}
             transition="all 0.3s"
             cursor="pointer"
+            onClick={() => router.push("/admin/manage/messages")}
+          >
+            <Icon as={FaEnvelope} fontSize="32px" color="#888888" mb={4} />
+            <Heading
+              as="h3"
+              fontSize="16px"
+              color="#e0e0e0"
+              fontFamily="system-ui, -apple-system, sans-serif"
+              fontWeight="300"
+              letterSpacing="2px"
+              textTransform="uppercase"
+              mb={2}
+            >
+              User Messages
+            </Heading>
+            <Text color="#888888" fontSize="13px" fontWeight="300">
+              View and respond to messages sent through the contact form
+            </Text>
+          </Box>
+
+          <Box
+            bg="#141414"
+            p={6}
+            borderRadius="0"
+            border="1px solid #333333"
+            _hover={{
+              borderColor: "#555555",
+              transform: "translateY(-2px)",
+            }}
+            transition="all 0.3s"
+            cursor="pointer"
             onClick={() => router.push("/admin/manage/work-experience")}
           >
             <Icon as={FaBriefcase} fontSize="32px" color="#888888" mb={4} />
