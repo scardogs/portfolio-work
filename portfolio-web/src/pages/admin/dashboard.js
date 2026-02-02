@@ -25,6 +25,7 @@ import {
   FaHome,
   FaBriefcase,
   FaCalendarAlt,
+  FaBell,
 } from "react-icons/fa";
 
 export default function AdminDashboard() {
@@ -44,7 +45,107 @@ export default function AdminDashboard() {
     if (userData) {
       setUser(JSON.parse(userData));
     }
+    checkSubscription();
   }, [router]);
+
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [subLoading, setSubLoading] = useState(false);
+
+  const urlBase64ToUint8Array = (base64String) => {
+    const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  };
+
+  const checkSubscription = async () => {
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      setIsSubscribed(!!subscription);
+    }
+  };
+
+  const subscribeUser = async () => {
+    setSubLoading(true);
+    try {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        throw new Error('Push notifications not supported on this browser');
+      }
+
+      const registration = await navigator.serviceWorker.ready;
+      const pKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "BMfwOcQ_e7U9hbi2XWE-BKgzCNIu8c3BS00m1V49-MW_X"; // Fallback to avoid error if env not loaded yet
+
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(pKey)
+      });
+
+      const token = localStorage.getItem("token");
+      const response = await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(subscription)
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setIsSubscribed(true);
+        toast({
+          title: "Enabled",
+          description: "Push notifications enabled for this device",
+          status: "success",
+          duration: 3000
+        });
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (error) {
+      console.error('Subscription error:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to enable notifications",
+        status: "error",
+        duration: 3000
+      });
+    } finally {
+      setSubLoading(false);
+    }
+  };
+
+  const unsubscribeUser = async () => {
+    setSubLoading(true);
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      if (subscription) {
+        await subscription.unsubscribe();
+        setIsSubscribed(false);
+        toast({
+          title: "Disabled",
+          description: "Push notifications disabled",
+          status: "info",
+          duration: 3000
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to disable notifications",
+        status: "error",
+        duration: 3000
+      });
+    } finally {
+      setSubLoading(false);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -366,6 +467,50 @@ export default function AdminDashboard() {
             <Text color="#888888" fontSize="13px" fontWeight="300">
               Manage key years and milestones reflected in your timeline
             </Text>
+          </Box>
+
+          <Box
+            bg="#141414"
+            p={6}
+            borderRadius="0"
+            border="1px solid #333333"
+            _hover={{
+              borderColor: "#555555",
+              transform: "translateY(-2px)",
+            }}
+            transition="all 0.3s"
+          >
+            <Icon as={FaBell} fontSize="32px" color="#888888" mb={4} />
+            <Heading
+              as="h3"
+              fontSize="16px"
+              color="#e0e0e0"
+              fontFamily="system-ui, -apple-system, sans-serif"
+              fontWeight="300"
+              letterSpacing="2px"
+              textTransform="uppercase"
+              mb={2}
+            >
+              Push Notifications
+            </Heading>
+            <Text color="#888888" fontSize="13px" fontWeight="300" mb={4}>
+              Receive alerts directly to this device when a user contact you
+            </Text>
+            <Button
+              size="sm"
+              w="full"
+              variant="outline"
+              borderColor="#333333"
+              color="#e0e0e0"
+              borderRadius="0"
+              fontWeight="300"
+              letterSpacing="1px"
+              onClick={isSubscribed ? unsubscribeUser : subscribeUser}
+              isLoading={subLoading}
+              _hover={{ bg: "#1a1a1a", borderColor: "#555555" }}
+            >
+              {isSubscribed ? "DISABLE NOTIFICATIONS" : "ENABLE NOTIFICATIONS"}
+            </Button>
           </Box>
         </Grid>
       </Container>
