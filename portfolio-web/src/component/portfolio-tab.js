@@ -23,6 +23,7 @@ import {
   DrawerCloseButton,
   SimpleGrid,
 } from "@chakra-ui/react";
+import ContactForm from "./ContactForm";
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import { FaUserShield, FaGithub, FaLinkedin, FaBars } from "react-icons/fa";
@@ -50,14 +51,7 @@ const PortfolioTab = () => {
   const [imageError, setImageError] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  // Form state
-  const [formData, setFormData] = useState({
-    name: "",
-    company: "",
-    email: "",
-    subject: "",
-    message: "",
-  });
+
 
   const toast = useToast();
 
@@ -148,33 +142,19 @@ const PortfolioTab = () => {
     setImageLoaded(true);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    // Basic validation
-    if (!formData.name || !formData.email || !formData.subject || !formData.message) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
+  const handleFormSubmit = async (data) => {
     try {
       const response = await fetch("/api/messages", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(data),
       });
 
-      const data = await response.json();
+      const result = await response.json();
 
-      if (data.success) {
+      if (result.success) {
         toast({
           title: "Message sent!",
           description: "Thank you for reaching out. I'll get back to you soon.",
@@ -182,9 +162,9 @@ const PortfolioTab = () => {
           duration: 3000,
           isClosable: true,
         });
-        setFormData({ name: "", company: "", email: "", subject: "", message: "" });
+        return true;
       } else {
-        throw new Error(data.message || "Failed to send message");
+        throw new Error(result.message || "Failed to send message");
       }
     } catch (error) {
       toast({
@@ -194,11 +174,8 @@ const PortfolioTab = () => {
         duration: 3000,
         isClosable: true,
       });
+      return false;
     }
-  };
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   return (
@@ -1245,132 +1222,7 @@ const PortfolioTab = () => {
                 <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={12} align="start">
                   {/* Left column - Contact Form */}
                   <Box>
-                    <form onSubmit={handleSubmit}>
-                      <VStack spacing={4} align="stretch">
-                        <Box>
-                          <Text
-                            fontSize={[11, 12]}
-                            color="#888888"
-                            mb={1}
-                            fontWeight="400"
-                          >
-                            NAME
-                          </Text>
-                          <Input
-                            name="name"
-                            value={formData.name}
-                            onChange={handleChange}
-                            border="1px solid #333333"
-                            borderRadius="0"
-                            bg="#141414"
-                            color="#e0e0e0"
-                            _focus={{ borderColor: "#888888" }}
-                            fontWeight="300"
-                          />
-                        </Box>
-                        <Box>
-                          <Text
-                            fontSize={[11, 12]}
-                            color="#888888"
-                            mb={1}
-                            fontWeight="400"
-                          >
-                            COMPANY (OPTIONAL)
-                          </Text>
-                          <Input
-                            name="company"
-                            value={formData.company}
-                            onChange={handleChange}
-                            border="1px solid #333333"
-                            borderRadius="0"
-                            bg="#141414"
-                            color="#e0e0e0"
-                            _focus={{ borderColor: "#888888" }}
-                            fontWeight="300"
-                          />
-                        </Box>
-                        <Box>
-                          <Text
-                            fontSize={[11, 12]}
-                            color="#888888"
-                            mb={1}
-                            fontWeight="400"
-                          >
-                            EMAIL
-                          </Text>
-                          <Input
-                            name="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            border="1px solid #333333"
-                            borderRadius="0"
-                            bg="#141414"
-                            color="#e0e0e0"
-                            _focus={{ borderColor: "#888888" }}
-                            fontWeight="300"
-                          />
-                        </Box>
-                        <Box>
-                          <Text
-                            fontSize={[11, 12]}
-                            color="#888888"
-                            mb={1}
-                            fontWeight="400"
-                          >
-                            SUBJECT
-                          </Text>
-                          <Input
-                            name="subject"
-                            value={formData.subject}
-                            onChange={handleChange}
-                            border="1px solid #333333"
-                            borderRadius="0"
-                            bg="#141414"
-                            color="#e0e0e0"
-                            _focus={{ borderColor: "#888888" }}
-                            fontWeight="300"
-                          />
-                        </Box>
-                        <Box>
-                          <Text
-                            fontSize={[11, 12]}
-                            color="#888888"
-                            mb={1}
-                            fontWeight="400"
-                          >
-                            MESSAGE
-                          </Text>
-                          <Textarea
-                            name="message"
-                            value={formData.message}
-                            onChange={handleChange}
-                            border="1px solid #333333"
-                            borderRadius="0"
-                            bg="#141414"
-                            color="#e0e0e0"
-                            _focus={{ borderColor: "#888888" }}
-                            fontWeight="300"
-                            rows={5}
-                          />
-                        </Box>
-                        <Button
-                          type="submit"
-                          bg="#1a1a1a"
-                          color="#e0e0e0"
-                          border="1px solid #333333"
-                          borderRadius="0"
-                          fontWeight="300"
-                          letterSpacing="1px"
-                          textTransform="uppercase"
-                          _hover={{ bg: "#2a2a2a", borderColor: "#555555" }}
-                          px={6}
-                          py={6}
-                          leftIcon={<span>✉️</span>}
-                        >
-                          Send Message
-                        </Button>
-                      </VStack>
-                    </form>
+                    <ContactForm onSubmit={handleFormSubmit} toast={toast} />
                   </Box>
 
                   {/* Right column - Contact Info */}

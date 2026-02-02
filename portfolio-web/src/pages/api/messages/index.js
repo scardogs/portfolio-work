@@ -51,7 +51,7 @@ async function createMessage(req, res) {
                     "Title": "New Portfolio Message",
                     "Priority": "high",
                     "Tags": "envelope,sparkles",
-                    "Click": `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/admin/manage/messages`
+                    "Click": `${process.env.NEXT_PUBLIC_BASE_URL || "https://jjscrl.xyz"}/admin/manage/messages`
                 }
             });
         } catch (pushError) {
