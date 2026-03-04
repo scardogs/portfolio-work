@@ -42,16 +42,14 @@ const ContentGenerationSection = ({ items }) => {
 
         {/* Masonry Layout Container */}
         <Box
-          display="grid"
-          gridTemplateColumns={{
-            base: "1fr",
-            md: "repeat(2, 1fr)",
-            lg: "repeat(3, 1fr)"
-          }}
-          gap="1.5rem"
           sx={{
+            columnCount: [1, 2, 3],
+            columnGap: "1.5rem",
             "& > *": {
-              height: "fit-content"
+              breakInside: "avoid",
+              pageBreakInside: "avoid",
+              marginBottom: "1.5rem",
+              display: "block"
             }
           }}
         >
