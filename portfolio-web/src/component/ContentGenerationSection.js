@@ -102,9 +102,9 @@ const ContentGenerationSection = ({ items }) => {
             fontWeight="300"
             letterSpacing="4px"
             textTransform="uppercase"
-            color="#1a1a1a"
+            color="#e0e0e0"
           >
-            CONTENT GALLERY
+            AI CONTENT GALLERY
           </Heading>
           <Box w="80px" h="1px" bg="#e2b714" />
           <Text
