@@ -39,8 +39,9 @@ async function createProject(req, res) {
   }
 }
 
-export default function (req, res) {
-  if (req.method === "GET") {
+export default async function (req, res) {
+  const method = req.method?.toUpperCase();
+  if (method === "GET") {
     return handler(req, res);
   }
   return authenticate(handler)(req, res);

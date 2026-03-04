@@ -11,8 +11,10 @@ export function generateToken(user, expiresIn = "7d") {
 
 export function verifyToken(token) {
   try {
+    if (!token) return null;
     return jwt.verify(token, JWT_SECRET);
   } catch (error) {
+    console.error("JWT Verification Error:", error.message);
     return null;
   }
 }

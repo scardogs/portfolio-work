@@ -94,9 +94,10 @@ async function updateAbout(req, res) {
   }
 }
 
-export default function (req, res) {
+export default async function (req, res) {
+  const method = req.method?.toUpperCase();
   // Only protect POST and PUT methods
-  if (req.method === "GET") {
+  if (method === "GET") {
     return handler(req, res);
   }
   return authenticate(handler)(req, res);

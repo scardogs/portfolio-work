@@ -24,6 +24,7 @@ import {
   SimpleGrid,
 } from "@chakra-ui/react";
 import ContactForm from "./ContactForm";
+import ContentGenerationSection from "./ContentGenerationSection";
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import { FaUserShield, FaGithub, FaLinkedin, FaBars } from "react-icons/fa";
@@ -42,6 +43,7 @@ const ensureAbsoluteUrl = (url) => {
 const PortfolioTab = () => {
   const router = useRouter();
   const [aboutData, setAboutData] = useState(null);
+  const [contentGenData, setContentGenData] = useState([]);
   const [projects, setProjects] = useState([]);
   const [skills, setSkills] = useState([]);
   const [contactData, setContactData] = useState(null);
@@ -102,6 +104,7 @@ const PortfolioTab = () => {
           contactRes,
           workExperienceRes,
           yearsRes,
+          contentGenRes,
         ] = await Promise.all([
           fetch("/api/about"),
           fetch("/api/projects"),
@@ -109,6 +112,7 @@ const PortfolioTab = () => {
           fetch("/api/contact"),
           fetch("/api/work-experience"),
           fetch("/api/years"),
+          fetch("/api/content-generation"),
         ]);
 
         const aboutData = await aboutRes.json();
@@ -117,6 +121,7 @@ const PortfolioTab = () => {
         const contactData = await contactRes.json();
         const workExperienceData = await workExperienceRes.json();
         const yearsData = await yearsRes.json();
+        const contentGenData = await contentGenRes.json();
 
         if (aboutData.success) {
           console.log("About data from API:", aboutData.data);
@@ -128,6 +133,7 @@ const PortfolioTab = () => {
         if (workExperienceData.success)
           setWorkExperiences(workExperienceData.data);
         if (yearsData.success) setYears(yearsData.data);
+        if (contentGenData.success) setContentGenData(contentGenData.data || []);
       } catch (error) {
         console.error("Failed to fetch data:", error);
       }
@@ -416,6 +422,21 @@ const PortfolioTab = () => {
                   _hover={{ color: "#e0e0e0" }}
                   onClick={() =>
                     document
+                      .getElementById("content-gen-section")
+                      ?.scrollIntoView({ behavior: "smooth" })
+                  }
+                >
+                  Content
+                </Button>
+                <Button
+                  variant="link"
+                  color="#888888"
+                  fontSize={[13, 14]}
+                  fontWeight="400"
+                  letterSpacing="1px"
+                  _hover={{ color: "#e0e0e0" }}
+                  onClick={() =>
+                    document
                       .getElementById("contact-section")
                       ?.scrollIntoView({ behavior: "smooth" })
                   }
@@ -478,6 +499,19 @@ const PortfolioTab = () => {
                         }}
                       >
                         WORK
+                      </Button>
+                      <Button
+                        variant="link"
+                        color="#888888"
+                        fontSize="18px"
+                        fontWeight="300"
+                        letterSpacing="1px"
+                        onClick={() => {
+                          onClose();
+                          document.getElementById("content-gen-section")?.scrollIntoView({ behavior: "smooth" });
+                        }}
+                      >
+                        CONTENT
                       </Button>
                       <Button
                         variant="link"
@@ -1190,6 +1224,14 @@ const PortfolioTab = () => {
                     </Box>
                   ))}
                 </VStack>
+              </Box>
+
+              <Box my={[12, 16, 20]}>
+                <Divider borderColor="#333333" borderWidth="1px" />
+              </Box>
+
+              <Box id="content-gen-section">
+                <ContentGenerationSection items={contentGenData} />
               </Box>
 
               <Box my={[12, 16, 20]}>

@@ -25,8 +25,167 @@ import {
   Divider,
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
-import { ArrowBackIcon, EditIcon, DeleteIcon, AddIcon } from "@chakra-ui/icons";
+import { ArrowBackIcon, EditIcon, DeleteIcon, AddIcon, DragHandleIcon } from "@chakra-ui/icons";
 import ImageUploader from "../../../component/admin/ImageUploader";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
+function SortableProjectItem({ project, onEdit, onDelete }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: project._id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 1000 : 1,
+    opacity: isDragging ? 0.6 : 1,
+    cursor: isDragging ? "grabbing" : "default",
+  };
+
+  return (
+    <Box
+      ref={setNodeRef}
+      style={style}
+      bg="#1a1a1a"
+      borderRadius="0"
+      border="1px solid #333333"
+      overflow="hidden"
+      _hover={{
+        borderColor: "#555555",
+        transform: "translateY(-4px)",
+      }}
+      transition="all 0.3s"
+      position="relative"
+    >
+      <Box
+        h="200px"
+        bg="#0a0a0a"
+        position="relative"
+        sx={{
+          "&::after": {
+            content: '""',
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            bg: "blackAlpha.200",
+            pointerEvents: "none",
+          }
+        }}
+      >
+        <img
+          src={project.img}
+          alt={project.title}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "contain",
+            padding: "20px",
+            filter: "grayscale(100%)",
+          }}
+        />
+        <IconButton
+          {...attributes}
+          {...listeners}
+          icon={<DragHandleIcon />}
+          aria-label="Drag to reorder"
+          position="absolute"
+          top={2}
+          right={2}
+          size="sm"
+          variant="solid"
+          bg="blackAlpha.700"
+          color="white"
+          _hover={{ bg: "blackAlpha.900" }}
+          cursor="grab"
+          transition="all 0.2s"
+          _active={{ cursor: "grabbing" }}
+        />
+      </Box>
+      <Box p={6}>
+        <Heading
+          fontSize="18px"
+          color="#e0e0e0"
+          mb={2}
+          fontWeight="600"
+          noOfLines={1}
+        >
+          {project.title}
+        </Heading>
+        <Text color="#888888" fontSize="13px" mb={4} noOfLines={3}>
+          {project.description}
+        </Text>
+        <HStack spacing={2} mb={4}>
+          <Text
+            fontSize="11px"
+            color="#666666"
+            fontWeight="400"
+            letterSpacing="1px"
+            textTransform="uppercase"
+          >
+            Sort Order: {project.order}
+          </Text>
+          {project.projectDate && (
+            <>
+              <Text color="#333333">|</Text>
+              <Text
+                fontSize="11px"
+                color="#666666"
+                fontWeight="400"
+                letterSpacing="1px"
+                textTransform="uppercase"
+              >
+                {project.projectDate}
+              </Text>
+            </>
+          )}
+        </HStack>
+        <Divider borderColor="#333333" mb={4} />
+        <HStack spacing={2} justify="flex-end">
+          <IconButton
+            icon={<EditIcon />}
+            aria-label="Edit project"
+            size="sm"
+            variant="ghost"
+            color="#888888"
+            _hover={{ color: "#e0e0e0", bg: "#2a2a2a" }}
+            onClick={() => onEdit(project)}
+          />
+          <IconButton
+            icon={<DeleteIcon />}
+            aria-label="Delete project"
+            size="sm"
+            variant="ghost"
+            color="#ff4444"
+            _hover={{ color: "#ff6666", bg: "#2a2a2a" }}
+            onClick={() => onDelete(project._id)}
+          />
+        </HStack>
+      </Box>
+    </Box>
+  );
+}
 
 export default function ManageProjects() {
   const [projects, setProjects] = useState([]);
@@ -45,6 +204,17 @@ export default function ManageProjects() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const router = useRouter();
   const toast = useToast();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -74,6 +244,61 @@ export default function ManageProjects() {
       });
     } finally {
       setFetching(false);
+    }
+  };
+
+  const handleDragEnd = async (event) => {
+    const { active, over } = event;
+
+    if (active.id !== over.id) {
+      const oldIndex = projects.findIndex((i) => i._id === active.id);
+      const newIndex = projects.findIndex((i) => i._id === over.id);
+
+      const newOrderedProjects = arrayMove(projects, oldIndex, newIndex);
+
+      // Update local state immediately for responsiveness
+      setProjects(newOrderedProjects);
+
+      // Save the new order to the backend
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch("/api/projects/reorder", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ projects: newOrderedProjects.map(p => p._id) }),
+        });
+        const data = await response.json();
+        if (data.success) {
+          toast({
+            title: "Success",
+            description: "Order updated successfully",
+            status: "success",
+            duration: 2000,
+            isClosable: true,
+          });
+          // Refresh projects to get the updated order from server
+          fetchProjects();
+        } else {
+          toast({
+            title: "Error",
+            description: data.message || "Failed to save order",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "An error occurred while saving order",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
     }
   };
 
@@ -281,96 +506,27 @@ export default function ManageProjects() {
               No projects found. Click "Add Project" to create one.
             </Text>
           ) : (
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-              {projects.map((project) => (
-                <Box
-                  key={project._id}
-                  bg="#1a1a1a"
-                  borderRadius="0"
-                  border="1px solid #333333"
-                  overflow="hidden"
-                  _hover={{
-                    borderColor: "#555555",
-                    transform: "translateY(-4px)",
-                  }}
-                  transition="all 0.3s"
-                >
-                  <Box h="200px" bg="#0a0a0a" position="relative">
-                    <img
-                      src={project.img}
-                      alt={project.title}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "contain",
-                        padding: "20px",
-                        filter: "grayscale(100%)",
-                      }}
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={projects.map(p => p._id)}
+                strategy={rectSortingStrategy}
+              >
+                <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+                  {projects.map((project) => (
+                    <SortableProjectItem
+                      key={project._id}
+                      project={project}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
                     />
-                  </Box>
-                  <Box p={6}>
-                    <Heading
-                      fontSize="18px"
-                      color="#e0e0e0"
-                      mb={2}
-                      fontWeight="600"
-                      noOfLines={1}
-                    >
-                      {project.title}
-                    </Heading>
-                    <Text color="#888888" fontSize="13px" mb={4} noOfLines={3}>
-                      {project.description}
-                    </Text>
-                    <HStack spacing={2} mb={4}>
-                      <Text
-                        fontSize="11px"
-                        color="#666666"
-                        fontWeight="400"
-                        letterSpacing="1px"
-                        textTransform="uppercase"
-                      >
-                        Order: {project.order}
-                      </Text>
-                      {project.projectDate && (
-                        <>
-                          <Text color="#333333">|</Text>
-                          <Text
-                            fontSize="11px"
-                            color="#666666"
-                            fontWeight="400"
-                            letterSpacing="1px"
-                            textTransform="uppercase"
-                          >
-                            {project.projectDate}
-                          </Text>
-                        </>
-                      )}
-                    </HStack>
-                    <Divider borderColor="#333333" mb={4} />
-                    <HStack spacing={2} justify="flex-end">
-                      <IconButton
-                        icon={<EditIcon />}
-                        aria-label="Edit project"
-                        size="sm"
-                        variant="ghost"
-                        color="#888888"
-                        _hover={{ color: "#e0e0e0", bg: "#2a2a2a" }}
-                        onClick={() => handleEdit(project)}
-                      />
-                      <IconButton
-                        icon={<DeleteIcon />}
-                        aria-label="Delete project"
-                        size="sm"
-                        variant="ghost"
-                        color="#ff4444"
-                        _hover={{ color: "#ff6666", bg: "#2a2a2a" }}
-                        onClick={() => handleDelete(project._id)}
-                      />
-                    </HStack>
-                  </Box>
-                </Box>
-              ))}
-            </SimpleGrid>
+                  ))}
+                </SimpleGrid>
+              </SortableContext>
+            </DndContext>
           )}
         </Box>
       </Container>
@@ -552,7 +708,7 @@ export default function ManageProjects() {
                     letterSpacing="2px"
                     textTransform="uppercase"
                   >
-                    Order
+                    Order (Manual)
                   </FormLabel>
                   <Input
                     name="order"
@@ -569,6 +725,9 @@ export default function ManageProjects() {
                       boxShadow: "0 0 0 1px #888888",
                     }}
                   />
+                  <Text fontSize="10px" color="#666666" mt={1}>
+                    Tip: You can now drag and drop project cards in the grid to reorder them automatically.
+                  </Text>
                 </FormControl>
 
                 <Button
