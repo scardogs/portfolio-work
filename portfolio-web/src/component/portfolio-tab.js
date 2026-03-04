@@ -254,6 +254,15 @@ const PortfolioTab = () => {
     };
   }, [showIntro]);
 
+  // ─── Remove CSS pre-loader once React has mounted ─────────────────
+  useEffect(() => {
+    const el = document.getElementById("css-preloader");
+    if (el) {
+      el.classList.add("hidden");
+      setTimeout(() => el.remove(), 450);
+    }
+  }, []);
+
   // ─── Loading progress animation ───────────────────────────────────
   useEffect(() => {
     if (showIntro) {
@@ -472,7 +481,7 @@ const PortfolioTab = () => {
               display="flex"
               alignItems="center"
               justifyContent="center"
-              zIndex={1}
+              zIndex={3}
             >
               <audio ref={audioRef} src="/cashing.mp3" preload="auto" />
               <Box position="relative" textAlign="center">
