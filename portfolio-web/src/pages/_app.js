@@ -29,7 +29,7 @@ export default function App({ Component, pageProps }) {
           zIndex: 0,
           top: 0,
           left: 0,
-          width: "100vw",
+          width: "100%",
           height: "100vh",
         }}
       />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
   Avatar,
@@ -6,9 +6,6 @@ import {
   Button,
   Heading,
   Divider,
-  Skeleton,
-  IconButton,
-  Tooltip,
   Image,
   useBreakpointValue,
 } from "@chakra-ui/react";
@@ -20,6 +17,86 @@ const MotionBox = motion(Box);
 const MotionImage = motion(Image);
 const MotionText = motion(Text);
 const MotionHeading = motion(Heading);
+
+// ─── Cursor Sparkle Particles ────────────────────────────────────────
+const CursorParticles = () => {
+  const canvasRef = useRef(null);
+  const particles = useRef([]);
+  const mouse = useRef({ x: 0, y: 0 });
+  const animationFrame = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    const handleMouseMove = (e) => {
+      mouse.current = { x: e.clientX, y: e.clientY };
+      // Spawn particles
+      for (let i = 0; i < 2; i++) {
+        particles.current.push({
+          x: e.clientX + (Math.random() - 0.5) * 10,
+          y: e.clientY + (Math.random() - 0.5) * 10,
+          vx: (Math.random() - 0.5) * 2,
+          vy: (Math.random() - 0.5) * 2 - 1,
+          life: 1,
+          size: Math.random() * 3 + 1,
+        });
+      }
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      particles.current = particles.current.filter((p) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= 0.02;
+        p.size *= 0.98;
+
+        if (p.life <= 0) return false;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(200, 200, 200, ${p.life * 0.4})`;
+        ctx.fill();
+        return true;
+      });
+
+      animationFrame.current = requestAnimationFrame(animate);
+    };
+    animate();
+
+    return () => {
+      window.removeEventListener("resize", resize);
+      window.removeEventListener("mousemove", handleMouseMove);
+      cancelAnimationFrame(animationFrame.current);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        pointerEvents: "none",
+        zIndex: 10,
+      }}
+    />
+  );
+};
 
 // Separate component for animated background image
 const AnimatedBackgroundImage = ({ src, position, delay, scrollYProgress }) => {
@@ -73,8 +150,6 @@ const AnimatedBackgroundImage = ({ src, position, delay, scrollYProgress }) => {
 
 const FrontPage = () => {
   const router = useRouter();
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageError, setImageError] = useState(false);
   const [aboutData, setAboutData] = useState(null);
 
   // Scroll tracking for background images
@@ -192,17 +267,11 @@ const FrontPage = () => {
     fetchAboutData();
   }, []);
 
-  const handleImageLoad = useCallback(() => {
-    setImageLoaded(true);
-  }, []);
-
-  const handleImageError = useCallback(() => {
-    setImageError(true);
-    setImageLoaded(true);
-  }, []);
-
   return (
     <Box minH="200vh" bg="#ffffff" position="relative">
+      {/* Cursor sparkle particles */}
+      <CursorParticles />
+
       {/* Minimal grid background */}
       <Box
         position="fixed"
@@ -216,7 +285,7 @@ const FrontPage = () => {
         zIndex="0"
       />
 
-      {/* Geometric shapes - minimal */}
+      {/* Geometric shapes — animated floating & rotating */}
       <Box
         position="fixed"
         top="15%"
@@ -227,6 +296,14 @@ const FrontPage = () => {
         transform="rotate(45deg)"
         zIndex="0"
         opacity="0.3"
+        sx={{
+          animation: "floatRotate1 20s ease-in-out infinite",
+          "@keyframes floatRotate1": {
+            "0%": { transform: "rotate(45deg) translateY(0px)" },
+            "50%": { transform: "rotate(55deg) translateY(-20px)" },
+            "100%": { transform: "rotate(45deg) translateY(0px)" },
+          },
+        }}
       />
       <Box
         position="fixed"
@@ -238,9 +315,36 @@ const FrontPage = () => {
         borderRadius="50%"
         zIndex="0"
         opacity="0.2"
+        sx={{
+          animation: "floatRotate2 15s ease-in-out infinite",
+          "@keyframes floatRotate2": {
+            "0%": { transform: "translateY(0px) scale(1)" },
+            "50%": { transform: "translateY(-15px) scale(1.05)" },
+            "100%": { transform: "translateY(0px) scale(1)" },
+          },
+        }}
+      />
+      {/* Third floating shape */}
+      <Box
+        position="fixed"
+        top="60%"
+        right="25%"
+        width="150px"
+        height="150px"
+        border="1px solid #e5e5e5"
+        zIndex="0"
+        opacity="0.15"
+        sx={{
+          animation: "floatRotate3 18s ease-in-out infinite",
+          "@keyframes floatRotate3": {
+            "0%": { transform: "rotate(0deg) translateX(0px)" },
+            "50%": { transform: "rotate(30deg) translateX(15px)" },
+            "100%": { transform: "rotate(0deg) translateX(0px)" },
+          },
+        }}
       />
 
-      {/* Minimal scroll indicator */}
+      {/* Scroll indicator with animated dotted trail */}
       <MotionText
         position="fixed"
         top={["auto", "auto", "calc(50% - 320px)"]}
@@ -258,7 +362,23 @@ const FrontPage = () => {
           opacity: scrollMoreOpacity,
         }}
       >
-        Scroll
+        <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
+          <Text fontSize="inherit" letterSpacing="inherit">Scroll</Text>
+          {/* Animated dots trail */}
+          {[0, 1, 2].map((i) => (
+            <motion.div
+              key={i}
+              animate={{ opacity: [0.2, 0.8, 0.2] }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                delay: i * 0.3,
+              }}
+            >
+              <Box w="3px" h="3px" borderRadius="50%" bg="#999999" />
+            </motion.div>
+          ))}
+        </Box>
       </MotionText>
 
       <MotionBox
@@ -270,9 +390,6 @@ const FrontPage = () => {
         flexDirection="column"
         alignItems="center"
         fontFamily="system-ui, -apple-system, sans-serif"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
         position="fixed"
         top="50%"
         left="50%"
@@ -283,27 +400,14 @@ const FrontPage = () => {
       >
         {/* Profile Image - Always visible */}
         <Box position="relative">
-          <Skeleton
-            isLoaded={imageLoaded}
-            startColor="#232323"
-            endColor="#e2b714"
-            borderRadius="full"
-            boxSize="280px"
-            fadeDuration={0.4}
-          >
-            <Avatar
-              src={aboutData?.profileImage}
-              boxSize={["200px", "240px", "260px"]}
-              border="1px solid #e5e5e5"
-              name={aboutData?.name || "John Michael T. Escarlan"}
-              onLoad={handleImageLoad}
-              onError={handleImageError}
-              opacity={imageLoaded ? 1 : 0}
-              transition="opacity 0.3s ease-in-out"
-              showBorder={false}
-              bg="#f5f5f5"
-            />
-          </Skeleton>
+          <Avatar
+            src={aboutData?.profileImage}
+            boxSize={["200px", "240px", "260px"]}
+            border="1px solid #e5e5e5"
+            name={aboutData?.name || "John Michael T. Escarlan"}
+            showBorder={false}
+            bg="#f5f5f5"
+          />
         </Box>
 
         {/* Minimal divider */}
@@ -402,7 +506,7 @@ const FrontPage = () => {
           <Divider borderColor="#e5e5e5" borderWidth="1px" w="80px" />
         </MotionBox>
 
-        {/* Proceed button - Stage 3 (appears on third scroll) */}
+        {/* Proceed button - Stage 3 with pulsing border */}
         <MotionBox
           style={{
             opacity: buttonOpacity,
@@ -434,6 +538,14 @@ const FrontPage = () => {
             }}
             onClick={() => router.push("/portfolio-tab")}
             transition="all 0.2s ease"
+            sx={{
+              animation: "pulsingBorder 2s ease-in-out infinite",
+              "@keyframes pulsingBorder": {
+                "0%": { boxShadow: "0 0 0 0 rgba(26, 26, 26, 0.4)" },
+                "50%": { boxShadow: "0 0 0 8px rgba(26, 26, 26, 0)" },
+                "100%": { boxShadow: "0 0 0 0 rgba(26, 26, 26, 0)" },
+              },
+            }}
           >
             Enter Portfolio
           </Button>
