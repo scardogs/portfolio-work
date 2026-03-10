@@ -122,7 +122,7 @@ const ContentGenerationSection = ({ items }) => {
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: ["1fr", "repeat(2, 1fr)", "repeat(3, 1fr)"],
+            gridTemplateColumns: ["repeat(2, 1fr)", "repeat(2, 1fr)", "repeat(3, 1fr)"],
             gridAutoRows: `${ROW_HEIGHT}px`,
             gap: `${GAP}px`,
             alignItems: "start",
