@@ -1,0 +1,7 @@
+# robots.txt for jjscrl.xyz
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+Sitemap: https://jjscrl.xyz/sitemap.xml
