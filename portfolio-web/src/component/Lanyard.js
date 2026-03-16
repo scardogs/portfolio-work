@@ -14,7 +14,6 @@ import {
 } from '@react-three/rapier';
 import { MeshLineGeometry, MeshLineMaterial } from 'meshline';
 import * as THREE from 'three';
-import './Lanyard.css';
 
 extend({ MeshLineGeometry, MeshLineMaterial });
 
@@ -44,9 +43,20 @@ export default function Lanyard({
   }, []);
 
   return (
-    <div className="lanyard-wrapper">
+    <div
+      style={{
+        position: 'relative',
+        width: '100%',
+        height: '100%',
+        minHeight: '220px',
+        overflow: 'visible',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+    >
       <Canvas
-        className="lanyard-canvas"
+        style={{ width: '100%', height: '100%' }}
         camera={{ position, fov }}
         dpr={[1, isMobile ? 1 : 1.15]}
         gl={{ alpha: transparent, antialias: true, powerPreference: 'high-performance' }}
