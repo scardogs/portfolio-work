@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
+import dynamic from "next/dynamic";
 import {
   Box,
   Button,
@@ -8,8 +9,6 @@ import {
   Textarea,
   Heading,
   Text,
-  Avatar,
-  Skeleton,
   HStack,
   VStack,
   Flex,
@@ -35,6 +34,7 @@ const MotionFlex = motion.create(Flex);
 const MotionHeading = motion.create(Heading);
 const MotionText = motion.create(Text);
 const MotionButton = motion.create(Button);
+const Lanyard = dynamic(() => import("./Lanyard"), { ssr: false });
 
 const ensureAbsoluteUrl = (url) => {
   if (!url) return "";
@@ -174,6 +174,24 @@ const AnimatedYear = ({ year }) => {
   );
 };
 
+// ─── Parallax Section Wrapper ────────────────────────────────────────────
+const ParallaxSection = ({ children, offset = 40, ...props }) => {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"],
+  });
+  const y = useTransform(scrollYProgress, [0, 1], [offset, -offset]);
+
+  return (
+    <Box ref={ref} overflow="hidden" {...props}>
+      <MotionBox style={{ y }}>
+        {children}
+      </MotionBox>
+    </Box>
+  );
+};
+
 // ─── Scroll Progress Bar ────────────────────────────────────────────────
 const ScrollProgressBar = () => {
   const { scrollYProgress } = useScroll();
@@ -205,8 +223,6 @@ const PortfolioTab = () => {
   const [contactData, setContactData] = useState(null);
   const [workExperiences, setWorkExperiences] = useState([]);
   const [years, setYears] = useState([]);
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageError, setImageError] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   // Active section tracking
@@ -221,6 +237,9 @@ const PortfolioTab = () => {
   const [showIntro, setShowIntro] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [introExiting, setIntroExiting] = useState(false);
+  const [minimumIntroDone, setMinimumIntroDone] = useState(false);
+  const [lanyardAssetsReady, setLanyardAssetsReady] = useState(false);
+  const [heroLanyardReady, setHeroLanyardReady] = useState(false);
 
   // Tech marquee hover pause
   const [marquePaused, setMarqueePaused] = useState(false);
@@ -263,6 +282,8 @@ const PortfolioTab = () => {
     }
   }, []);
 
+  const INTRO_DURATION_MS = 1800;
+
   // ─── Loading progress animation ───────────────────────────────────
   useEffect(() => {
     if (showIntro) {
@@ -285,25 +306,68 @@ const PortfolioTab = () => {
             clearInterval(progressInterval);
             return 100;
           }
-          return prev + 1.5;
+          return prev + 4;
         });
-      }, 60);
+      }, 45);
 
       const timer = setTimeout(() => {
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current.currentTime = 0;
-        }
-        setIntroExiting(true);
-        setTimeout(() => setShowIntro(false), 800);
-      }, 5000);
+        setMinimumIntroDone(true);
+      }, INTRO_DURATION_MS);
 
       return () => {
         clearTimeout(timer);
         clearInterval(progressInterval);
       };
     }
-  }, [showIntro]);
+  }, [showIntro, INTRO_DURATION_MS]);
+
+  useEffect(() => {
+    // Preload heavy 3D modules + profile texture during intro so Lanyard is ready before entering the page.
+    let cancelled = false;
+
+    const preloadImage = (src) =>
+      new Promise((resolve) => {
+        if (!src) return resolve();
+        const img = new window.Image();
+        img.src = src;
+        if (img.complete) return resolve();
+        img.onload = () => resolve();
+        img.onerror = () => resolve();
+      });
+
+    const run = async () => {
+      const profileSrc = aboutData?.profileImage || "/profile2.png";
+      await Promise.all([
+        import("./Lanyard"),
+        import("@dimforge/rapier3d-compat"),
+        preloadImage(profileSrc),
+      ]);
+
+      if (!cancelled) {
+        setLanyardAssetsReady(true);
+      }
+    };
+
+    run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [aboutData?.profileImage]);
+
+  useEffect(() => {
+    if (!showIntro) return;
+    if (!minimumIntroDone || !lanyardAssetsReady) return;
+
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+
+    setIntroExiting(true);
+    const exitTimer = setTimeout(() => setShowIntro(false), 800);
+    return () => clearTimeout(exitTimer);
+  }, [showIntro, minimumIntroDone, lanyardAssetsReady]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -352,12 +416,6 @@ const PortfolioTab = () => {
 
     fetchData();
   }, []);
-
-  const handleImageLoad = () => setImageLoaded(true);
-  const handleImageError = () => {
-    setImageError(true);
-    setImageLoaded(true);
-  };
 
   const handleFormSubmit = async (data) => {
     try {
@@ -777,7 +835,7 @@ const PortfolioTab = () => {
                 w="100%"
                 gap={8}
               >
-                {/* Profile Picture with parallax */}
+                {/* Hero visual */}
                 <MotionBox
                   flex="0 0 auto"
                   order={{ base: 0, md: 2 }}
@@ -788,37 +846,31 @@ const PortfolioTab = () => {
                 >
                   <Box
                     position="relative"
-                    _hover={{
-                      "& > div:first-of-type": {
-                        boxShadow: "0 0 40px rgba(224, 224, 224, 0.1)",
-                      },
-                    }}
+                    boxSize={["240px", "280px", "340px", "430px"]}
                   >
-                    <Skeleton
-                      isLoaded={imageLoaded}
-                      startColor="#1a1a1a"
-                      endColor="#2a2a2a"
-                      borderRadius="full"
-                      boxSize={["200px", "240px", "280px", "400px"]}
-                      fadeDuration={0.3}
-                    >
-                      <Avatar
-                        src={aboutData?.profileImage}
-                        boxSize={["200px", "240px", "280px", "400px"]}
-                        border="4px solid #333333"
-                        name={aboutData?.name || "John Michael T. Escarlan"}
-                        onLoad={handleImageLoad}
-                        onError={handleImageError}
-                        opacity={imageLoaded ? 1 : 0}
-                        transition="all 0.5s ease-in-out"
-                        bg="#1a1a1a"
-                        sx={{
-                          "&:hover": {
-                            boxShadow: "0 0 60px rgba(224, 224, 224, 0.08)",
-                          },
-                        }}
-                      />
-                    </Skeleton>
+                    {!heroLanyardReady && (
+                      <Box
+                        position="absolute"
+                        inset={0}
+                        borderRadius="16px"
+                        border="1px solid rgba(255,255,255,0.1)"
+                        bg="rgba(255,255,255,0.03)"
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                        zIndex={2}
+                      >
+                        <Text fontSize="12px" letterSpacing="2px" color="#888888">
+                          LOADING LANYARD...
+                        </Text>
+                      </Box>
+                    )}
+                    <Lanyard
+                      imageUrl={aboutData?.profileImage || "/profile2.png"}
+                      position={[0, 0, 20]}
+                      gravity={[0, -40, 0]}
+                      onReady={() => setHeroLanyardReady(true)}
+                    />
                   </Box>
                 </MotionBox>
 
@@ -921,7 +973,7 @@ const PortfolioTab = () => {
               <AnimatedDivider />
 
               {/* ═══ ABOUT SECTION ═══ */}
-              <Box mb={[12, 16, 20]}>
+              <ParallaxSection mb={[12, 16, 20]} offset={30}>
                 <SectionHeading id="about-section" subtitle="My Professional Journey and Expertise">
                   About Me
                 </SectionHeading>
@@ -1072,12 +1124,12 @@ const PortfolioTab = () => {
                     ))}
                   </Box>
                 </Box>
-              </Box>
+              </ParallaxSection>
 
               <AnimatedDivider />
 
               {/* ═══ FEATURED PROJECTS ═══ */}
-              <Box mb={[12, 16, 20]}>
+              <ParallaxSection mb={[12, 16, 20]} offset={50}>
                 <SectionHeading id="projects-section" subtitle="What Did I Do?">
                   Featured Projects
                 </SectionHeading>
@@ -1273,12 +1325,12 @@ const PortfolioTab = () => {
                     </MotionBox>
                   ))}
                 </VStack>
-              </Box>
+              </ParallaxSection>
 
               <AnimatedDivider />
 
               {/* ═══ KEY MILESTONES ═══ */}
-              <Box mb={[12, 16, 20]}>
+              <ParallaxSection mb={[12, 16, 20]} offset={25}>
                 <SectionHeading id="milestones-section" subtitle="Significant Years and Achievements">
                   Key Milestones
                 </SectionHeading>
@@ -1326,12 +1378,12 @@ const PortfolioTab = () => {
                     </MotionBox>
                   ))}
                 </Flex>
-              </Box>
+              </ParallaxSection>
 
               <AnimatedDivider />
 
               {/* ═══ WORK EXPERIENCE — Timeline ═══ */}
-              <Box mb={[12, 16, 20]}>
+              <ParallaxSection mb={[12, 16, 20]} offset={35}>
                 <SectionHeading id="experience-section" subtitle="Professional Journey">
                   Work Experience
                 </SectionHeading>
@@ -1467,19 +1519,19 @@ const PortfolioTab = () => {
                     ))}
                   </VStack>
                 </Box>
-              </Box>
+              </ParallaxSection>
 
               <AnimatedDivider />
 
               {/* ═══ CONTENT GENERATION ═══ */}
-              <Box id="content-gen-section">
+              <ParallaxSection id="content-gen-section" offset={30}>
                 <ContentGenerationSection items={contentGenData} />
-              </Box>
+              </ParallaxSection>
 
               <AnimatedDivider />
 
               {/* ═══ CONTACT SECTION ═══ */}
-              <Box mb={[12, 16, 20]}>
+              <ParallaxSection mb={[12, 16, 20]} offset={25}>
                 <SectionHeading id="contact-section" subtitle="Want to Connect?">
                   Get in Touch with Me
                 </SectionHeading>
@@ -1567,7 +1619,7 @@ const PortfolioTab = () => {
                     </VStack>
                   </MotionBox>
                 </SimpleGrid>
-              </Box>
+              </ParallaxSection>
 
               {/* ─── Footer ──────────────────────────────────────── */}
               <MotionBox

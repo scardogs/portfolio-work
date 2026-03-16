@@ -1,8 +1,11 @@
 import { ChakraProvider, Box } from "@chakra-ui/react";
 import Head from "next/head";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/next";
 import { ScrollingBackground } from "react-scrolling-background";
+
+const SplashCursor = dynamic(() => import("../component/SplashCursor"), { ssr: false });
 
 const svgPattern = `url('data:image/svg+xml;utf8,<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" fill="%23191919"/><circle cx="20" cy="20" r="2" fill="%23e2b714"/></svg>')`;
 
@@ -44,6 +47,7 @@ export default function App({ Component, pageProps }) {
           height: "100vh",
         }}
       />
+      {!isAdmin && <SplashCursor />}
       <Box position="relative" zIndex={1}>
         <Component {...pageProps} />
       </Box>
