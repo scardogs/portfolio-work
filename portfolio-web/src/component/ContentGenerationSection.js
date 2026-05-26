@@ -20,6 +20,16 @@ const PAGE_LIMIT = 12;
 const ROW_HEIGHT = 10; // px — fine-grained grid rows
 const GAP = 16; // px — must match the grid gap
 
+// Derive a still-frame poster from a Cloudinary video URL (so_0 = first second).
+// Falls back to undefined for non-Cloudinary URLs so the <video> can still render.
+function getVideoPoster(url) {
+  if (!url || typeof url !== "string") return undefined;
+  if (!url.includes("/video/upload/")) return undefined;
+  return url
+    .replace("/video/upload/", "/video/upload/so_0,q_auto,f_jpg/")
+    .replace(/\.(mp4|webm|mov|m4v|ogg)(\?.*)?$/i, ".jpg$2");
+}
+
 // ─── Beautiful Play Button Overlay ────────────────────────────────────────
 function PlayButton({ playing, onClick }) {
   return (
@@ -198,9 +208,10 @@ function MasonryItem({ item, index, span, onSpanChange }) {
           <Box position="relative" w="100%" onClick={playing ? handlePlay : undefined}>
             <video
               ref={videoRef}
-              src={item.mediaUrl}
-              poster={item.thumbnailUrl || undefined}
+              src={`${item.mediaUrl}#t=0.1`}
+              poster={item.thumbnailUrl || getVideoPoster(item.mediaUrl)}
               loop
+              muted
               playsInline
               preload="metadata"
               controls={playing}
