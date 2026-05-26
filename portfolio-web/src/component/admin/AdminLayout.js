@@ -28,6 +28,7 @@ import {
   FaBriefcase,
   FaCalendarAlt,
   FaImages,
+  FaBookOpen,
   FaSignOutAlt,
   FaEye,
   FaBars,
@@ -56,6 +57,7 @@ const NAV_ITEMS = [
   { label: "Work Experience", icon: FaBriefcase, path: "/admin/manage/work-experience" },
   { label: "Milestones", icon: FaCalendarAlt, path: "/admin/manage/years" },
   { label: "Content Gallery", icon: FaImages, path: "/admin/manage/content-generation" },
+  { label: "Blog & Notes", icon: FaBookOpen, path: "/admin/manage/blog" },
   { label: "Contact Info", icon: FaEnvelope, path: "/admin/manage/contact" },
   { label: "Messages", icon: FaInbox, path: "/admin/manage/messages" },
 ];

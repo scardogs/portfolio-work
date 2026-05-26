@@ -257,6 +257,18 @@ const FluidNavbar = ({ activeSection, navLinkProps, onOpen, router, children }) 
           <Button {...navLinkProps("about-section")}>About</Button>
           <Button {...navLinkProps("projects-section")}>Work</Button>
           <Button {...navLinkProps("content-gen-section")}>Content</Button>
+          <Button
+            variant="link"
+            color="#888888"
+            fontSize={[13, 14]}
+            fontWeight="400"
+            letterSpacing="1px"
+            _hover={{ color: "#e0e0e0" }}
+            transition="color 0.3s ease"
+            onClick={() => router.push("/blog")}
+          >
+            Notes
+          </Button>
           <Button {...navLinkProps("contact-section")}>Contact</Button>
         </HStack>
 
@@ -831,10 +843,11 @@ const PortfolioTab = () => {
                           { label: "ABOUT", id: "about-section" },
                           { label: "WORK", id: "projects-section" },
                           { label: "CONTENT", id: "content-gen-section" },
+                          { label: "NOTES", href: "/blog" },
                           { label: "CONTACT", id: "contact-section" },
                         ].map((item, i) => (
                           <motion.div
-                            key={item.id}
+                            key={item.id || item.href}
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: i * 0.1 }}
@@ -847,7 +860,11 @@ const PortfolioTab = () => {
                               letterSpacing="1px"
                               onClick={() => {
                                 onClose();
-                                document.getElementById(item.id)?.scrollIntoView({ behavior: "smooth" });
+                                if (item.href) {
+                                  router.push(item.href);
+                                } else {
+                                  document.getElementById(item.id)?.scrollIntoView({ behavior: "smooth" });
+                                }
                               }}
                             >
                               {item.label}

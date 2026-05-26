@@ -23,6 +23,7 @@ import {
   FaBriefcase,
   FaCalendarAlt,
   FaImages,
+  FaBookOpen,
   FaBell,
   FaArrowRight,
   FaMagic,
@@ -198,7 +199,7 @@ export default function AdminDashboard() {
   const router = useRouter();
   const toast = useToast();
   const [user, setUser] = useState(null);
-  const [stats, setStats] = useState({ projects: null, skills: null, experience: null, content: null, messages: null });
+  const [stats, setStats] = useState({ projects: null, skills: null, experience: null, content: null, messages: null, blog: null });
   const [statsLoading, setStatsLoading] = useState(true);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [subLoading, setSubLoading] = useState(false);
@@ -216,7 +217,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [pr, sk, we, cg, msg] = await Promise.all([
+        const [pr, sk, we, cg, msg, bl] = await Promise.all([
           fetch("/api/projects").then((r) => r.json()).catch(() => ({})),
           fetch("/api/skills").then((r) => r.json()).catch(() => ({})),
           fetch("/api/work-experience").then((r) => r.json()).catch(() => ({})),
@@ -227,6 +228,7 @@ export default function AdminDashboard() {
             const r = await fetch("/api/messages", { headers: { Authorization: `Bearer ${token}` } });
             return r.json().catch(() => ({}));
           })(),
+          fetch("/api/blog?admin=1&page=1&limit=1").then((r) => r.json()).catch(() => ({})),
         ]);
         setStats({
           projects: Array.isArray(pr?.data) ? pr.data.length : 0,
@@ -234,6 +236,7 @@ export default function AdminDashboard() {
           experience: Array.isArray(we?.data) ? we.data.length : 0,
           content: cg?.pagination?.total ?? (Array.isArray(cg?.data) ? cg.data.length : 0),
           messages: Array.isArray(msg?.data) ? msg.data.length : 0,
+          blog: bl?.pagination?.total ?? (Array.isArray(bl?.data) ? bl.data.length : 0),
         });
       } catch (e) {
         console.error("Stats fetch failed:", e);
@@ -413,6 +416,7 @@ export default function AdminDashboard() {
         <QuickCard title="Work Experience" description="Professional timeline entries." icon={FaBriefcase} path="/admin/manage/work-experience" router={router} badge={stats.experience ? `${stats.experience}` : null} />
         <QuickCard title="Milestones" description="Key years and achievements." icon={FaCalendarAlt} path="/admin/manage/years" router={router} />
         <QuickCard title="Content Gallery" description="AI content gallery items." icon={FaImages} path="/admin/manage/content-generation" router={router} badge={stats.content ? `${stats.content}` : null} />
+        <QuickCard title="Blog & Notes" description="Write markdown posts and notes." icon={FaBookOpen} path="/admin/manage/blog" router={router} badge={stats.blog ? `${stats.blog}` : null} />
         <QuickCard title="Contact Info" description="Email, phone, location, social." icon={FaEnvelope} path="/admin/manage/contact" router={router} />
         <QuickCard title="Messages" description="Read inbound contact-form messages." icon={FaInbox} path="/admin/manage/messages" router={router} badge={stats.messages ? `${stats.messages}` : null} />
       </Grid>
