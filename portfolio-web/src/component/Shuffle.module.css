@@ -1,0 +1,19 @@
+.shuffleParent {
+  display: inline-block;
+  white-space: normal;
+  word-wrap: break-word;
+  will-change: transform;
+  line-height: 1.1;
+  visibility: hidden;
+}
+
+.shuffleParent.isReady {
+  visibility: visible;
+}
+
+.shuffleChar {
+  line-height: 1.1;
+  display: inline-block;
+  text-align: center;
+}
+

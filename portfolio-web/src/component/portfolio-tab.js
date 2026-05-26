@@ -1,5 +1,4 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
-import dynamic from "next/dynamic";
 import {
   Box,
   Button,
@@ -24,6 +23,7 @@ import {
 } from "@chakra-ui/react";
 import ContactForm from "./ContactForm";
 import ContentGenerationSection from "./ContentGenerationSection";
+import Shuffle from "./Shuffle";
 import { useRouter } from "next/router";
 import { motion, useScroll, useTransform, useSpring, useInView, AnimatePresence } from "framer-motion";
 import { FaUserShield, FaGithub, FaLinkedin, FaBars } from "react-icons/fa";
@@ -34,8 +34,6 @@ const MotionFlex = motion.create(Flex);
 const MotionHeading = motion.create(Heading);
 const MotionText = motion.create(Text);
 const MotionButton = motion.create(Button);
-const Lanyard = dynamic(() => import("./Lanyard"), { ssr: false });
-
 const ensureAbsoluteUrl = (url) => {
   if (!url) return "";
   if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("mailto:") || url.startsWith("tel:")) {
@@ -192,6 +190,104 @@ const ParallaxSection = ({ children, offset = 40, ...props }) => {
   );
 };
 
+// ─── Fluid Morphing Navbar ──────────────────────────────────────────────
+const FluidNavbar = ({ activeSection, navLinkProps, onOpen, router, children }) => {
+  const { scrollY } = useScroll();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    return scrollY.on("change", (v) => {
+      setScrolled(v > 60);
+    });
+  }, [scrollY]);
+
+  // Spring-driven transforms for that fluid, water-like feel
+  const SPRING = { type: "spring", stiffness: 180, damping: 22, mass: 0.9 };
+
+  return (
+    <>
+      {/* Spacer to preserve layout since the nav is fixed-positioned */}
+      <Box h={["64px", "68px", "72px"]} aria-hidden="true" />
+      <MotionBox
+        as="nav"
+        position="fixed"
+        top="0"
+        left="0"
+        right="0"
+        zIndex={1000}
+        mx="auto"
+        animate={{
+          width: scrolled ? "min(640px, 92%)" : "100%",
+          marginTop: scrolled ? 16 : 0,
+          borderRadius: scrolled ? 999 : 0,
+          paddingLeft: scrolled ? 18 : 0,
+          paddingRight: scrolled ? 18 : 0,
+          borderColor: scrolled ? "rgba(255,255,255,0.08)" : "rgba(51,51,51,0.5)",
+          boxShadow: scrolled
+            ? "0 20px 50px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04) inset"
+            : "0 0 0 rgba(0,0,0,0)",
+          backgroundColor: scrolled ? "rgba(15,15,15,0.7)" : "rgba(10,10,10,0.8)",
+        }}
+        transition={SPRING}
+        style={{
+          backdropFilter: "blur(14px)",
+          WebkitBackdropFilter: "blur(14px)",
+          borderBottom: scrolled ? "none" : "1px solid rgba(51,51,51,0.5)",
+          borderWidth: scrolled ? "1px" : "0",
+          borderStyle: "solid",
+          overflow: "hidden",
+        }}
+      >
+      <MotionFlex
+        animate={{ paddingTop: scrolled ? 8 : 16, paddingBottom: scrolled ? 8 : 16 }}
+        transition={SPRING}
+        maxW="1200px"
+        mx="auto"
+        px={scrolled ? 2 : [4, 6, 8]}
+        justify="space-between"
+        align="center"
+      >
+        <HStack
+          spacing={scrolled ? 5 : 8}
+          display={{ base: "none", md: "flex" }}
+          as={motion.div}
+          animate={{ gap: scrolled ? 18 : 32 }}
+          transition={SPRING}
+        >
+          <Button {...navLinkProps("about-section")}>About</Button>
+          <Button {...navLinkProps("projects-section")}>Work</Button>
+          <Button {...navLinkProps("content-gen-section")}>Content</Button>
+          <Button {...navLinkProps("contact-section")}>Contact</Button>
+        </HStack>
+
+        <HStack spacing={scrolled ? 2 : 4}>
+          <IconButton
+            display={{ base: "flex", md: "none" }}
+            icon={<FaBars />}
+            aria-label="Open Menu"
+            onClick={onOpen}
+            variant="ghost"
+            color="#888888"
+            _hover={{ color: "#e0e0e0", bg: "#1a1a1a" }}
+          />
+          <IconButton
+            icon={<FaUserShield />}
+            aria-label="Admin Login"
+            onClick={() => router.push("/admin/login")}
+            variant="ghost"
+            size="sm"
+            color="#888888"
+            _hover={{ color: "#e0e0e0", bg: "#1a1a1a" }}
+          />
+        </HStack>
+
+        {children}
+      </MotionFlex>
+    </MotionBox>
+    </>
+  );
+};
+
 // ─── Scroll Progress Bar ────────────────────────────────────────────────
 const ScrollProgressBar = () => {
   const { scrollYProgress } = useScroll();
@@ -217,7 +313,6 @@ const ScrollProgressBar = () => {
 const PortfolioTab = () => {
   const router = useRouter();
   const [aboutData, setAboutData] = useState(null);
-  const [contentGenData, setContentGenData] = useState([]);
   const [projects, setProjects] = useState([]);
   const [skills, setSkills] = useState([]);
   const [contactData, setContactData] = useState(null);
@@ -238,38 +333,43 @@ const PortfolioTab = () => {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [introExiting, setIntroExiting] = useState(false);
   const [minimumIntroDone, setMinimumIntroDone] = useState(false);
-  const [lanyardAssetsReady, setLanyardAssetsReady] = useState(false);
-  const [heroLanyardReady, setHeroLanyardReady] = useState(false);
+  const [heroImageReady, setHeroImageReady] = useState(false);
 
   // Tech marquee hover pause
   const [marquePaused, setMarqueePaused] = useState(false);
 
-  // ─── Intersection Observer for active nav section ──────────────────
+  // ─── Active nav section tracker (scroll-position based) ──────────────
   useEffect(() => {
     if (showIntro) return;
     const sectionIds = ["about-section", "projects-section", "content-gen-section", "contact-section"];
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id);
-          }
-        });
-      },
-      { threshold: 0.3, rootMargin: "-80px 0px -50% 0px" }
-    );
+    const OFFSET = 120; // pixels below viewport top counted as "active line"
 
-    // Small delay to ensure DOM is ready
-    const timer = setTimeout(() => {
+    const compute = () => {
+      let current = "";
+      let bestTop = -Infinity;
       sectionIds.forEach((id) => {
         const el = document.getElementById(id);
-        if (el) observer.observe(el);
+        if (!el) return;
+        const top = el.getBoundingClientRect().top;
+        // section whose top has crossed the active line (top <= OFFSET) and is closest to it
+        if (top - OFFSET <= 0 && top > bestTop) {
+          bestTop = top;
+          current = id;
+        }
       });
-    }, 100);
+      if (current) setActiveSection(current);
+    };
+
+    const onScroll = () => requestAnimationFrame(compute);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+
+    const timer = setTimeout(compute, 100);
 
     return () => {
       clearTimeout(timer);
-      observer.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
     };
   }, [showIntro]);
 
@@ -322,34 +422,18 @@ const PortfolioTab = () => {
   }, [showIntro, INTRO_DURATION_MS]);
 
   useEffect(() => {
-    // Preload heavy 3D modules + profile texture during intro so Lanyard is ready before entering the page.
     let cancelled = false;
-
-    const preloadImage = (src) =>
-      new Promise((resolve) => {
-        if (!src) return resolve();
-        const img = new window.Image();
-        img.src = src;
-        if (img.complete) return resolve();
-        img.onload = () => resolve();
-        img.onerror = () => resolve();
-      });
-
-    const run = async () => {
-      const profileSrc = aboutData?.profileImage || "/profile2.png";
-      await Promise.all([
-        import("./Lanyard"),
-        import("@dimforge/rapier3d-compat"),
-        preloadImage(profileSrc),
-      ]);
-
-      if (!cancelled) {
-        setLanyardAssetsReady(true);
-      }
+    const src = aboutData?.profileImage || "/profile2.png";
+    const img = new window.Image();
+    img.src = src;
+    const done = () => {
+      if (!cancelled) setHeroImageReady(true);
     };
-
-    run();
-
+    if (img.complete) done();
+    else {
+      img.onload = done;
+      img.onerror = done;
+    }
     return () => {
       cancelled = true;
     };
@@ -357,7 +441,7 @@ const PortfolioTab = () => {
 
   useEffect(() => {
     if (!showIntro) return;
-    if (!minimumIntroDone || !lanyardAssetsReady) return;
+    if (!minimumIntroDone || !heroImageReady) return;
 
     if (audioRef.current) {
       audioRef.current.pause();
@@ -367,7 +451,7 @@ const PortfolioTab = () => {
     setIntroExiting(true);
     const exitTimer = setTimeout(() => setShowIntro(false), 800);
     return () => clearTimeout(exitTimer);
-  }, [showIntro, minimumIntroDone, lanyardAssetsReady]);
+  }, [showIntro, minimumIntroDone, heroImageReady]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -379,7 +463,6 @@ const PortfolioTab = () => {
           contactRes,
           workExperienceRes,
           yearsRes,
-          contentGenRes,
         ] = await Promise.all([
           fetch("/api/about"),
           fetch("/api/projects"),
@@ -387,7 +470,6 @@ const PortfolioTab = () => {
           fetch("/api/contact"),
           fetch("/api/work-experience"),
           fetch("/api/years"),
-          fetch("/api/content-generation"),
         ]);
 
         const aboutData = await aboutRes.json();
@@ -396,7 +478,6 @@ const PortfolioTab = () => {
         const contactData = await contactRes.json();
         const workExperienceData = await workExperienceRes.json();
         const yearsData = await yearsRes.json();
-        const contentGenData = await contentGenRes.json();
 
         if (aboutData.success) {
           console.log("About data from API:", aboutData.data);
@@ -408,7 +489,6 @@ const PortfolioTab = () => {
         if (workExperienceData.success)
           setWorkExperiences(workExperienceData.data);
         if (yearsData.success) setYears(yearsData.data);
-        if (contentGenData.success) setContentGenData(contentGenData.data || []);
       } catch (error) {
         console.error("Failed to fetch data:", error);
       }
@@ -731,50 +811,13 @@ const PortfolioTab = () => {
           <ScrollProgressBar />
 
           <Box bg="#0a0a0a" minH="100vh" color="#e0e0e0" overflowX="hidden">
-            {/* ─── Sticky Navigation ──────────────────────────── */}
-            <Box
-              position="sticky"
-              top="0"
-              zIndex={1000}
-              bg="rgba(10, 10, 10, 0.8)"
-              backdropFilter="blur(12px)"
-              borderBottom="1px solid rgba(51, 51, 51, 0.5)"
+            {/* ─── Fluid Morphing Navigation ──────────────────── */}
+            <FluidNavbar
+              activeSection={activeSection}
+              navLinkProps={navLinkProps}
+              onOpen={onOpen}
+              router={router}
             >
-              <Flex
-                maxW="1200px"
-                mx="auto"
-                px={[4, 6, 8]}
-                py={4}
-                justify="space-between"
-                align="center"
-              >
-                <HStack spacing={8} display={{ base: "none", md: "flex" }}>
-                  <Button {...navLinkProps("about-section")}>About</Button>
-                  <Button {...navLinkProps("projects-section")}>Work</Button>
-                  <Button {...navLinkProps("content-gen-section")}>Content</Button>
-                  <Button {...navLinkProps("contact-section")}>Contact</Button>
-                </HStack>
-
-                <HStack spacing={4}>
-                  <IconButton
-                    display={{ base: "flex", md: "none" }}
-                    icon={<FaBars />}
-                    aria-label="Open Menu"
-                    onClick={onOpen}
-                    variant="ghost"
-                    color="#888888"
-                    _hover={{ color: "#e0e0e0", bg: "#1a1a1a" }}
-                  />
-                  <IconButton
-                    icon={<FaUserShield />}
-                    aria-label="Admin Login"
-                    onClick={() => router.push("/admin/login")}
-                    variant="ghost"
-                    size="sm"
-                    color="#888888"
-                    _hover={{ color: "#e0e0e0", bg: "#1a1a1a" }}
-                  />
-                </HStack>
 
                 {/* Mobile Menu Drawer */}
                 <Drawer isOpen={isOpen} placement="right" onClose={onClose}>
@@ -815,8 +858,7 @@ const PortfolioTab = () => {
                     </DrawerBody>
                   </DrawerContent>
                 </Drawer>
-              </Flex>
-            </Box>
+            </FluidNavbar>
 
             {/* ─── Hero Section ───────────────────────────────── */}
             <Box
@@ -827,144 +869,452 @@ const PortfolioTab = () => {
               mx="auto"
               px={[4, 6, 8, 12]}
               py={16}
+              position="relative"
             >
               <Flex
                 direction={{ base: "column", md: "row" }}
                 align="center"
                 justify="space-between"
                 w="100%"
-                gap={8}
+                gap={[10, 12, 16]}
+                position="relative"
               >
-                {/* Hero visual */}
+                {/* ── Decorative background numerals ──────────── */}
+                <Box
+                  position="absolute"
+                  top={["-40px", "-60px", "-80px"]}
+                  left={["-20px", "-30px", "-40px"]}
+                  fontSize={["140px", "200px", "280px"]}
+                  fontWeight="700"
+                  lineHeight="1"
+                  color="transparent"
+                  letterSpacing="-10px"
+                  pointerEvents="none"
+                  zIndex={0}
+                  sx={{
+                    WebkitTextStroke: "1px #1a1a1a",
+                    fontFamily: "system-ui, -apple-system, sans-serif",
+                  }}
+                  display={{ base: "none", md: "block" }}
+                >
+                  00
+                </Box>
+
+                {/* ── Profile portrait card ─────────────────────── */}
                 <MotionBox
                   flex="0 0 auto"
                   order={{ base: 0, md: 2 }}
-                  mb={{ base: 8, md: 0 }}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.8, delay: 0.2 }}
+                  mb={{ base: 0, md: 0 }}
+                  initial={{ opacity: 0, scale: 0.92, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                  position="relative"
+                  zIndex={1}
                 >
                   <Box
                     position="relative"
-                    boxSize={["240px", "280px", "340px", "430px"]}
+                    w={["260px", "300px", "360px", "430px"]}
+                    role="group"
                   >
-                    {!heroLanyardReady && (
+                    {/* Top metadata strip */}
+                    <Flex
+                      justify="space-between"
+                      align="center"
+                      mb={3}
+                      fontFamily="monospace"
+                      fontSize="10px"
+                      color="#666666"
+                      letterSpacing="2px"
+                    >
+                      <Text>ID / 001</Text>
+                      <Text>PORTFOLIO · {new Date().getFullYear()}</Text>
+                    </Flex>
+
+                    {/* Image with framed border + corner brackets */}
+                    <Box position="relative">
+                      {/* Corner brackets */}
+                      {[
+                        { top: "-6px", left: "-6px", borderTop: "1px solid #444", borderLeft: "1px solid #444" },
+                        { top: "-6px", right: "-6px", borderTop: "1px solid #444", borderRight: "1px solid #444" },
+                        { bottom: "-6px", left: "-6px", borderBottom: "1px solid #444", borderLeft: "1px solid #444" },
+                        { bottom: "-6px", right: "-6px", borderBottom: "1px solid #444", borderRight: "1px solid #444" },
+                      ].map((pos, i) => (
+                        <Box
+                          key={i}
+                          position="absolute"
+                          w="14px"
+                          h="14px"
+                          pointerEvents="none"
+                          transition="border-color 0.4s ease"
+                          {...pos}
+                          _groupHover={{ borderColor: "#888888" }}
+                        />
+                      ))}
+
                       <Box
-                        position="absolute"
-                        inset={0}
-                        borderRadius="16px"
-                        border="1px solid rgba(255,255,255,0.1)"
-                        bg="rgba(255,255,255,0.03)"
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
-                        zIndex={2}
+                        position="relative"
+                        overflow="hidden"
+                        bg="#0d0d0d"
+                        border="1px solid #1f1f1f"
+                        aspectRatio="3 / 4"
+                        boxShadow="0 30px 70px -20px rgba(0,0,0,0.7)"
+                        transition="all 0.5s cubic-bezier(0.22, 1, 0.36, 1)"
+                        _groupHover={{
+                          borderColor: "#333333",
+                          transform: "translateY(-6px)",
+                          boxShadow: "0 50px 100px -25px rgba(0,0,0,0.85)",
+                        }}
                       >
-                        <Text fontSize="12px" letterSpacing="2px" color="#888888">
-                          LOADING LANYARD...
-                        </Text>
+                        <Box
+                          as="img"
+                          src={aboutData?.profileImage || "/profile2.png"}
+                          alt={aboutData?.name || "Profile"}
+                          position="absolute"
+                          inset={0}
+                          w="100%"
+                          h="100%"
+                          objectFit="cover"
+                          filter="grayscale(100%) brightness(0.92) contrast(1.05)"
+                          transition="filter 0.7s ease, transform 0.7s ease"
+                          _groupHover={{ filter: "grayscale(0%) brightness(1) contrast(1)", transform: "scale(1.03)" }}
+                        />
+
+                        {/* Subtle grid overlay */}
+                        <Box
+                          position="absolute"
+                          inset={0}
+                          pointerEvents="none"
+                          opacity={0.25}
+                          backgroundImage="linear-gradient(#1a1a1a 1px, transparent 1px), linear-gradient(90deg, #1a1a1a 1px, transparent 1px)"
+                          backgroundSize="40px 40px"
+                        />
+
+                        {/* Bottom gradient + caption */}
+                        <Box
+                          position="absolute"
+                          bottom={0}
+                          left={0}
+                          right={0}
+                          h="45%"
+                          pointerEvents="none"
+                          background="linear-gradient(to top, rgba(10,10,10,0.85), transparent)"
+                        />
+                        <Flex
+                          position="absolute"
+                          bottom={3}
+                          left={3}
+                          right={3}
+                          justify="space-between"
+                          align="end"
+                          pointerEvents="none"
+                        >
+                          <Box>
+                            <Text
+                              fontSize="9px"
+                              color="#666666"
+                              letterSpacing="2px"
+                              textTransform="uppercase"
+                              fontFamily="monospace"
+                              mb={0.5}
+                            >
+                              Subject
+                            </Text>
+                            <Text
+                              fontSize="11px"
+                              color="#e0e0e0"
+                              letterSpacing="1px"
+                              textTransform="uppercase"
+                              fontWeight="500"
+                            >
+                              {(aboutData?.name || "J. Escarlan").split(" ").slice(-1)[0]}
+                            </Text>
+                          </Box>
+                          <Text
+                            fontSize="9px"
+                            color="#555555"
+                            fontFamily="monospace"
+                            letterSpacing="2px"
+                          >
+                            03:24
+                          </Text>
+                        </Flex>
                       </Box>
-                    )}
-                    <Lanyard
-                      imageUrl={aboutData?.profileImage || "/profile2.png"}
-                      position={[0, 0, 20]}
-                      gravity={[0, -40, 0]}
-                      onReady={() => setHeroLanyardReady(true)}
-                    />
+                    </Box>
+
+                    {/* Bottom info strip */}
+                    <Flex
+                      justify="space-between"
+                      align="center"
+                      mt={3}
+                      fontFamily="monospace"
+                      fontSize="10px"
+                      color="#555555"
+                      letterSpacing="2px"
+                    >
+                      <Text>· FRAME 1 / 1</Text>
+                      <Text>RAW</Text>
+                    </Flex>
                   </Box>
                 </MotionBox>
 
-                {/* Text Block with staggered entrance */}
+                {/* ── Text block ────────────────────────────────── */}
                 <Box
                   flex="1"
-                  maxW="600px"
+                  maxW="640px"
                   order={{ base: 1, md: 0 }}
                   textAlign={{ base: "center", md: "left" }}
+                  position="relative"
+                  zIndex={1}
                 >
+                  {/* Available status row */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                  >
+                    <HStack
+                      spacing={3}
+                      mb={6}
+                      justify={{ base: "center", md: "flex-start" }}
+                      divider={<Box w="20px" h="1px" bg="#333333" />}
+                    >
+                      <HStack spacing={2}>
+                        <Box
+                          w="6px"
+                          h="6px"
+                          borderRadius="50%"
+                          bg="#e0e0e0"
+                          sx={{
+                            animation: "heroPulse 2s ease-in-out infinite",
+                            "@keyframes heroPulse": {
+                              "0%, 100%": { opacity: 1, boxShadow: "0 0 0 0 rgba(224,224,224,0.5)" },
+                              "50%": { opacity: 0.5, boxShadow: "0 0 0 6px rgba(224,224,224,0)" },
+                            },
+                          }}
+                        />
+                        <Text
+                          fontSize="11px"
+                          color="#888888"
+                          letterSpacing="3px"
+                          textTransform="uppercase"
+                          fontWeight="500"
+                        >
+                          Available for Work
+                        </Text>
+                      </HStack>
+                      <Text
+                        fontSize="11px"
+                        color="#666666"
+                        letterSpacing="2px"
+                        fontFamily="monospace"
+                        display={{ base: "none", sm: "block" }}
+                      >
+                        {contactData?.location?.toUpperCase() || "CEBU · PH"}
+                      </Text>
+                    </HStack>
+                  </motion.div>
+
+                  {/* Eyebrow */}
+                  <MotionText
+                    fontSize="11px"
+                    color="#666666"
+                    letterSpacing="4px"
+                    textTransform="uppercase"
+                    fontWeight="500"
+                    mb={3}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                  >
+                    — Portfolio · Hello, I&apos;m
+                  </MotionText>
+
+                  {/* Name */}
                   <MotionHeading
                     as="h1"
-                    fontSize={[48, 56, 64, 72]}
+                    fontSize={[44, 56, 68, 84]}
                     fontWeight="700"
                     color="#e0e0e0"
-                    mb={4}
-                    letterSpacing="-2px"
-                    lineHeight="1.1"
+                    mb={5}
+                    letterSpacing="-3px"
+                    lineHeight="0.95"
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 0.3 }}
                   >
-                    {aboutData?.name || "John Michael T. Escarlan"}
+                    <Shuffle
+                      text={aboutData?.name || "John Michael T. Escarlan"}
+                      tag="span"
+                      textAlign="inherit"
+                      shuffleDirection="right"
+                      duration={0.35}
+                      animationMode="evenodd"
+                      shuffleTimes={1}
+                      ease="power3.out"
+                      stagger={0.03}
+                      threshold={0.1}
+                      triggerOnce
+                      triggerOnHover
+                      respectReducedMotion
+                      loop={false}
+                      loopDelay={0}
+                      className="hero-name-shuffle"
+                      style={{ display: "inline-block", color: "inherit" }}
+                    />
                   </MotionHeading>
 
-                  <MotionText
-                    fontSize={[18, 20, 22, 24]}
-                    fontWeight="400"
-                    color="#e0e0e0"
-                    mb={6}
-                    letterSpacing="0.5px"
-                    textTransform="uppercase"
+                  {/* Role with divider */}
+                  <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.5 }}
                   >
-                    {aboutData?.currentJobTitle || "Web Developer"}
-                  </MotionText>
+                    <HStack
+                      spacing={3}
+                      mb={5}
+                      justify={{ base: "center", md: "flex-start" }}
+                      align="center"
+                    >
+                      <Box w="40px" h="1px" bg="#444444" />
+                      <Text
+                        fontSize={[14, 15, 16]}
+                        fontWeight="500"
+                        color="#e0e0e0"
+                        letterSpacing="2px"
+                        textTransform="uppercase"
+                      >
+                        {aboutData?.currentJobTitle || "Web Developer"}
+                      </Text>
+                    </HStack>
+                  </motion.div>
 
+                  {/* Tagline */}
                   <MotionText
                     fontSize={[16, 18, 20]}
                     fontWeight="300"
-                    color="#888888"
-                    mb={8}
-                    letterSpacing="0.5px"
+                    color="#999999"
+                    mb={10}
+                    letterSpacing="0.2px"
+                    lineHeight="1.6"
+                    maxW="520px"
+                    mx={{ base: "auto", md: 0 }}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.7 }}
                   >
-                    {aboutData?.tagline ||
-                      "Building thoughtful digital experiences"}
+                    {aboutData?.tagline || "Building thoughtful digital experiences"}
                   </MotionText>
 
-                  {/* Social Icons with wave entrance */}
+                  {/* Social row — labeled link buttons */}
                   <HStack
-                    spacing={6}
+                    spacing={0}
+                    flexWrap="wrap"
                     justify={{ base: "center", md: "flex-start" }}
+                    divider={<Box w="1px" h="14px" bg="#2a2a2a" mx={4} />}
                   >
                     {[
-                      { icon: <FaGithub />, label: "GitHub", link: aboutData?.githubLink, show: !!aboutData?.githubLink },
-                      { icon: <FaLinkedin />, label: "LinkedIn", link: aboutData?.linkedinLink, show: !!aboutData?.linkedinLink },
-                      { icon: <span>🌐</span>, label: "Portfolio", link: aboutData?.portfolioLink, show: !!aboutData?.portfolioLink },
-                      { icon: <span>📧</span>, label: "Email", link: contactData?.email ? `mailto:${contactData.email}` : null, show: !!contactData?.email, isMail: true },
-                    ].filter(s => s.show).map((social, i) => (
-                      <motion.div
-                        key={social.label}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: 0.9 + i * 0.1, type: "spring", stiffness: 200 }}
-                      >
-                        <IconButton
-                          icon={social.icon}
-                          aria-label={social.label}
-                          variant="ghost"
-                          fontSize="24px"
-                          color="#e0e0e0"
-                          _hover={{
-                            color: "#e0e0e0",
-                            transform: "translateY(-3px)",
-                          }}
-                          transition="all 0.3s ease"
-                          onClick={() => {
-                            if (social.isMail) {
-                              window.location.href = social.link;
-                            } else {
-                              window.open(ensureAbsoluteUrl(social.link), "_blank");
-                            }
-                          }}
-                        />
-                      </motion.div>
-                    ))}
+                      { icon: FaGithub, label: "GitHub", link: aboutData?.githubLink, show: !!aboutData?.githubLink },
+                      { icon: FaLinkedin, label: "LinkedIn", link: aboutData?.linkedinLink, show: !!aboutData?.linkedinLink },
+                      { label: "Portfolio", link: aboutData?.portfolioLink, show: !!aboutData?.portfolioLink, isWeb: true },
+                      { label: "Email", link: contactData?.email ? `mailto:${contactData.email}` : null, show: !!contactData?.email, isMail: true },
+                    ].filter(s => s.show).map((social, i) => {
+                      const Icon = social.icon;
+                      return (
+                        <motion.div
+                          key={social.label}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.4, delay: 0.9 + i * 0.08 }}
+                        >
+                          <Box
+                            as="button"
+                            display="inline-flex"
+                            alignItems="center"
+                            gap={2}
+                            color="#888888"
+                            fontSize="12px"
+                            fontWeight="500"
+                            letterSpacing="2px"
+                            textTransform="uppercase"
+                            py={2}
+                            position="relative"
+                            role="group"
+                            transition="color 0.3s"
+                            _hover={{ color: "#e0e0e0" }}
+                            sx={{
+                              "&::after": {
+                                content: '""',
+                                position: "absolute",
+                                bottom: 0,
+                                left: "50%",
+                                right: "50%",
+                                height: "1px",
+                                bg: "#e0e0e0",
+                                transition: "all 0.3s ease",
+                              },
+                              "&:hover::after": { left: 0, right: 0 },
+                            }}
+                            onClick={() => {
+                              if (social.isMail) {
+                                window.location.href = social.link;
+                              } else {
+                                window.open(ensureAbsoluteUrl(social.link), "_blank");
+                              }
+                            }}
+                          >
+                            {Icon && <Icon size={13} />}
+                            <span>{social.label}</span>
+                            <Box
+                              as="span"
+                              transition="transform 0.3s ease"
+                              _groupHover={{ transform: "translateX(3px)" }}
+                            >
+                              →
+                            </Box>
+                          </Box>
+                        </motion.div>
+                      );
+                    })}
                   </HStack>
                 </Box>
               </Flex>
+
+              {/* ── Scroll cue ───────────────────────────────────── */}
+              <MotionBox
+                position="absolute"
+                bottom={[6, 8, 10]}
+                left="50%"
+                transform="translateX(-50%)"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8, delay: 1.5 }}
+                pointerEvents="none"
+                display={{ base: "none", md: "block" }}
+              >
+                <VStack spacing={2}>
+                  <Text
+                    fontSize="10px"
+                    color="#666666"
+                    letterSpacing="4px"
+                    textTransform="uppercase"
+                    fontWeight="500"
+                  >
+                    Scroll
+                  </Text>
+                  <Box
+                    w="1px"
+                    h="36px"
+                    bg="linear-gradient(to bottom, #444444, transparent)"
+                    sx={{
+                      animation: "scrollLine 2s ease-in-out infinite",
+                      "@keyframes scrollLine": {
+                        "0%, 100%": { transform: "scaleY(1)", opacity: 0.6, transformOrigin: "top" },
+                        "50%": { transform: "scaleY(1.4)", opacity: 1, transformOrigin: "top" },
+                      },
+                    }}
+                  />
+                </VStack>
+              </MotionBox>
             </Box>
 
             {/* ─── Main Content ───────────────────────────────── */}
@@ -978,83 +1328,283 @@ const PortfolioTab = () => {
                   About Me
                 </SectionHeading>
 
-                <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={8} mb={8} align="stretch">
-                  {/* Quote Box */}
-                  <TiltCard>
-                    <MotionBox
-                      bg="#1a1a1a"
-                      p={6}
-                      border="1px solid #333333"
-                      display="flex"
-                      alignItems="center"
-                      minH="100%"
-                      initial={{ opacity: 0, x: -30 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.5, delay: 0.1 }}
+                {/* ── Editorial About Layout ────────────────────── */}
+                <Flex
+                  direction={{ base: "column", lg: "row" }}
+                  gap={[8, 10, 14]}
+                  mb={[10, 12, 16]}
+                  align="stretch"
+                >
+                  {/* ── Left: Bio narrative ─────────────────────── */}
+                  <MotionBox
+                    flex={{ base: "1", lg: "0 0 58%" }}
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6 }}
+                    position="relative"
+                  >
+                    {/* Section eyebrow */}
+                    <HStack
+                      spacing={3}
+                      mb={5}
+                      divider={<Box w="20px" h="1px" bg="#333333" />}
                     >
                       <Text
-                        color="#e0e0e0"
-                        fontSize={[16, 17, 18]}
+                        fontSize="11px"
+                        color="#888888"
+                        letterSpacing="3px"
+                        textTransform="uppercase"
+                        fontWeight="500"
+                      >
+                        Profile
+                      </Text>
+                      <Text
+                        fontSize="11px"
+                        color="#666666"
+                        letterSpacing="2px"
+                        fontFamily="monospace"
+                      >
+                        / 01
+                      </Text>
+                    </HStack>
+
+                    {/* Pull-quote intro */}
+                    <Text
+                      fontSize={[22, 26, 30]}
+                      fontWeight="300"
+                      color="#e0e0e0"
+                      lineHeight="1.35"
+                      letterSpacing="-0.5px"
+                      mb={6}
+                    >
+                      <Text as="span" color="#444444" fontSize={[36, 44, 52]} fontWeight="600" lineHeight="0" verticalAlign="-0.4em" mr={2}>
+                        “
+                      </Text>
+                      {aboutData?.tagline || "Building thoughtful digital experiences that balance form, function, and craft."}
+                    </Text>
+
+                    {/* Description body with left rail */}
+                    <Box
+                      position="relative"
+                      pl={5}
+                      borderLeft="1px solid #2a2a2a"
+                      mb={8}
+                    >
+                      <Text
+                        color="#999999"
+                        fontSize={[14, 15, 16]}
                         fontWeight="300"
-                        fontStyle="italic"
-                        lineHeight="1.6"
-                        textAlign="center"
+                        lineHeight="1.8"
                       >
                         {aboutData?.description ||
                           "Passionate about building reliable, efficient, and user-friendly systems. Skilled in solving technical challenges, improving processes, and delivering high-quality solutions."}
                       </Text>
-                    </MotionBox>
-                  </TiltCard>
+                    </Box>
 
-                  {/* Education Box */}
-                  <TiltCard>
+                    {/* Languages chips */}
+                    {aboutData?.languages?.length > 0 && (
+                      <Box>
+                        <Text
+                          fontSize="10px"
+                          color="#666666"
+                          letterSpacing="3px"
+                          textTransform="uppercase"
+                          fontWeight="500"
+                          mb={3}
+                        >
+                          Languages
+                        </Text>
+                        <HStack
+                          spacing={0}
+                          flexWrap="wrap"
+                          divider={<Box w="1px" h="10px" bg="#2a2a2a" mx={3} />}
+                        >
+                          {aboutData.languages.map((lang, idx) => (
+                            <Text
+                              key={idx}
+                              fontSize={[12, 13]}
+                              color="#888888"
+                              fontWeight="400"
+                              letterSpacing="0.5px"
+                              _hover={{ color: "#e0e0e0" }}
+                              transition="color 0.3s"
+                              cursor="default"
+                            >
+                              {lang}
+                            </Text>
+                          ))}
+                        </HStack>
+                      </Box>
+                    )}
+                  </MotionBox>
+
+                  {/* ── Right: Status + stats column ────────────── */}
+                  <VStack
+                    flex="1"
+                    spacing={5}
+                    align="stretch"
+                  >
+                    {/* Currently working — featured card */}
                     <MotionBox
-                      border="1px solid #333333"
-                      p={6}
-                      bg="#141414"
-                      minH="100%"
-                      initial={{ opacity: 0, x: -30 }}
-                      whileInView={{ opacity: 1, x: 0 }}
+                      initial={{ opacity: 0, y: 30 }}
+                      whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
-                      transition={{ duration: 0.5, delay: 0.2 }}
+                      transition={{ duration: 0.6, delay: 0.1 }}
+                      position="relative"
+                      bg="#0d0d0d"
+                      border="1px solid #1f1f1f"
+                      p={6}
+                      overflow="hidden"
+                      role="group"
+                      _hover={{ borderColor: "#333333" }}
+                      transition_chakra="border-color 0.3s"
                     >
-                      <Text fontSize={[16, 17]} fontWeight="600" color="#e0e0e0" mb={2}>
+                      {/* Live dot */}
+                      <HStack spacing={2} mb={4}>
+                        <Box
+                          w="6px"
+                          h="6px"
+                          borderRadius="50%"
+                          bg="#e0e0e0"
+                          sx={{
+                            animation: "livePulse 2s ease-in-out infinite",
+                            "@keyframes livePulse": {
+                              "0%, 100%": { opacity: 1, boxShadow: "0 0 0 0 rgba(224,224,224,0.5)" },
+                              "50%": { opacity: 0.5, boxShadow: "0 0 0 6px rgba(224,224,224,0)" },
+                            },
+                          }}
+                        />
+                        <Text
+                          fontSize="10px"
+                          color="#888888"
+                          letterSpacing="3px"
+                          textTransform="uppercase"
+                          fontWeight="500"
+                        >
+                          Currently
+                        </Text>
+                      </HStack>
+                      <Text
+                        fontSize={[18, 20, 22]}
+                        fontWeight="600"
+                        color="#e0e0e0"
+                        letterSpacing="-0.5px"
+                        lineHeight="1.2"
+                        mb={1}
+                      >
+                        {aboutData?.currentJobTitle || "Software Developer"}
+                      </Text>
+                      <Text
+                        fontSize={[13, 14]}
+                        color="#888888"
+                        fontWeight="400"
+                      >
+                        @ {aboutData?.currentCompany || "Independent"}
+                      </Text>
+
+                      {/* Diagonal corner accent */}
+                      <Box
+                        position="absolute"
+                        top={0}
+                        right={0}
+                        w="60px"
+                        h="60px"
+                        pointerEvents="none"
+                        sx={{
+                          background: "linear-gradient(135deg, transparent 50%, #1a1a1a 50%)",
+                          transition: "background 0.3s",
+                        }}
+                        _groupHover={{
+                          sx: { background: "linear-gradient(135deg, transparent 50%, #2a2a2a 50%)" },
+                        }}
+                      />
+                    </MotionBox>
+
+                    {/* Education — minimal row */}
+                    <MotionBox
+                      initial={{ opacity: 0, y: 30 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.6, delay: 0.2 }}
+                      bg="#0d0d0d"
+                      border="1px solid #1f1f1f"
+                      p={6}
+                      _hover={{ borderColor: "#333333" }}
+                      transition_chakra="border-color 0.3s"
+                    >
+                      <Text
+                        fontSize="10px"
+                        color="#666666"
+                        letterSpacing="3px"
+                        textTransform="uppercase"
+                        fontWeight="500"
+                        mb={3}
+                      >
+                        Education
+                      </Text>
+                      <Text
+                        fontSize={[15, 16]}
+                        fontWeight="500"
+                        color="#e0e0e0"
+                        letterSpacing="-0.2px"
+                        lineHeight="1.4"
+                        mb={1}
+                      >
                         {aboutData?.education || "Bachelor of Science in Information Technology"}
                       </Text>
-                      <Text fontSize={[13, 14]} fontWeight="400" color="#888888" mb={1}>
-                        {aboutData?.education || "University"}
-                      </Text>
-                      <Text fontSize={[12, 13]} fontWeight="300" color="#666666">
+                      <Text fontSize="11px" color="#555555" letterSpacing="1px" textTransform="uppercase">
                         Graduated
                       </Text>
                     </MotionBox>
-                  </TiltCard>
 
-                  {/* Experience Box */}
-                  <TiltCard>
+                    {/* Stat trio */}
                     <MotionBox
-                      border="1px solid #333333"
-                      p={6}
-                      bg="#141414"
-                      minH="100%"
-                      initial={{ opacity: 0, x: -30 }}
-                      whileInView={{ opacity: 1, x: 0 }}
+                      initial={{ opacity: 0, y: 30 }}
+                      whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
-                      transition={{ duration: 0.5, delay: 0.3 }}
+                      transition={{ duration: 0.6, delay: 0.3 }}
                     >
-                      <Text fontSize={[16, 17]} fontWeight="600" color="#e0e0e0" mb={2}>
-                        {aboutData?.currentJobTitle || "Software Developer"}
-                      </Text>
-                      <Text fontSize={[13, 14]} fontWeight="400" color="#888888" mb={1}>
-                        {aboutData?.currentCompany || "Current Company"}
-                      </Text>
-                      <Text fontSize={[12, 13]} fontWeight="300" color="#666666">
-                        Present
-                      </Text>
+                      <SimpleGrid columns={3} spacing={0} border="1px solid #1f1f1f">
+                        {[
+                          { value: projects.length || 0, label: "Projects" },
+                          { value: skills.length || 0, label: "Stack" },
+                          { label: "God is good all the time" },
+                        ].map((stat, idx) => (
+                          <Box
+                            key={stat.label}
+                            p={4}
+                            textAlign="center"
+                            borderLeft={idx === 0 ? "none" : "1px solid #1f1f1f"}
+                            transition="background 0.3s"
+                            _hover={{ bg: "#0d0d0d" }}
+                            cursor="default"
+                          >
+                            <Text
+                              fontSize={[22, 26, 28]}
+                              fontWeight="700"
+                              color="#e0e0e0"
+                              letterSpacing="-1px"
+                              lineHeight="1"
+                              mb={1}
+                            >
+                              {stat.value}
+                            </Text>
+                            <Text
+                              fontSize="9px"
+                              color="#666666"
+                              letterSpacing="2px"
+                              textTransform="uppercase"
+                              fontWeight="500"
+                            >
+                              {stat.label}
+                            </Text>
+                          </Box>
+                        ))}
+                      </SimpleGrid>
                     </MotionBox>
-                  </TiltCard>
-                </SimpleGrid>
+                  </VStack>
+                </Flex>
 
                 {/* Tech Stack */}
                 <Text
@@ -1072,6 +1622,7 @@ const PortfolioTab = () => {
                   position="relative"
                   w="100%"
                   mb={4}
+                  py={3}
                   onMouseEnter={() => setMarqueePaused(true)}
                   onMouseLeave={() => setMarqueePaused(false)}
                 >
@@ -1134,390 +1685,948 @@ const PortfolioTab = () => {
                   Featured Projects
                 </SectionHeading>
 
-                <VStack spacing={12} align="stretch">
-                  {projects.slice(0, 5).map((project, index) => (
-                    <MotionBox
-                      key={project._id || index}
-                      initial={{ opacity: 0, x: index % 2 === 0 ? -60 : 60 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true, margin: "-60px" }}
-                      transition={{ duration: 0.6, ease: "easeOut" }}
-                    >
-                      <Flex
-                        direction={{ base: "column-reverse", md: "row" }}
-                        gap={8}
-                        align="start"
+                <VStack spacing={[20, 28, 36]} align="stretch">
+                  {projects.slice(0, 5).map((project, index) => {
+                    const isEven = index % 2 === 0;
+                    const dateLabel = project.projectDate
+                      ? isNaN(Date.parse(project.projectDate))
+                        ? project.projectDate.toUpperCase()
+                        : new Date(project.projectDate).toLocaleDateString("en-US", {
+                            month: "long",
+                            year: "numeric",
+                          }).toUpperCase()
+                      : new Date(project.createdAt).toLocaleDateString("en-US", {
+                          month: "long",
+                          year: "numeric",
+                        }).toUpperCase();
+
+                    return (
+                      <MotionBox
+                        key={project._id || index}
+                        position="relative"
+                        initial={{ opacity: 0, y: 60 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, margin: "-80px" }}
+                        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                        role="group"
                       >
-                        <Box flex="1" w="100%">
-                          <Text
-                            fontSize={[18, 20, 22]}
-                            fontWeight="600"
-                            color="#e0e0e0"
-                            mb={1}
-                            letterSpacing="-0.5px"
-                          >
-                            {project.title}
-                          </Text>
-                          <Text
-                            fontSize={[10, 11, 12]}
-                            fontWeight="400"
-                            color="#888888"
-                            mb={2}
-                            letterSpacing="1px"
-                            textTransform="uppercase"
-                          >
-                            {project.type || "Full-Stack Application"}
-                          </Text>
-                          <Text
-                            fontSize={[11, 12, 13]}
-                            fontWeight="400"
-                            color="#666666"
-                            mb={4}
-                            letterSpacing="0.5px"
-                          >
-                            {project.projectDate
-                              ? isNaN(Date.parse(project.projectDate))
-                                ? project.projectDate.toUpperCase()
-                                : new Date(project.projectDate).toLocaleDateString(
-                                  "en-US",
-                                  { month: "long", year: "numeric", day: "numeric" }
-                                ).toUpperCase()
-                              : new Date(project.createdAt).toLocaleDateString(
-                                "en-US",
-                                { month: "long", year: "numeric" }
-                              ).toUpperCase()}
-                          </Text>
+                        {/* Giant ghost number index */}
+                        <Box
+                          position="absolute"
+                          top={["-30px", "-50px", "-70px"]}
+                          left={isEven ? ["-10px", "-20px", "-30px"] : "auto"}
+                          right={isEven ? "auto" : ["-10px", "-20px", "-30px"]}
+                          fontSize={["120px", "180px", "240px"]}
+                          fontWeight="700"
+                          lineHeight="1"
+                          color="transparent"
+                          letterSpacing="-8px"
+                          pointerEvents="none"
+                          zIndex={0}
+                          sx={{
+                            WebkitTextStroke: "1px #1a1a1a",
+                            fontFamily: "system-ui, -apple-system, sans-serif",
+                            transition: "color 0.6s ease, -webkit-text-stroke-color 0.6s ease",
+                          }}
+                          _groupHover={{
+                            sx: {
+                              WebkitTextStroke: "1px #2a2a2a",
+                            },
+                          }}
+                        >
+                          {String(index + 1).padStart(2, "0")}
+                        </Box>
 
-                          {/* Tech Stack with cascading pop-in */}
-                          <HStack spacing={2} mb={4} flexWrap="wrap">
-                            {project.technologies
-                              ?.slice(0, 6)
-                              .map((tech, idx) => (
-                                <MotionBox
-                                  key={idx}
-                                  px={3}
-                                  py={1}
-                                  borderRadius="2px"
-                                  bg="#141414"
-                                  border="1px solid #333333"
-                                  initial={{ opacity: 0, scale: 0.8 }}
-                                  whileInView={{ opacity: 1, scale: 1 }}
-                                  viewport={{ once: true }}
-                                  transition={{ duration: 0.3, delay: idx * 0.05 }}
+                        <Flex
+                          direction={{
+                            base: "column",
+                            md: isEven ? "row" : "row-reverse",
+                          }}
+                          gap={[8, 10, 14]}
+                          align="center"
+                          position="relative"
+                          zIndex={1}
+                        >
+                          {/* ── Project Image Card ─────────────────────── */}
+                          <Box
+                            flex={{ base: "1", md: "0 0 55%" }}
+                            w="100%"
+                            position="relative"
+                          >
+                            <MotionBox
+                              position="relative"
+                              overflow="hidden"
+                              borderRadius="2px"
+                              border="1px solid #1f1f1f"
+                              bg="#0d0d0d"
+                              aspectRatio="16 / 11"
+                              boxShadow="0 30px 60px -20px rgba(0,0,0,0.6)"
+                              transition_chakra="all 0.5s cubic-bezier(0.22, 1, 0.36, 1)"
+                              _groupHover={{
+                                borderColor: "#333333",
+                                transform: "translateY(-8px)",
+                                boxShadow: "0 50px 90px -25px rgba(0,0,0,0.75)",
+                              }}
+                              whileHover={{}}
+                            >
+                              {/* Image */}
+                              <Box
+                                as="img"
+                                src={project.img}
+                                alt={project.title}
+                                position="absolute"
+                                inset={0}
+                                w="100%"
+                                h="100%"
+                                objectFit="contain"
+                                p={[6, 8, 10]}
+                                filter="grayscale(100%) brightness(0.85)"
+                                transition="filter 0.7s ease, transform 0.7s ease"
+                                _groupHover={{
+                                  filter: "grayscale(0%) brightness(1)",
+                                  transform: "scale(1.04)",
+                                }}
+                              />
+
+                              {/* Subtle grid overlay */}
+                              <Box
+                                position="absolute"
+                                inset={0}
+                                pointerEvents="none"
+                                opacity={0.4}
+                                backgroundImage="linear-gradient(#141414 1px, transparent 1px), linear-gradient(90deg, #141414 1px, transparent 1px)"
+                                backgroundSize="40px 40px"
+                              />
+
+                              {/* Bottom gradient + corner index */}
+                              <Box
+                                position="absolute"
+                                bottom={0}
+                                left={0}
+                                right={0}
+                                h="40%"
+                                pointerEvents="none"
+                                background="linear-gradient(to top, rgba(10,10,10,0.85), transparent)"
+                              />
+
+                              {/* Top-left tag */}
+                              <Box
+                                position="absolute"
+                                top={3}
+                                left={3}
+                                px={2.5}
+                                py={1}
+                                bg="rgba(10,10,10,0.7)"
+                                backdropFilter="blur(8px)"
+                                border="1px solid #2a2a2a"
+                              >
+                                <Text
+                                  fontSize="10px"
+                                  color="#888888"
+                                  letterSpacing="2px"
+                                  textTransform="uppercase"
+                                  fontWeight="500"
                                 >
-                                  <Text
-                                    fontSize={[11, 12]}
-                                    color="#888888"
-                                    fontWeight="400"
-                                  >
-                                    {tech}
-                                  </Text>
-                                </MotionBox>
-                              ))}
-                          </HStack>
+                                  {project.type || "Project"}
+                                </Text>
+                              </Box>
 
-                          {/* Description */}
-                          <VStack align="start" spacing={2} mb={4}>
-                            {project.description
-                              ?.split("\n")
-                              .map((line, idx) => (
-                                <HStack key={idx} align="start" spacing={2}>
-                                  <Text fontSize={16} color="#888888">•</Text>
+                              {/* Corner number */}
+                              <Text
+                                position="absolute"
+                                top={3}
+                                right={4}
+                                fontSize="11px"
+                                color="#555555"
+                                letterSpacing="3px"
+                                fontWeight="400"
+                                fontFamily="monospace"
+                              >
+                                / {String(index + 1).padStart(2, "0")}
+                              </Text>
+                            </MotionBox>
+
+                            {/* Tech chips under image */}
+                            {project.technologies?.length > 0 && (
+                              <HStack
+                                spacing={0}
+                                mt={4}
+                                flexWrap="wrap"
+                                divider={
+                                  <Box w="1px" h="10px" bg="#2a2a2a" mx={3} />
+                                }
+                              >
+                                {project.technologies.slice(0, 6).map((tech, idx) => (
+                                  <MotionBox
+                                    key={idx}
+                                    initial={{ opacity: 0, y: 8 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.3, delay: idx * 0.04 }}
+                                  >
+                                    <Text
+                                      fontSize={[10, 11]}
+                                      color="#666666"
+                                      fontWeight="400"
+                                      letterSpacing="1px"
+                                      textTransform="uppercase"
+                                      _hover={{ color: "#e0e0e0" }}
+                                      transition="color 0.3s"
+                                      cursor="default"
+                                    >
+                                      {tech}
+                                    </Text>
+                                  </MotionBox>
+                                ))}
+                              </HStack>
+                            )}
+                          </Box>
+
+                          {/* ── Project Content ────────────────────────── */}
+                          <Box flex="1" w="100%">
+                            {/* Meta row */}
+                            <HStack
+                              spacing={3}
+                              mb={4}
+                              divider={<Box w="20px" h="1px" bg="#333333" />}
+                            >
+                              <Text
+                                fontSize="11px"
+                                color="#888888"
+                                letterSpacing="3px"
+                                textTransform="uppercase"
+                                fontWeight="500"
+                              >
+                                Featured
+                              </Text>
+                              <Text
+                                fontSize="11px"
+                                color="#666666"
+                                letterSpacing="2px"
+                                fontFamily="monospace"
+                              >
+                                {dateLabel}
+                              </Text>
+                            </HStack>
+
+                            {/* Title */}
+                            <MotionHeading
+                              as="h3"
+                              fontSize={[28, 34, 42]}
+                              fontWeight="700"
+                              color="#e0e0e0"
+                              letterSpacing="-1.5px"
+                              lineHeight="1.05"
+                              mb={5}
+                              initial={{ opacity: 0, y: 20 }}
+                              whileInView={{ opacity: 1, y: 0 }}
+                              viewport={{ once: true }}
+                              transition={{ duration: 0.5, delay: 0.1 }}
+                            >
+                              {project.title}
+                            </MotionHeading>
+
+                            {/* Description with side-bar */}
+                            <Box
+                              position="relative"
+                              pl={5}
+                              mb={6}
+                              borderLeft="1px solid #2a2a2a"
+                              transition="border-color 0.4s"
+                              _groupHover={{ borderColor: "#444444" }}
+                            >
+                              <VStack align="start" spacing={3}>
+                                {project.description?.split("\n").map((line, idx) => (
                                   <Text
-                                    fontSize={[14, 15]}
-                                    lineHeight="1.6"
-                                    color="#888888"
+                                    key={idx}
+                                    fontSize={[14, 15, 16]}
+                                    lineHeight="1.7"
+                                    color="#999999"
                                     fontWeight="300"
-                                    flex="1"
                                   >
                                     {line.trim()}
                                   </Text>
-                                </HStack>
-                              ))}
-                          </VStack>
+                                ))}
+                              </VStack>
+                            </Box>
 
-                          {/* Links with underline-expand hover */}
-                          <HStack spacing={6}>
-                            <Button
-                              variant="link"
-                              color="#888888"
-                              fontSize={[13, 14]}
-                              fontWeight="400"
-                              letterSpacing="1px"
-                              textTransform="uppercase"
-                              position="relative"
-                              _hover={{ color: "#e0e0e0" }}
-                              sx={{
-                                "&::after": {
-                                  content: '""',
-                                  position: "absolute",
-                                  bottom: "-2px",
-                                  left: "50%",
-                                  right: "50%",
-                                  height: "1px",
-                                  bg: "#e0e0e0",
-                                  transition: "all 0.3s ease",
-                                },
-                                "&:hover::after": {
-                                  left: "0",
-                                  right: "0",
-                                },
-                              }}
-                              onClick={() =>
-                                window.open(ensureAbsoluteUrl(project.github), "_blank")
-                              }
-                            >
-                              GitHub
-                            </Button>
-                            {project.website && (
-                              <Button
-                                variant="link"
-                                color="#888888"
-                                fontSize={[13, 14]}
-                                fontWeight="400"
-                                letterSpacing="1px"
-                                textTransform="uppercase"
+                            {/* CTAs with arrow slide */}
+                            <HStack spacing={6}>
+                              <Box
+                                as="button"
+                                onClick={() => window.open(ensureAbsoluteUrl(project.github), "_blank")}
                                 position="relative"
-                                _hover={{ color: "#e0e0e0" }}
-                                sx={{
-                                  "&::after": {
-                                    content: '""',
-                                    position: "absolute",
-                                    bottom: "-2px",
-                                    left: "50%",
-                                    right: "50%",
-                                    height: "1px",
-                                    bg: "#e0e0e0",
-                                    transition: "all 0.3s ease",
-                                  },
-                                  "&:hover::after": {
-                                    left: "0",
-                                    right: "0",
-                                  },
-                                }}
-                                onClick={() =>
-                                  window.open(ensureAbsoluteUrl(project.website), "_blank")
-                                }
+                                role="group"
+                                display="inline-flex"
+                                alignItems="center"
+                                gap={3}
+                                color="#888888"
+                                fontSize={[12, 13]}
+                                fontWeight="500"
+                                letterSpacing="2px"
+                                textTransform="uppercase"
+                                py={2}
+                                borderBottom="1px solid #2a2a2a"
+                                transition="all 0.3s"
+                                _hover={{ color: "#e0e0e0", borderColor: "#e0e0e0" }}
                               >
-                                Preview
-                              </Button>
-                            )}
-                          </HStack>
-                        </Box>
+                                <span>View Code</span>
+                                <Box
+                                  as="span"
+                                  display="inline-block"
+                                  transition="transform 0.3s ease"
+                                  _groupHover={{ transform: "translateX(6px)" }}
+                                >
+                                  →
+                                </Box>
+                              </Box>
 
-                        {/* Project Image — grayscale → color on hover */}
-                        <Box flex="0 0 auto" w={["140px", "160px", "180px"]} overflow="hidden">
-                          <Box
-                            as="img"
-                            src={project.img}
-                            alt={project.title}
-                            w="100%"
-                            h="auto"
-                            objectFit="contain"
-                            border="1px solid #333333"
-                            p="12px"
-                            filter="grayscale(100%)"
-                            transition="all 0.5s ease"
-                            _hover={{ filter: "grayscale(0%)", transform: "scale(1.05)" }}
-                          />
-                        </Box>
-                      </Flex>
-                    </MotionBox>
-                  ))}
+                              {project.website && (
+                                <Box
+                                  as="button"
+                                  onClick={() => window.open(ensureAbsoluteUrl(project.website), "_blank")}
+                                  position="relative"
+                                  role="group"
+                                  display="inline-flex"
+                                  alignItems="center"
+                                  gap={3}
+                                  color="#e0e0e0"
+                                  fontSize={[12, 13]}
+                                  fontWeight="500"
+                                  letterSpacing="2px"
+                                  textTransform="uppercase"
+                                  py={2}
+                                  borderBottom="1px solid #e0e0e0"
+                                  transition="all 0.3s"
+                                  _hover={{ color: "#ffffff" }}
+                                >
+                                  <span>Live Preview</span>
+                                  <Box
+                                    as="span"
+                                    display="inline-block"
+                                    transition="transform 0.3s ease"
+                                    _groupHover={{ transform: "translate(6px, -2px) rotate(-45deg)" }}
+                                  >
+                                    →
+                                  </Box>
+                                </Box>
+                              )}
+                            </HStack>
+                          </Box>
+                        </Flex>
+                      </MotionBox>
+                    );
+                  })}
                 </VStack>
               </ParallaxSection>
 
               <AnimatedDivider />
 
               {/* ═══ KEY MILESTONES ═══ */}
-              <ParallaxSection mb={[12, 16, 20]} offset={25}>
-                <SectionHeading id="milestones-section" subtitle="Significant Years and Achievements">
-                  Key Milestones
-                </SectionHeading>
+              <ParallaxSection id="milestones-section" mb={[12, 16, 20]} offset={25}>
+                <Box position="relative">
+                  {/* Ghost numeral */}
+                  <Box
+                    position="absolute"
+                    top={["-30px", "-50px", "-70px"]}
+                    right={["-10px", "-20px", "-30px"]}
+                    fontSize={["120px", "180px", "240px"]}
+                    fontWeight="700"
+                    lineHeight="1"
+                    color="transparent"
+                    letterSpacing="-8px"
+                    pointerEvents="none"
+                    zIndex={0}
+                    sx={{
+                      WebkitTextStroke: "1px #1a1a1a",
+                      fontFamily: "system-ui, -apple-system, sans-serif",
+                    }}
+                    display={{ base: "none", md: "block" }}
+                  >
+                    02
+                  </Box>
 
-                <Flex
-                  gap={4}
-                  overflowX="auto"
-                  pb={4}
-                  sx={{
-                    scrollSnapType: "x mandatory",
-                    "&::-webkit-scrollbar": { height: "4px" },
-                    "&::-webkit-scrollbar-track": { background: "#0a0a0a" },
-                    "&::-webkit-scrollbar-thumb": { background: "#333333" },
-                  }}
-                >
-                  {years.map((y, i) => (
-                    <MotionBox
-                      key={y._id}
-                      minW={["200px", "240px"]}
-                      bg="#141414"
-                      p={6}
-                      border="1px solid #333333"
-                      _hover={{
-                        borderColor: "#555555",
-                        transform: "translateY(-4px) scale(1.02)",
-                        boxShadow: "0 8px 30px rgba(0,0,0,0.3)",
-                      }}
-                      transition="all 0.3s"
-                      sx={{ scrollSnapAlign: "start" }}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      // @ts-ignore
-                      transition_framer={{ duration: 0.4, delay: i * 0.1 }}
+                  {/* Editorial header */}
+                  <Box mb={[8, 10, 12]} position="relative" zIndex={1} maxW="640px">
+                    <HStack
+                      spacing={3}
+                      mb={5}
+                      divider={<Box w="20px" h="1px" bg="#333333" />}
                     >
-                      <AnimatedYear year={y.year} />
                       <Text
-                        fontSize="13px"
+                        fontSize="11px"
                         color="#888888"
-                        fontWeight="300"
-                        lineHeight="1.5"
+                        letterSpacing="3px"
+                        textTransform="uppercase"
+                        fontWeight="500"
                       >
-                        {y.label}
+                        Milestones
                       </Text>
-                    </MotionBox>
-                  ))}
-                </Flex>
+                      <Text
+                        fontSize="11px"
+                        color="#666666"
+                        letterSpacing="2px"
+                        fontFamily="monospace"
+                      >
+                        / 02
+                      </Text>
+                    </HStack>
+
+                    <Heading
+                      as="h2"
+                      fontSize={[36, 48, 60]}
+                      fontWeight="700"
+                      color="#e0e0e0"
+                      letterSpacing="-2px"
+                      lineHeight="0.95"
+                      mb={5}
+                    >
+                      A short
+                      <Text as="span" color="#555555" fontWeight="300" fontStyle="italic">
+                        {" "}timeline
+                      </Text>
+                    </Heading>
+
+                    <Box position="relative" pl={5} borderLeft="1px solid #2a2a2a" maxW="520px">
+                      <Text
+                        fontSize={[14, 15, 16]}
+                        color="#999999"
+                        fontWeight="300"
+                        lineHeight="1.7"
+                      >
+                        Years that mattered — milestones, transitions, and moments that
+                        shaped how I work today.
+                      </Text>
+                    </Box>
+                  </Box>
+
+                  {/* Horizontal timeline strip */}
+                  <Box position="relative" zIndex={1}>
+                    {/* Decorative continuous baseline */}
+                    <Box
+                      display={{ base: "none", md: "block" }}
+                      position="absolute"
+                      left={0}
+                      right={0}
+                      top="40px"
+                      h="1px"
+                      bg="#1f1f1f"
+                      pointerEvents="none"
+                    />
+
+                    <Flex
+                      gap={[4, 6]}
+                      overflowX="auto"
+                      pb={6}
+                      sx={{
+                        scrollSnapType: "x mandatory",
+                        "&::-webkit-scrollbar": { height: "2px" },
+                        "&::-webkit-scrollbar-track": { background: "transparent" },
+                        "&::-webkit-scrollbar-thumb": { background: "#2a2a2a" },
+                      }}
+                    >
+                      {years.map((y, i) => (
+                        <MotionBox
+                          key={y._id}
+                          minW={["220px", "260px", "280px"]}
+                          flexShrink={0}
+                          position="relative"
+                          sx={{ scrollSnapAlign: "start" }}
+                          initial={{ opacity: 0, y: 30 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.4, delay: i * 0.08 }}
+                          role="group"
+                        >
+                          {/* Top connector dot on timeline */}
+                          <Flex
+                            display={{ base: "none", md: "flex" }}
+                            position="absolute"
+                            top="34px"
+                            left="50%"
+                            transform="translateX(-50%)"
+                            w="14px"
+                            h="14px"
+                            align="center"
+                            justify="center"
+                            zIndex={2}
+                            pointerEvents="none"
+                          >
+                            <Box
+                              w="14px"
+                              h="14px"
+                              borderRadius="50%"
+                              bg="#0a0a0a"
+                              border="1px solid #333333"
+                              transition="all 0.3s"
+                              _groupHover={{
+                                borderColor: "#e0e0e0",
+                                w: "16px",
+                                h: "16px",
+                                boxShadow: "0 0 0 4px rgba(224,224,224,0.05)",
+                              }}
+                            />
+                          </Flex>
+
+                          {/* Index label */}
+                          <Text
+                            fontSize="9px"
+                            color="#555555"
+                            fontFamily="monospace"
+                            letterSpacing="3px"
+                            mb={3}
+                            textAlign="center"
+                          >
+                            #{String(i + 1).padStart(2, "0")}
+                          </Text>
+
+                          {/* Spacer so card sits below the baseline */}
+                          <Box display={{ base: "none", md: "block" }} h="40px" />
+
+                          <Box
+                            bg="#0d0d0d"
+                            border="1px solid #1f1f1f"
+                            p={5}
+                            position="relative"
+                            overflow="hidden"
+                            transition="all 0.4s cubic-bezier(0.22, 1, 0.36, 1)"
+                            _groupHover={{
+                              borderColor: "#333333",
+                              transform: "translateY(-4px)",
+                              boxShadow: "0 20px 40px -10px rgba(0,0,0,0.5)",
+                            }}
+                          >
+                            <Box mb={3}>
+                              <AnimatedYear year={y.year} />
+                            </Box>
+                            <Box
+                              w="24px"
+                              h="1px"
+                              bg="#2a2a2a"
+                              mb={3}
+                              transition="all 0.4s"
+                              _groupHover={{ w: "48px", bg: "#555555" }}
+                            />
+                            <Text
+                              fontSize="13px"
+                              color="#999999"
+                              fontWeight="300"
+                              lineHeight="1.6"
+                            >
+                              {y.label}
+                            </Text>
+
+                            {/* Corner accent */}
+                            <Box
+                              position="absolute"
+                              top={0}
+                              right={0}
+                              w="40px"
+                              h="40px"
+                              pointerEvents="none"
+                              sx={{
+                                background: "linear-gradient(135deg, transparent 50%, #1a1a1a 50%)",
+                                transition: "background 0.3s",
+                              }}
+                              _groupHover={{
+                                sx: { background: "linear-gradient(135deg, transparent 50%, #2a2a2a 50%)" },
+                              }}
+                            />
+                          </Box>
+                        </MotionBox>
+                      ))}
+                    </Flex>
+
+                    {/* Scroll hint */}
+                    <Flex
+                      align="center"
+                      justify="center"
+                      gap={3}
+                      mt={2}
+                      display={{ base: "flex", md: "none" }}
+                    >
+                      <Box w="20px" h="1px" bg="#2a2a2a" />
+                      <Text
+                        fontSize="10px"
+                        color="#555555"
+                        letterSpacing="3px"
+                        textTransform="uppercase"
+                        fontFamily="monospace"
+                      >
+                        Swipe →
+                      </Text>
+                      <Box w="20px" h="1px" bg="#2a2a2a" />
+                    </Flex>
+                  </Box>
+                </Box>
               </ParallaxSection>
 
               <AnimatedDivider />
 
               {/* ═══ WORK EXPERIENCE — Timeline ═══ */}
-              <ParallaxSection mb={[12, 16, 20]} offset={35}>
-                <SectionHeading id="experience-section" subtitle="Professional Journey">
-                  Work Experience
-                </SectionHeading>
-
-                <Box position="relative" pl={[0, 0, 8]}>
-                  {/* Timeline vertical line (desktop only) */}
+              <ParallaxSection id="experience-section" mb={[12, 16, 20]} offset={35}>
+                <Box position="relative">
+                  {/* Ghost numeral */}
                   <Box
-                    display={{ base: "none", md: "block" }}
                     position="absolute"
-                    left="15px"
-                    top="0"
-                    bottom="0"
-                    w="1px"
-                    bg="#333333"
-                  />
+                    top={["-30px", "-50px", "-70px"]}
+                    left={["-10px", "-20px", "-30px"]}
+                    fontSize={["120px", "180px", "240px"]}
+                    fontWeight="700"
+                    lineHeight="1"
+                    color="transparent"
+                    letterSpacing="-8px"
+                    pointerEvents="none"
+                    zIndex={0}
+                    sx={{
+                      WebkitTextStroke: "1px #1a1a1a",
+                      fontFamily: "system-ui, -apple-system, sans-serif",
+                    }}
+                    display={{ base: "none", md: "block" }}
+                  >
+                    03
+                  </Box>
 
-                  <VStack spacing={8} align="stretch">
-                    {workExperiences.map((experience, i) => (
-                      <MotionBox
-                        key={experience._id}
-                        position="relative"
-                        initial={{ opacity: 0, x: -40 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true, margin: "-40px" }}
-                        transition={{ duration: 0.5, delay: i * 0.1 }}
+                  {/* Editorial header */}
+                  <Flex
+                    direction={{ base: "column", lg: "row" }}
+                    align={{ base: "stretch", lg: "end" }}
+                    justify="space-between"
+                    gap={[6, 8, 10]}
+                    mb={[10, 12, 14]}
+                    position="relative"
+                    zIndex={1}
+                  >
+                    <Box maxW="640px" flex="1">
+                      <HStack
+                        spacing={3}
+                        mb={5}
+                        divider={<Box w="20px" h="1px" bg="#333333" />}
                       >
-                        {/* Timeline dot (desktop only) */}
-                        <Box
-                          display={{ base: "none", md: "block" }}
-                          position="absolute"
-                          left="-25px"
-                          top="24px"
-                          w="10px"
-                          h="10px"
-                          bg="#333333"
-                          borderRadius="50%"
-                          border="2px solid #0a0a0a"
-                          zIndex={1}
-                        />
-
-                        <Box
-                          bg="#141414"
-                          p={6}
-                          border="1px solid #333333"
-                          position="relative"
-                          overflow="hidden"
-                          _hover={{
-                            borderColor: "#555555",
-                            transform: "translateX(4px)",
-                          }}
-                          transition="all 0.3s"
-                          sx={{
-                            "&::before": {
-                              content: '""',
-                              position: "absolute",
-                              top: 0,
-                              left: "-100%",
-                              width: "100%",
-                              height: "100%",
-                              background: "linear-gradient(90deg, transparent, rgba(224,224,224,0.03), transparent)",
-                              transition: "left 0.6s ease",
-                            },
-                            "&:hover::before": {
-                              left: "100%",
-                            },
-                          }}
+                        <Text
+                          fontSize="11px"
+                          color="#888888"
+                          letterSpacing="3px"
+                          textTransform="uppercase"
+                          fontWeight="500"
                         >
-                          <HStack justify="space-between" align="start" mb={4}>
-                            <VStack align="start" spacing={1}>
-                              <Heading
-                                fontSize={[18, 20, 22]}
-                                fontWeight="600"
-                                color="#e0e0e0"
-                              >
-                                {experience.position}
-                              </Heading>
-                              <Text
-                                fontSize={[14, 15]}
-                                fontWeight="400"
-                                color="#888888"
-                              >
-                                {experience.company}
-                                {experience.location && ` · ${experience.location}`}
-                              </Text>
-                              <Text
-                                fontSize={[12, 13]}
-                                fontWeight="300"
-                                color="#666666"
-                              >
-                                {experience.startDate} - {experience.endDate}
-                              </Text>
-                            </VStack>
+                          Experience
+                        </Text>
+                        <Text
+                          fontSize="11px"
+                          color="#666666"
+                          letterSpacing="2px"
+                          fontFamily="monospace"
+                        >
+                          / 03
+                        </Text>
+                      </HStack>
+
+                      <Heading
+                        as="h2"
+                        fontSize={[36, 48, 60]}
+                        fontWeight="700"
+                        color="#e0e0e0"
+                        letterSpacing="-2px"
+                        lineHeight="0.95"
+                        mb={5}
+                      >
+                        Where I&apos;ve
+                        <Text as="span" color="#555555" fontWeight="300" fontStyle="italic">
+                          {" "}worked
+                        </Text>
+                      </Heading>
+
+                      <Box position="relative" pl={5} borderLeft="1px solid #2a2a2a" maxW="520px">
+                        <Text
+                          fontSize={[14, 15, 16]}
+                          color="#999999"
+                          fontWeight="300"
+                          lineHeight="1.7"
+                        >
+                          A chronological record of the teams I&apos;ve been part of and the
+                          systems I&apos;ve helped build.
+                        </Text>
+                      </Box>
+                    </Box>
+
+                    {/* Counter */}
+                    <Box
+                      flex="0 0 auto"
+                      border="1px solid #1f1f1f"
+                      px={6}
+                      py={4}
+                      minW="180px"
+                    >
+                      <Text
+                        fontSize="9px"
+                        color="#666666"
+                        letterSpacing="3px"
+                        textTransform="uppercase"
+                        fontWeight="500"
+                        mb={1}
+                      >
+                        Total Roles
+                      </Text>
+                      <Text
+                        fontSize={[26, 30, 34]}
+                        fontWeight="700"
+                        color="#e0e0e0"
+                        letterSpacing="-1px"
+                        lineHeight="1"
+                      >
+                        {String(workExperiences.length).padStart(2, "0")}
+                      </Text>
+                    </Box>
+                  </Flex>
+
+                  {/* Timeline body */}
+                  <Box position="relative" zIndex={1} pl={[6, 8, 10]}>
+                    {/* Vertical rail */}
+                    <Box
+                      position="absolute"
+                      left={["8px", "10px", "12px"]}
+                      top="0"
+                      bottom="0"
+                      w="1px"
+                      bg="#1f1f1f"
+                    />
+
+                    <VStack spacing={[8, 10, 12]} align="stretch">
+                      {workExperiences.map((experience, i) => (
+                        <MotionBox
+                          key={experience._id}
+                          position="relative"
+                          initial={{ opacity: 0, x: -20 }}
+                          whileInView={{ opacity: 1, x: 0 }}
+                          viewport={{ once: true, margin: "-40px" }}
+                          transition={{ duration: 0.5, delay: i * 0.08 }}
+                          role="group"
+                        >
+                          {/* Timeline marker */}
+                          <Box
+                            position="absolute"
+                            left={["-24px", "-28px", "-32px"]}
+                            top="6px"
+                            w="18px"
+                            h="18px"
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="center"
+                            zIndex={1}
+                          >
+                            <Box
+                              w="9px"
+                              h="9px"
+                              bg="#0a0a0a"
+                              border="1px solid #333333"
+                              transition="all 0.3s"
+                              transform="rotate(45deg)"
+                              _groupHover={{
+                                borderColor: "#e0e0e0",
+                                bg: "#e0e0e0",
+                                boxShadow: "0 0 0 4px rgba(224,224,224,0.06)",
+                              }}
+                            />
+                          </Box>
+
+                          {/* Date row above card */}
+                          <HStack
+                            spacing={3}
+                            mb={3}
+                            divider={<Box w="20px" h="1px" bg="#2a2a2a" />}
+                          >
+                            <Text
+                              fontSize="10px"
+                              color="#888888"
+                              letterSpacing="3px"
+                              textTransform="uppercase"
+                              fontWeight="500"
+                              fontFamily="monospace"
+                            >
+                              {experience.startDate} → {experience.endDate}
+                            </Text>
+                            <Text
+                              fontSize="10px"
+                              color="#444444"
+                              letterSpacing="2px"
+                              fontFamily="monospace"
+                            >
+                              #{String(i + 1).padStart(2, "0")}
+                            </Text>
                           </HStack>
 
-                          <Text
-                            fontSize={[14, 15]}
-                            color="#e0e0e0"
-                            fontWeight="300"
-                            mb={4}
-                            lineHeight="1.6"
+                          {/* Card */}
+                          <Box
+                            bg="#0d0d0d"
+                            border="1px solid #1f1f1f"
+                            p={[5, 6, 7]}
+                            position="relative"
+                            overflow="hidden"
+                            transition="all 0.4s cubic-bezier(0.22, 1, 0.36, 1)"
+                            _groupHover={{
+                              borderColor: "#333333",
+                              transform: "translateY(-4px)",
+                              boxShadow: "0 20px 40px -10px rgba(0,0,0,0.5)",
+                            }}
+                            sx={{
+                              "&::before": {
+                                content: '""',
+                                position: "absolute",
+                                top: 0,
+                                left: "-100%",
+                                width: "100%",
+                                height: "100%",
+                                background: "linear-gradient(90deg, transparent, rgba(224,224,224,0.03), transparent)",
+                                transition: "left 0.6s ease",
+                                pointerEvents: "none",
+                              },
+                              "&:hover::before": {
+                                left: "100%",
+                              },
+                            }}
                           >
-                            {experience.description}
-                          </Text>
-
-                          {experience.technologies?.length > 0 && (
-                            <HStack spacing={2} flexWrap="wrap">
-                              {experience.technologies.map((tech, idx) => (
-                                <MotionBox
-                                  key={idx}
-                                  px={3}
-                                  py={1}
-                                  bg="#1a1a1a"
-                                  border="1px solid #333333"
-                                  borderRadius="0"
-                                  initial={{ opacity: 0, scale: 0.8 }}
-                                  whileInView={{ opacity: 1, scale: 1 }}
-                                  viewport={{ once: true }}
-                                  transition={{ duration: 0.3, delay: idx * 0.04 }}
+                            {/* Position + company */}
+                            <Heading
+                              as="h3"
+                              fontSize={[20, 24, 28]}
+                              fontWeight="700"
+                              color="#e0e0e0"
+                              letterSpacing="-0.5px"
+                              lineHeight="1.15"
+                              mb={2}
+                            >
+                              {experience.position}
+                            </Heading>
+                            <HStack
+                              spacing={3}
+                              mb={5}
+                              divider={<Box w="14px" h="1px" bg="#333333" />}
+                              flexWrap="wrap"
+                            >
+                              <Text
+                                fontSize={[13, 14]}
+                                fontWeight="500"
+                                color="#999999"
+                                letterSpacing="0.3px"
+                              >
+                                @ {experience.company}
+                              </Text>
+                              {experience.location && (
+                                <Text
+                                  fontSize="11px"
+                                  color="#666666"
+                                  letterSpacing="2px"
+                                  textTransform="uppercase"
+                                  fontFamily="monospace"
                                 >
-                                  <Text
-                                    fontSize="11px"
-                                    color="#888888"
-                                    fontWeight="400"
-                                  >
-                                    {tech}
-                                  </Text>
-                                </MotionBox>
-                              ))}
+                                  {experience.location}
+                                </Text>
+                              )}
                             </HStack>
-                          )}
-                        </Box>
-                      </MotionBox>
-                    ))}
-                  </VStack>
+
+                            {/* Description with side rail */}
+                            <Box
+                              position="relative"
+                              pl={5}
+                              borderLeft="1px solid #2a2a2a"
+                              mb={experience.technologies?.length > 0 ? 6 : 0}
+                              transition="border-color 0.4s"
+                              _groupHover={{ borderColor: "#444444" }}
+                            >
+                              <Text
+                                fontSize={[14, 15]}
+                                color="#999999"
+                                fontWeight="300"
+                                lineHeight="1.7"
+                              >
+                                {experience.description}
+                              </Text>
+                            </Box>
+
+                            {/* Technologies — dot-divided typography (no chips) */}
+                            {experience.technologies?.length > 0 && (
+                              <Box>
+                                <Text
+                                  fontSize="9px"
+                                  color="#555555"
+                                  letterSpacing="3px"
+                                  textTransform="uppercase"
+                                  fontWeight="500"
+                                  mb={3}
+                                  fontFamily="monospace"
+                                >
+                                  Stack
+                                </Text>
+                                <HStack
+                                  spacing={0}
+                                  flexWrap="wrap"
+                                  divider={<Box w="1px" h="10px" bg="#2a2a2a" mx={3} />}
+                                >
+                                  {experience.technologies.map((tech, idx) => (
+                                    <Text
+                                      key={idx}
+                                      fontSize={[11, 12]}
+                                      color="#888888"
+                                      fontWeight="400"
+                                      letterSpacing="1px"
+                                      textTransform="uppercase"
+                                      _hover={{ color: "#e0e0e0" }}
+                                      transition="color 0.3s"
+                                      cursor="default"
+                                    >
+                                      {tech}
+                                    </Text>
+                                  ))}
+                                </HStack>
+                              </Box>
+                            )}
+
+                            {/* Corner accent */}
+                            <Box
+                              position="absolute"
+                              top={0}
+                              right={0}
+                              w="50px"
+                              h="50px"
+                              pointerEvents="none"
+                              sx={{
+                                background: "linear-gradient(135deg, transparent 50%, #1a1a1a 50%)",
+                                transition: "background 0.3s",
+                              }}
+                              _groupHover={{
+                                sx: { background: "linear-gradient(135deg, transparent 50%, #2a2a2a 50%)" },
+                              }}
+                            />
+                          </Box>
+                        </MotionBox>
+                      ))}
+
+                      {/* Timeline terminator */}
+                      <Box position="relative">
+                        <Box
+                          position="absolute"
+                          left={["-20px", "-24px", "-28px"]}
+                          top="0"
+                          w="10px"
+                          h="10px"
+                          bg="#0a0a0a"
+                          border="1px solid #2a2a2a"
+                          borderRadius="50%"
+                        />
+                        <Text
+                          fontSize="10px"
+                          color="#555555"
+                          letterSpacing="3px"
+                          textTransform="uppercase"
+                          fontFamily="monospace"
+                          pl={1}
+                        >
+                          — End of record
+                        </Text>
+                      </Box>
+                    </VStack>
+                  </Box>
                 </Box>
               </ParallaxSection>
 
@@ -1525,100 +2634,313 @@ const PortfolioTab = () => {
 
               {/* ═══ CONTENT GENERATION ═══ */}
               <ParallaxSection id="content-gen-section" offset={30}>
-                <ContentGenerationSection items={contentGenData} />
+                <ContentGenerationSection />
               </ParallaxSection>
 
               <AnimatedDivider />
 
               {/* ═══ CONTACT SECTION ═══ */}
-              <ParallaxSection mb={[12, 16, 20]} offset={25}>
-                <SectionHeading id="contact-section" subtitle="Want to Connect?">
-                  Get in Touch with Me
-                </SectionHeading>
-
-                <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={12} align="start">
-                  {/* Left column - Contact Form */}
-                  <MotionBox
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5 }}
+              <ParallaxSection id="contact-section" mb={[12, 16, 20]} offset={25}>
+                <Box position="relative">
+                  {/* Giant ghost numeral */}
+                  <Box
+                    position="absolute"
+                    top={["-30px", "-50px", "-70px"]}
+                    left={["-10px", "-20px", "-30px"]}
+                    fontSize={["120px", "180px", "240px"]}
+                    fontWeight="700"
+                    lineHeight="1"
+                    color="transparent"
+                    letterSpacing="-8px"
+                    pointerEvents="none"
+                    zIndex={0}
+                    sx={{
+                      WebkitTextStroke: "1px #1a1a1a",
+                      fontFamily: "system-ui, -apple-system, sans-serif",
+                    }}
+                    display={{ base: "none", md: "block" }}
                   >
-                    <ContactForm onSubmit={handleFormSubmit} toast={toast} />
-                  </MotionBox>
+                    05
+                  </Box>
 
-                  {/* Right column - Contact Info */}
-                  <MotionBox
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
+                  {/* Editorial header */}
+                  <Box mb={[10, 12, 14]} position="relative" zIndex={1} maxW="640px">
+                    <HStack
+                      spacing={3}
+                      mb={5}
+                      divider={<Box w="20px" h="1px" bg="#333333" />}
+                    >
+                      <Text
+                        fontSize="11px"
+                        color="#888888"
+                        letterSpacing="3px"
+                        textTransform="uppercase"
+                        fontWeight="500"
+                      >
+                        Contact
+                      </Text>
+                      <Text
+                        fontSize="11px"
+                        color="#666666"
+                        letterSpacing="2px"
+                        fontFamily="monospace"
+                      >
+                        / 05
+                      </Text>
+                    </HStack>
+
+                    <Heading
+                      as="h2"
+                      fontSize={[36, 48, 60]}
+                      fontWeight="700"
+                      color="#e0e0e0"
+                      letterSpacing="-2px"
+                      lineHeight="0.95"
+                      mb={5}
+                    >
+                      Let&apos;s build
+                      <Text as="span" color="#555555" fontWeight="300" fontStyle="italic">
+                        {" "}something
+                      </Text>
+                    </Heading>
+
+                    <Box
+                      position="relative"
+                      pl={5}
+                      borderLeft="1px solid #2a2a2a"
+                    >
+                      <Text
+                        fontSize={[14, 15, 16]}
+                        color="#999999"
+                        fontWeight="300"
+                        lineHeight="1.7"
+                      >
+                        Have a project in mind or just want to say hi? Drop a message —
+                        I read every one and reply within a couple of days.
+                      </Text>
+                    </Box>
+                  </Box>
+
+                  <Flex
+                    direction={{ base: "column", lg: "row" }}
+                    gap={[8, 10, 14]}
+                    align="stretch"
+                    position="relative"
+                    zIndex={1}
                   >
-                    <VStack spacing={6} align="start">
-                      {[
-                        { emoji: "📧", value: contactData?.email || "johnmichael.escarlan14@gmail.com" },
-                        { emoji: "📱", value: contactData?.mobile || "+63 995 7128385" },
-                        { emoji: "📍", value: contactData?.location || "Cebu City, Central Visayas, PH" },
-                      ].map((item, i) => (
-                        <motion.div
-                          key={item.emoji}
-                          initial={{ opacity: 0, x: -20 }}
-                          whileInView={{ opacity: 1, x: 0 }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 0.4, delay: 0.3 + i * 0.1 }}
+                    {/* ── Left: Contact form ────────────────────── */}
+                    <MotionBox
+                      flex={{ base: "1", lg: "0 0 58%" }}
+                      initial={{ opacity: 0, y: 30 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <ContactForm onSubmit={handleFormSubmit} toast={toast} />
+                    </MotionBox>
+
+                    {/* ── Right: Contact info stack ─────────────── */}
+                    <MotionBox
+                      flex="1"
+                      initial={{ opacity: 0, y: 30 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: 0.15 }}
+                    >
+                      <VStack spacing={4} align="stretch">
+                        {/* Direct line card */}
+                        <Box
+                          bg="#0d0d0d"
+                          border="1px solid #1f1f1f"
+                          p={6}
+                          position="relative"
+                          overflow="hidden"
+                          role="group"
+                          transition="border-color 0.3s"
+                          _hover={{ borderColor: "#333333" }}
                         >
-                          <HStack spacing={4}>
+                          <HStack spacing={2} mb={4}>
                             <Box
-                              w="24px"
-                              h="24px"
-                              display="flex"
-                              alignItems="center"
-                              justifyContent="center"
-                            >
-                              <Text fontSize="20px">{item.emoji}</Text>
-                            </Box>
+                              w="6px"
+                              h="6px"
+                              borderRadius="50%"
+                              bg="#e0e0e0"
+                              sx={{
+                                animation: "contactPulse 2s ease-in-out infinite",
+                                "@keyframes contactPulse": {
+                                  "0%, 100%": { opacity: 1, boxShadow: "0 0 0 0 rgba(224,224,224,0.5)" },
+                                  "50%": { opacity: 0.5, boxShadow: "0 0 0 6px rgba(224,224,224,0)" },
+                                },
+                              }}
+                            />
                             <Text
-                              fontSize={[14, 15, 16]}
-                              color="#e0e0e0"
-                              fontWeight="300"
+                              fontSize="10px"
+                              color="#888888"
+                              letterSpacing="3px"
+                              textTransform="uppercase"
+                              fontWeight="500"
                             >
-                              {item.value}
+                              Direct Line
                             </Text>
                           </HStack>
-                        </motion.div>
-                      ))}
 
-                      <HStack spacing={6} mt={4}>
-                        <Button
-                          variant="link"
-                          color="#888888"
-                          fontSize={[14, 15]}
-                          fontWeight="400"
-                          _hover={{ color: "#e0e0e0" }}
-                          leftIcon={<FaGithub />}
-                          onClick={() =>
-                            window.open(ensureAbsoluteUrl(contactData?.githubLink || "https://github.com"), "_blank")
-                          }
+                          {[
+                            { key: "EMAIL", value: contactData?.email || "johnmichael.escarlan14@gmail.com", href: `mailto:${contactData?.email || "johnmichael.escarlan14@gmail.com"}` },
+                            { key: "PHONE", value: contactData?.mobile || "+63 995 7128385", href: `tel:${(contactData?.mobile || "+639957128385").replace(/\s/g, "")}` },
+                            { key: "BASED", value: contactData?.location || "Cebu City, PH" },
+                          ].map((item, i, arr) => (
+                            <Box
+                              key={item.key}
+                              py={3}
+                              borderBottom={i === arr.length - 1 ? "none" : "1px solid #1f1f1f"}
+                            >
+                              <Text
+                                fontSize="9px"
+                                color="#555555"
+                                letterSpacing="3px"
+                                textTransform="uppercase"
+                                fontWeight="500"
+                                mb={1}
+                                fontFamily="monospace"
+                              >
+                                {item.key}
+                              </Text>
+                              {item.href ? (
+                                <Box
+                                  as="a"
+                                  href={item.href}
+                                  fontSize={[13, 14]}
+                                  color="#e0e0e0"
+                                  fontWeight="400"
+                                  letterSpacing="0.2px"
+                                  transition="color 0.3s"
+                                  _hover={{ color: "#ffffff", textDecoration: "underline" }}
+                                  wordBreak="break-all"
+                                >
+                                  {item.value}
+                                </Box>
+                              ) : (
+                                <Text
+                                  fontSize={[13, 14]}
+                                  color="#e0e0e0"
+                                  fontWeight="400"
+                                  letterSpacing="0.2px"
+                                >
+                                  {item.value}
+                                </Text>
+                              )}
+                            </Box>
+                          ))}
+
+                          {/* Corner accent */}
+                          <Box
+                            position="absolute"
+                            top={0}
+                            right={0}
+                            w="50px"
+                            h="50px"
+                            pointerEvents="none"
+                            sx={{
+                              background: "linear-gradient(135deg, transparent 50%, #1a1a1a 50%)",
+                              transition: "background 0.3s",
+                            }}
+                            _groupHover={{
+                              sx: { background: "linear-gradient(135deg, transparent 50%, #2a2a2a 50%)" },
+                            }}
+                          />
+                        </Box>
+
+                        {/* Social links card */}
+                        <Box
+                          bg="#0d0d0d"
+                          border="1px solid #1f1f1f"
+                          p={6}
+                          transition="border-color 0.3s"
+                          _hover={{ borderColor: "#333333" }}
                         >
-                          View Profile
-                        </Button>
-                        <Button
-                          variant="link"
-                          color="#888888"
-                          fontSize={[14, 15]}
-                          fontWeight="400"
-                          _hover={{ color: "#e0e0e0" }}
-                          leftIcon={<FaLinkedin />}
-                          onClick={() =>
-                            window.open(ensureAbsoluteUrl(contactData?.linkedinLink || "https://linkedin.com"), "_blank")
-                          }
+                          <Text
+                            fontSize="10px"
+                            color="#888888"
+                            letterSpacing="3px"
+                            textTransform="uppercase"
+                            fontWeight="500"
+                            mb={4}
+                          >
+                            Elsewhere
+                          </Text>
+
+                          <VStack spacing={0} align="stretch">
+                            {[
+                              { icon: FaGithub, label: "GitHub", href: contactData?.githubLink || "https://github.com" },
+                              { icon: FaLinkedin, label: "LinkedIn", href: contactData?.linkedinLink || "https://linkedin.com" },
+                            ].map((social, i, arr) => {
+                              const Icon = social.icon;
+                              return (
+                                <Box
+                                  key={social.label}
+                                  as="a"
+                                  href={ensureAbsoluteUrl(social.href)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  role="group"
+                                  py={3}
+                                  borderBottom={i === arr.length - 1 ? "none" : "1px solid #1f1f1f"}
+                                  display="flex"
+                                  alignItems="center"
+                                  justifyContent="space-between"
+                                  gap={3}
+                                  transition="all 0.3s"
+                                  _hover={{ pl: 2 }}
+                                >
+                                  <HStack spacing={3}>
+                                    <Box color="#666666" _groupHover={{ color: "#e0e0e0" }} transition="color 0.3s">
+                                      <Icon size={14} />
+                                    </Box>
+                                    <Text
+                                      fontSize="13px"
+                                      color="#888888"
+                                      fontWeight="500"
+                                      letterSpacing="2px"
+                                      textTransform="uppercase"
+                                      _groupHover={{ color: "#e0e0e0" }}
+                                      transition="color 0.3s"
+                                    >
+                                      {social.label}
+                                    </Text>
+                                  </HStack>
+                                  <Box
+                                    color="#444444"
+                                    transition="all 0.3s"
+                                    _groupHover={{ color: "#e0e0e0", transform: "translate(4px, -2px) rotate(-45deg)" }}
+                                  >
+                                    →
+                                  </Box>
+                                </Box>
+                              );
+                            })}
+                          </VStack>
+                        </Box>
+
+                        {/* Response time strip */}
+                        <Flex
+                          align="center"
+                          justify="space-between"
+                          px={6}
+                          py={3}
+                          border="1px dashed #1f1f1f"
+                          fontFamily="monospace"
+                          fontSize="10px"
+                          letterSpacing="2px"
+                          color="#555555"
+                          textTransform="uppercase"
                         >
-                          Connect
-                        </Button>
-                      </HStack>
-                    </VStack>
-                  </MotionBox>
-                </SimpleGrid>
+                          <Text>Avg. Response</Text>
+                          <Text color="#888888">~ 24 hours</Text>
+                        </Flex>
+                      </VStack>
+                    </MotionBox>
+                  </Flex>
+                </Box>
               </ParallaxSection>
 
               {/* ─── Footer ──────────────────────────────────────── */}

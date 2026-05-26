@@ -1,57 +1,46 @@
 import React, { useState, useEffect } from "react";
 import {
   Box,
-  Button,
-  FormControl,
-  FormLabel,
-  Input,
-  Heading,
   VStack,
-  useToast,
-  Container,
-  Flex,
-  IconButton,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalCloseButton,
-  useDisclosure,
   HStack,
   Text,
+  SimpleGrid,
+  useToast,
+  useDisclosure,
+  Flex,
+  Image,
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
-import { ArrowBackIcon, EditIcon, DeleteIcon, AddIcon } from "@chakra-ui/icons";
+import { FaPlus, FaPen, FaTrash, FaLaptopCode } from "react-icons/fa";
+import AdminLayout from "../../../component/admin/AdminLayout";
+import {
+  Field,
+  TextInput,
+  PrimaryButton,
+  GhostButton,
+  IconAction,
+  Modal,
+  ConfirmDialog,
+  EmptyState,
+  Loading,
+  COLORS,
+  GridCard,
+} from "../../../component/admin/AdminUI";
 import ImageUploader from "../../../component/admin/ImageUploader";
 
 export default function ManageSkills() {
   const [skills, setSkills] = useState([]);
-  const [formData, setFormData] = useState({
-    name: "",
-    icon: "",
-    order: 0,
-  });
+  const [formData, setFormData] = useState({ name: "", icon: "", order: 0 });
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
+  const [deleteId, setDeleteId] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const router = useRouter();
   const toast = useToast();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      router.push("/admin/login");
-      return;
-    }
-
     fetchSkills();
   }, []);
 
@@ -59,18 +48,9 @@ export default function ManageSkills() {
     try {
       const response = await fetch("/api/skills");
       const data = await response.json();
-
-      if (data.success) {
-        setSkills(data.data);
-      }
+      if (data.success) setSkills(data.data);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch skills",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      toast({ title: "Error", description: "Failed to fetch skills", status: "error", duration: 3000 });
     } finally {
       setFetching(false);
     }
@@ -79,304 +59,158 @@ export default function ManageSkills() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
     const token = localStorage.getItem("token");
     const url = editingId ? `/api/skills/${editingId}` : "/api/skills";
     const method = editingId ? "PUT" : "POST";
-
     try {
       const response = await fetch(url, {
         method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(formData),
       });
-
       const data = await response.json();
-
       if (data.success) {
-        toast({
-          title: "Success",
-          description: editingId
-            ? "Skill updated successfully"
-            : "Skill created successfully",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-
+        toast({ title: editingId ? "Updated" : "Created", status: "success", duration: 3000 });
         fetchSkills();
         handleCloseModal();
       } else {
-        toast({
-          title: "Error",
-          description: data.message || "Failed to save skill",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
+        toast({ title: "Error", description: data.message || "Failed", status: "error", duration: 3000 });
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "An error occurred",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      toast({ title: "Error", description: "An error occurred", status: "error", duration: 3000 });
     } finally {
       setLoading(false);
     }
   };
 
   const handleEdit = (skill) => {
-    setFormData({
-      name: skill.name,
-      icon: skill.icon,
-      order: skill.order || 0,
-    });
+    setFormData({ name: skill.name, icon: skill.icon, order: skill.order || 0 });
     setEditingId(skill._id);
     onOpen();
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this skill?")) return;
-
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    setDeleting(true);
     const token = localStorage.getItem("token");
-
     try {
-      const response = await fetch(`/api/skills/${id}`, {
+      const response = await fetch(`/api/skills/${deleteId}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
-
       const data = await response.json();
-
       if (data.success) {
-        toast({
-          title: "Success",
-          description: "Skill deleted successfully",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-
+        toast({ title: "Deleted", status: "success", duration: 3000 });
         fetchSkills();
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete skill",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      toast({ title: "Error", description: "Failed to delete", status: "error", duration: 3000 });
+    } finally {
+      setDeleting(false);
+      setDeleteId(null);
     }
   };
 
   const handleCloseModal = () => {
-    setFormData({
-      name: "",
-      icon: "",
-      order: 0,
-    });
+    setFormData({ name: "", icon: "", order: 0 });
     setEditingId(null);
     onClose();
   };
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  if (fetching) {
-    return (
-      <Box
-        minH="100vh"
-        bg="#0a0a0a"
-        color="#e0e0e0"
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-      >
-        <Heading color="#e2b714">Loading...</Heading>
-      </Box>
-    );
-  }
+  const actions = (
+    <PrimaryButton onClick={onOpen} h="38px" px={5} fontSize="11px" leftIcon={<FaPlus size={11} />}>
+      Add Skill
+    </PrimaryButton>
+  );
 
   return (
-    <Box
-      minH="100vh"
-      bg="#0a0a0a"
-      color="#e0e0e0"
-      fontFamily="system-ui, -apple-system, sans-serif"
-      py={8}
-    >
-      <Container maxW="container.xl">
-        <Flex align="center" justify="space-between" mb={6}>
-          <Flex align="center">
-            <IconButton
-              icon={<ArrowBackIcon />}
-              colorScheme="yellow"
-              variant="outline"
-              mr={4}
-              onClick={() => router.push("/admin/dashboard")}
-              aria-label="Back to dashboard"
-            />
-            <Heading
-              as="h1"
-              size="xl"
-              color="#e0e0e0"
-              fontFamily="system-ui, -apple-system, sans-serif"
-              letterSpacing="2px"
-            >
-              Manage Skills
-            </Heading>
-          </Flex>
-          <Button
-            leftIcon={<AddIcon />}
-            colorScheme="yellow"
-            onClick={onOpen}
-            fontFamily="system-ui, -apple-system, sans-serif"
-          >
-            Add Skill
-          </Button>
-        </Flex>
-
-        <Box
-          bg="#141414"
-          p={8}
-          borderRadius="0"
-          border="1px solid #333333"
-          overflowX="auto"
-        >
-          {skills.length === 0 ? (
-            <Text color="#f7d794" textAlign="center">
-              No skills found. Click "Add Skill" to create one.
-            </Text>
-          ) : (
-            <Table variant="simple">
-              <Thead>
-                <Tr>
-                  <Th color="#e2b714">Name</Th>
-                  <Th color="#e2b714">Icon Path</Th>
-                  <Th color="#e2b714">Order</Th>
-                  <Th color="#e2b714">Actions</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {skills.map((skill) => (
-                  <Tr key={skill._id}>
-                    <Td color="#fff">{skill.name}</Td>
-                    <Td color="#f7d794" fontSize="sm">
-                      {skill.icon}
-                    </Td>
-                    <Td color="#fff">{skill.order}</Td>
-                    <Td>
-                      <HStack spacing={2}>
-                        <IconButton
-                          icon={<EditIcon />}
-                          colorScheme="yellow"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(skill)}
-                          aria-label="Edit skill"
-                        />
-                        <IconButton
-                          icon={<DeleteIcon />}
-                          colorScheme="red"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDelete(skill._id)}
-                          aria-label="Delete skill"
-                        />
-                      </HStack>
-                    </Td>
-                  </Tr>
-                ))}
-              </Tbody>
-            </Table>
-          )}
-        </Box>
-      </Container>
-
-      <Modal isOpen={isOpen} onClose={handleCloseModal} size="lg">
-        <ModalOverlay />
-        <ModalContent bg="#272727" border="2px solid #e2b714">
-          <ModalHeader
-            color="#e0e0e0"
-            fontFamily="system-ui, -apple-system, sans-serif"
-          >
-            {editingId ? "Edit Skill" : "Add Skill"}
-          </ModalHeader>
-          <ModalCloseButton color="#e2b714" />
-          <ModalBody pb={6}>
-            <form onSubmit={handleSubmit}>
-              <VStack spacing={4}>
-                <FormControl isRequired>
-                  <FormLabel color="#f7d794">Name</FormLabel>
-                  <Input
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    bg="#232323"
-                    border="1px solid #e2b714"
-                    color="#fff"
-                  />
-                </FormControl>
-
-                <FormControl isRequired>
-                  <ImageUploader
-                    label="Skill Icon"
-                    currentImage={formData.icon}
-                    onImageSelect={(url) =>
-                      setFormData({ ...formData, icon: url })
-                    }
-                  />
-                </FormControl>
-
-                <FormControl>
-                  <FormLabel color="#f7d794">Order</FormLabel>
-                  <Input
-                    name="order"
-                    type="number"
-                    value={formData.order}
-                    onChange={handleChange}
-                    bg="#232323"
-                    border="1px solid #e2b714"
-                    color="#fff"
-                  />
-                </FormControl>
-
-                <HStack spacing={4} w="full" pt={4}>
-                  <Button
-                    type="submit"
-                    colorScheme="yellow"
-                    flex={1}
-                    isLoading={loading}
-                    fontFamily="system-ui, -apple-system, sans-serif"
-                  >
-                    {editingId ? "Update" : "Create"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    borderColor="#e2b714"
-                    color="#e0e0e0"
-                    flex={1}
-                    onClick={handleCloseModal}
-                    fontFamily="system-ui, -apple-system, sans-serif"
-                  >
-                    Cancel
-                  </Button>
+    <AdminLayout title="Tech Stack" subtitle={`${skills.length} skill${skills.length !== 1 ? "s" : ""}`} actions={actions}>
+      {fetching ? (
+        <Loading label="Loading skills" />
+      ) : skills.length === 0 ? (
+        <EmptyState
+          icon={FaLaptopCode}
+          title="No skills yet"
+          description="Add your first technology to display it on your portfolio."
+          action={<PrimaryButton onClick={onOpen} leftIcon={<FaPlus size={11} />}>Add Skill</PrimaryButton>}
+        />
+      ) : (
+        <SimpleGrid columns={{ base: 2, sm: 3, md: 4, lg: 5 }} spacing={4}>
+          {skills.map((skill, i) => (
+            <GridCard key={skill._id} index={i}>
+              <Box p={5} textAlign="center">
+                <Flex
+                  align="center"
+                  justify="center"
+                  w="60px"
+                  h="60px"
+                  mx="auto"
+                  mb={3}
+                  borderRadius="10px"
+                  bg={COLORS.inputBg}
+                  border={`1px solid ${COLORS.border}`}
+                >
+                  {skill.icon ? (
+                    <Image src={skill.icon} alt={skill.name} maxW="36px" maxH="36px" filter="grayscale(80%) invert(0.9)" />
+                  ) : (
+                    <FaLaptopCode color={COLORS.muted} />
+                  )}
+                </Flex>
+                <Text fontSize="13px" color={COLORS.text} fontWeight="500" mb={1} noOfLines={1}>
+                  {skill.name}
+                </Text>
+                <Text fontSize="10px" color={COLORS.dim} letterSpacing="1px" textTransform="uppercase" mb={3}>
+                  Order {skill.order ?? 0}
+                </Text>
+                <HStack spacing={2} justify="center">
+                  <IconAction icon={<FaPen size={11} />} aria-label="Edit" onClick={() => handleEdit(skill)} />
+                  <IconAction tone="danger" icon={<FaTrash size={11} />} aria-label="Delete" onClick={() => setDeleteId(skill._id)} />
                 </HStack>
-              </VStack>
-            </form>
-          </ModalBody>
-        </ModalContent>
+              </Box>
+            </GridCard>
+          ))}
+        </SimpleGrid>
+      )}
+
+      <Modal
+        isOpen={isOpen}
+        onClose={handleCloseModal}
+        title={editingId ? "Edit Skill" : "Add Skill"}
+        footer={
+          <>
+            <GhostButton onClick={handleCloseModal} h="40px">Cancel</GhostButton>
+            <PrimaryButton type="submit" form="skill-form" isLoading={loading} h="40px">
+              {editingId ? "Update" : "Create"}
+            </PrimaryButton>
+          </>
+        }
+      >
+        <form id="skill-form" onSubmit={handleSubmit}>
+          <VStack spacing={5} align="stretch">
+            <Field label="Name" required>
+              <TextInput name="name" value={formData.name} onChange={handleChange} placeholder="e.g. React" />
+            </Field>
+            <Field label="Icon" required>
+              <ImageUploader label="" currentImage={formData.icon} onImageSelect={(url) => setFormData({ ...formData, icon: url })} />
+            </Field>
+            <Field label="Display Order">
+              <TextInput name="order" type="number" value={formData.order} onChange={handleChange} />
+            </Field>
+          </VStack>
+        </form>
       </Modal>
-    </Box>
+
+      <ConfirmDialog
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={handleDelete}
+        title="Delete Skill"
+        message="This will remove the skill from your portfolio. This action cannot be undone."
+        confirmLabel="Delete"
+        loading={deleting}
+      />
+    </AdminLayout>
   );
 }

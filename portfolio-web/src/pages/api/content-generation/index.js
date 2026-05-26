@@ -20,11 +20,34 @@ async function handler(req, res) {
   }
 }
 
-// GET - Public - Fetch all items
+// GET - Public - Fetch items with pagination
 async function getGalleryItems(req, res) {
   try {
-    const items = await ContentGeneration.find().sort({ order: 1, createdAt: -1 });
-    return res.status(200).json({ success: true, data: items });
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(60, Math.max(1, parseInt(req.query.limit, 10) || 12));
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await Promise.all([
+      ContentGeneration.find()
+        .sort({ createdAt: -1, order: 1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      ContentGeneration.countDocuments(),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+    return res.status(200).json({
+      success: true,
+      data: items,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasMore: page < totalPages,
+      },
+    });
   } catch (error) {
     console.error("Get gallery items error:", error);
     return res.status(500).json({ success: false, message: "Server error" });

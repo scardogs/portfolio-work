@@ -2,6 +2,7 @@ import { ChakraProvider, Box } from "@chakra-ui/react";
 import Head from "next/head";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 import { Analytics } from "@vercel/analytics/next";
 import { ScrollingBackground } from "react-scrolling-background";
 
@@ -12,6 +13,30 @@ const svgPattern = `url('data:image/svg+xml;utf8,<svg width="40" height="40" vie
 export default function App({ Component, pageProps }) {
   const router = useRouter();
   const isAdmin = router.pathname.startsWith("/admin");
+  const isHome = router.pathname === "/";
+  const [splashCursorEnabled, setSplashCursorEnabled] = useState(true);
+
+  // Dismiss the CSS pre-loader on every non-home route.
+  // The home page (portfolio-tab.js) handles its own dismissal in sync
+  // with the intro animation.
+  useEffect(() => {
+    if (isHome) return;
+    const el = document.getElementById("css-preloader");
+    if (el) el.remove();
+  }, [isHome]);
+
+  // Load global site settings (only for public site, not admin)
+  useEffect(() => {
+    if (isAdmin) return;
+    fetch("/api/settings")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json?.success && json.data) {
+          setSplashCursorEnabled(json.data.splashCursorEnabled !== false);
+        }
+      })
+      .catch(() => {});
+  }, [isAdmin]);
 
   return (
     <ChakraProvider>
@@ -47,7 +72,7 @@ export default function App({ Component, pageProps }) {
           height: "100vh",
         }}
       />
-      {!isAdmin && <SplashCursor />}
+      {!isAdmin && splashCursorEnabled && <SplashCursor />}
       <Box position="relative" zIndex={1}>
         <Component {...pageProps} />
       </Box>
