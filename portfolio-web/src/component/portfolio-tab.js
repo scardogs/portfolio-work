@@ -397,7 +397,7 @@ const PortfolioTab = () => {
     }
   }, []);
 
-  const INTRO_DURATION_MS = 1800;
+  const INTRO_DURATION_MS = 1600;
 
   // ─── Loading progress animation ───────────────────────────────────
   useEffect(() => {
@@ -414,16 +414,16 @@ const PortfolioTab = () => {
       };
       setTimeout(playSound, 100);
 
-      // Animate progress bar
+      // Animate progress bar — reaches 100% just before min-duration ends
       const progressInterval = setInterval(() => {
         setLoadingProgress((prev) => {
           if (prev >= 100) {
             clearInterval(progressInterval);
             return 100;
           }
-          return prev + 4;
+          return prev + 2;
         });
-      }, 45);
+      }, 28);
 
       const timer = setTimeout(() => {
         setMinimumIntroDone(true);
@@ -464,7 +464,7 @@ const PortfolioTab = () => {
     }
 
     setIntroExiting(true);
-    const exitTimer = setTimeout(() => setShowIntro(false), 800);
+    const exitTimer = setTimeout(() => setShowIntro(false), 500);
     return () => clearTimeout(exitTimer);
   }, [showIntro, minimumIntroDone, heroImageReady]);
 
@@ -597,7 +597,7 @@ const PortfolioTab = () => {
             {/* Top half */}
             <motion.div
               animate={introExiting ? { y: "-100%" } : { y: 0 }}
-              transition={{ duration: 0.7, ease: [0.76, 0, 0.24, 1] }}
+              transition={{ duration: 0.5, ease: [0.76, 0, 0.24, 1] }}
               style={{
                 position: "absolute",
                 top: 0,
@@ -611,7 +611,7 @@ const PortfolioTab = () => {
             {/* Bottom half */}
             <motion.div
               animate={introExiting ? { y: "100%" } : { y: 0 }}
-              transition={{ duration: 0.7, ease: [0.76, 0, 0.24, 1] }}
+              transition={{ duration: 0.5, ease: [0.76, 0, 0.24, 1] }}
               style={{
                 position: "absolute",
                 bottom: 0,
@@ -637,179 +637,326 @@ const PortfolioTab = () => {
               zIndex={3}
             >
               <audio ref={audioRef} src="/cashing.mp3" preload="auto" />
-              <Box position="relative" textAlign="center">
-                {/* Animated Grid Background */}
+
+              {/* Animated grid background — full screen */}
+              <Box
+                position="absolute"
+                top={0}
+                left={0}
+                w="100%"
+                h="100%"
+                backgroundImage="linear-gradient(rgba(224,224,224,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(224,224,224,0.035) 1px, transparent 1px)"
+                backgroundSize="60px 60px"
+                sx={{
+                  animation: "gridDrift 14s linear infinite",
+                  "@keyframes gridDrift": {
+                    "0%": { transform: "translate(0, 0)" },
+                    "100%": { transform: "translate(60px, 60px)" },
+                  },
+                }}
+              />
+
+              {/* Aurora radial glow — subtle white instead of yellow */}
+              <Box
+                position="absolute"
+                top="50%"
+                left="50%"
+                transform="translate(-50%, -50%)"
+                w={["420px", "640px", "860px"]}
+                h={["420px", "640px", "860px"]}
+                borderRadius="50%"
+                pointerEvents="none"
+                sx={{
+                  background:
+                    "radial-gradient(circle, rgba(224,224,224,0.10) 0%, rgba(224,224,224,0.04) 30%, transparent 65%)",
+                  filter: "blur(30px)",
+                  animation: "auroraPulse 2.4s ease-in-out infinite",
+                  "@keyframes auroraPulse": {
+                    "0%, 100%": { opacity: 0.6, transform: "translate(-50%, -50%) scale(1)" },
+                    "50%": { opacity: 1, transform: "translate(-50%, -50%) scale(1.08)" },
+                  },
+                }}
+              />
+
+              {/* Scanline overlay */}
+              <Box
+                position="absolute"
+                top={0}
+                left={0}
+                w="100%"
+                h="100%"
+                pointerEvents="none"
+                opacity={0.04}
+                sx={{
+                  backgroundImage:
+                    "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.5) 2px, rgba(255,255,255,0.5) 3px)",
+                }}
+              />
+
+              {/* Center stage */}
+              <Box position="relative" textAlign="center" zIndex={1} px={4}>
+                {/* Corner brackets — frame the brand */}
                 <Box
                   position="absolute"
-                  top={0}
-                  left={0}
-                  w="100%"
-                  h="100%"
-                  backgroundImage="linear-gradient(#141414 1px, transparent 1px), linear-gradient(90deg, #141414 1px, transparent 1px)"
-                  backgroundSize="40px 40px"
-                  opacity={0.3}
+                  top="-40px"
+                  left="-40px"
+                  w="24px"
+                  h="24px"
+                  borderTop="1px solid rgba(224,224,224,0.4)"
+                  borderLeft="1px solid rgba(224,224,224,0.4)"
                   sx={{
-                    animation: "gridMove 20s linear infinite",
-                    "@keyframes gridMove": {
-                      "0%": { transform: "translate(0, 0)" },
-                      "100%": { transform: "translate(40px, 40px)" },
+                    animation: "cornerFade 0.5s ease-out 0.05s both",
+                    "@keyframes cornerFade": {
+                      "0%": { opacity: 0, transform: "translate(8px, 8px)" },
+                      "100%": { opacity: 1, transform: "translate(0, 0)" },
+                    },
+                  }}
+                />
+                <Box
+                  position="absolute"
+                  top="-40px"
+                  right="-40px"
+                  w="24px"
+                  h="24px"
+                  borderTop="1px solid rgba(224,224,224,0.4)"
+                  borderRight="1px solid rgba(224,224,224,0.4)"
+                  sx={{
+                    animation: "cornerFadeTR 0.5s ease-out 0.1s both",
+                    "@keyframes cornerFadeTR": {
+                      "0%": { opacity: 0, transform: "translate(-8px, 8px)" },
+                      "100%": { opacity: 1, transform: "translate(0, 0)" },
+                    },
+                  }}
+                />
+                <Box
+                  position="absolute"
+                  bottom="-40px"
+                  left="-40px"
+                  w="24px"
+                  h="24px"
+                  borderBottom="1px solid rgba(224,224,224,0.4)"
+                  borderLeft="1px solid rgba(224,224,224,0.4)"
+                  sx={{
+                    animation: "cornerFadeBL 0.5s ease-out 0.15s both",
+                    "@keyframes cornerFadeBL": {
+                      "0%": { opacity: 0, transform: "translate(8px, -8px)" },
+                      "100%": { opacity: 1, transform: "translate(0, 0)" },
+                    },
+                  }}
+                />
+                <Box
+                  position="absolute"
+                  bottom="-40px"
+                  right="-40px"
+                  w="24px"
+                  h="24px"
+                  borderBottom="1px solid rgba(224,224,224,0.4)"
+                  borderRight="1px solid rgba(224,224,224,0.4)"
+                  sx={{
+                    animation: "cornerFadeBR 0.5s ease-out 0.2s both",
+                    "@keyframes cornerFadeBR": {
+                      "0%": { opacity: 0, transform: "translate(-8px, -8px)" },
+                      "100%": { opacity: 1, transform: "translate(0, 0)" },
                     },
                   }}
                 />
 
+                {/* Top eyebrow — system tag */}
                 <motion.div
-                  initial={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0 }}
+                  transition={{ duration: 0.4, delay: 0.05 }}
                 >
-                  {/* Decorative Lines */}
-                  <Box mb={8} display="flex" alignItems="center" justifyContent="center">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: "80px" }}
-                      transition={{ duration: 0.6, ease: "easeOut" }}
-                      style={{ display: "flex" }}
-                    >
-                      <Box h="1px" bg="#888888" w="100%" />
-                    </motion.div>
+                  <Flex justify="center" align="center" gap={3} mb={[5, 6]}>
                     <Box
-                      w="12px"
-                      h="12px"
-                      border="1px solid #888888"
-                      transform="rotate(45deg)"
+                      w="6px"
+                      h="6px"
+                      bg="#e2b714"
+                      borderRadius="50%"
+                      sx={{
+                        animation: "statusBlink 1.2s ease-in-out infinite",
+                        "@keyframes statusBlink": {
+                          "0%, 100%": { opacity: 1, boxShadow: "0 0 10px rgba(226,183,20,0.7)" },
+                          "50%": { opacity: 0.4, boxShadow: "0 0 3px rgba(226,183,20,0.25)" },
+                        },
+                      }}
+                    />
+                    <Text
+                      color="#888888"
+                      fontSize="10px"
+                      fontWeight="500"
+                      letterSpacing="4px"
+                      textTransform="uppercase"
+                      fontFamily="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+                    >
+                      Initializing
+                    </Text>
+                    <Box w="40px" h="1px" bg="rgba(224,224,224,0.2)" />
+                  </Flex>
+                </motion.div>
+
+                {/* Name — staggered letter reveal */}
+                <Box mb={[3, 4]} position="relative" overflow="hidden">
+                  <Heading
+                    as="h1"
+                    color="#f5f5f5"
+                    fontSize={["28px", "40px", "56px"]}
+                    fontWeight="700"
+                    letterSpacing={["-1px", "-1.5px", "-2px"]}
+                    lineHeight="1"
+                    fontFamily="system-ui, -apple-system, sans-serif"
+                    sx={{
+                      "& span": { display: "inline-block" },
+                    }}
+                  >
+                    {(aboutData?.name || "John Michael T. Escarlan")
+                      .split("")
+                      .map((ch, i) => (
+                        <motion.span
+                          key={i}
+                          initial={{ opacity: 0, y: 24, filter: "blur(8px)" }}
+                          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                          transition={{
+                            duration: 0.45,
+                            delay: 0.1 + i * 0.018,
+                            ease: [0.22, 1, 0.36, 1],
+                          }}
+                          style={{ display: "inline-block", whiteSpace: ch === " " ? "pre" : "normal" }}
+                        >
+                          {ch}
+                        </motion.span>
+                      ))}
+                  </Heading>
+
+                  {/* Sweeping highlight bar across the name */}
+                  <motion.div
+                    initial={{ x: "-110%" }}
+                    animate={{ x: "110%" }}
+                    transition={{ duration: 0.9, delay: 0.3, ease: [0.65, 0, 0.35, 1] }}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "60%",
+                      height: "100%",
+                      background:
+                        "linear-gradient(90deg, transparent 0%, rgba(224,224,224,0.22) 50%, transparent 100%)",
+                      mixBlendMode: "screen",
+                      pointerEvents: "none",
+                    }}
+                  />
+                </Box>
+
+                {/* Role / subtitle */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                >
+                  <Flex justify="center" align="center" gap={3} mb={[8, 10]}>
+                    <Box w="32px" h="1px" bg="rgba(255,255,255,0.2)" />
+                    <Text
+                      color="rgba(255,255,255,0.5)"
+                      fontSize={["10px", "11px"]}
+                      fontWeight="400"
+                      letterSpacing="6px"
+                      textTransform="uppercase"
+                      fontFamily="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+                    >
+                      Full-Stack Developer · Portfolio
+                    </Text>
+                    <Box w="32px" h="1px" bg="rgba(255,255,255,0.2)" />
+                  </Flex>
+                </motion.div>
+
+                {/* Progress — wider, with shimmer + monospace counter */}
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.5 }}
+                >
+                  <Box w={["240px", "300px"]} mx="auto">
+                    <Flex justify="space-between" mb={2} fontFamily="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+                      <Text fontSize="10px" color="rgba(255,255,255,0.35)" letterSpacing="2px">
+                        LOAD
+                      </Text>
+                      <Text
+                        fontSize="10px"
+                        color={loadingProgress >= 100 ? "#e0e0e0" : "rgba(255,255,255,0.55)"}
+                        letterSpacing="2px"
+                        sx={{ transition: "color 0.3s ease" }}
+                      >
+                        {String(Math.round(Math.min(loadingProgress, 100))).padStart(3, "0")} / 100
+                      </Text>
+                    </Flex>
+                    <Box
+                      h="2px"
+                      bg="rgba(255,255,255,0.06)"
                       position="relative"
-                      mx={1}
-                      flexShrink={0}
+                      overflow="hidden"
+                      borderRadius="2px"
                     >
                       <Box
                         position="absolute"
-                        top="50%"
-                        left="50%"
-                        transform="translate(-50%, -50%)"
-                        w="6px"
-                        h="6px"
-                        bg="#888888"
+                        top={0}
+                        left={0}
+                        h="100%"
+                        w={`${Math.min(loadingProgress, 100)}%`}
+                        bg="linear-gradient(90deg, #888888 0%, #e0e0e0 50%, #888888 100%)"
+                        sx={{
+                          transition: "width 0.12s linear",
+                          boxShadow: "0 0 10px rgba(224,224,224,0.4)",
+                        }}
                       />
-                    </Box>
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: "80px" }}
-                      transition={{ duration: 0.6, ease: "easeOut" }}
-                      style={{ display: "flex" }}
-                    >
-                      <Box h="1px" bg="#888888" w="100%" />
-                    </motion.div>
-                  </Box>
-
-                  {/* Name with Glitch Effect */}
-                  <Box mb={4}>
-                    <Text
-                      color="#e0e0e0"
-                      fontSize={[28, 32, 36]}
-                      fontWeight="300"
-                      letterSpacing="4px"
-                      fontFamily="system-ui, -apple-system, sans-serif"
-                      sx={{
-                        animation: "glitch 3s infinite",
-                        "@keyframes glitch": {
-                          "0%, 93%, 95%, 97%, 100%": { opacity: 1 },
-                          "94%": { opacity: 0.7, transform: "translateX(2px)" },
-                          "96%": { opacity: 0.8, transform: "translateX(-1px)" },
-                        },
-                      }}
-                    >
-                      {aboutData?.name || "John Michael T. Escarlan"}
-                    </Text>
-                  </Box>
-
-                  {/* Subtitle */}
-                  <Box mb={8}>
-                    <Text
-                      color="#888888"
-                      fontSize={[11, 12]}
-                      fontWeight="300"
-                      letterSpacing="2px"
-                      textTransform="uppercase"
-                      fontFamily="system-ui, -apple-system, sans-serif"
-                      mb={8}
-                    >
-                      Portfolio
-                    </Text>
-                  </Box>
-
-                  {/* Progress Bar */}
-                  <Box w="200px" mx="auto" mb={6}>
-                    <Box h="1px" bg="#333333" position="relative" overflow="hidden">
-                      <motion.div
-                        style={{
-                          height: "100%",
-                          background: "#e0e0e0",
-                          width: `${Math.min(loadingProgress, 100)}%`,
-                          transition: "width 0.1s linear",
+                      {/* Shimmer pulse on top of fill */}
+                      <Box
+                        position="absolute"
+                        top={0}
+                        left={0}
+                        h="100%"
+                        w="100%"
+                        sx={{
+                          backgroundImage:
+                            "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)",
+                          backgroundSize: "200% 100%",
+                          animation: "shimmerSlide 1.2s linear infinite",
+                          "@keyframes shimmerSlide": {
+                            "0%": { backgroundPosition: "200% 0" },
+                            "100%": { backgroundPosition: "-200% 0" },
+                          },
+                          mixBlendMode: "overlay",
+                          pointerEvents: "none",
                         }}
                       />
                     </Box>
-                    <Text
-                      fontSize="10px"
-                      color="#666666"
-                      mt={2}
-                      letterSpacing="2px"
-                      fontFamily="monospace"
-                    >
-                      {Math.round(Math.min(loadingProgress, 100))}%
-                    </Text>
                   </Box>
-
-                  {/* Loading Dots */}
-                  <Flex justifyContent="center" gap={2}>
-                    {[0, 1, 2].map((i) => (
-                      <motion.div
-                        key={i}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: [0, 1, 0] }}
-                        transition={{
-                          duration: 1.5,
-                          repeat: Infinity,
-                          delay: i * 0.2,
-                          ease: "easeInOut",
-                        }}
-                      >
-                        <Box w="6px" h="6px" bg="#888888" borderRadius="50%" />
-                      </motion.div>
-                    ))}
-                  </Flex>
-
-                  {/* Scanline overlay */}
-                  <Box
-                    position="fixed"
-                    top={0}
-                    left={0}
-                    w="100%"
-                    h="100vh"
-                    pointerEvents="none"
-                    opacity={0.03}
-                    sx={{
-                      backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(255,255,255,0.03) 1px, rgba(255,255,255,0.03) 2px)",
-                    }}
-                  />
-
-                  {/* Bottom Decorative Line */}
-                  <motion.div
-                    initial={{ opacity: 0, scaleX: 0 }}
-                    animate={{ opacity: 1, scaleX: 1 }}
-                    transition={{ duration: 0.6, delay: 1.3, ease: "easeOut" }}
-                    style={{ transformOrigin: "center" }}
-                  >
-                    <Box
-                      mt={8}
-                      mx="auto"
-                      w="120px"
-                      h="1px"
-                      bg="linear-gradient(to right, transparent, #888888, transparent)"
-                    />
-                  </motion.div>
                 </motion.div>
               </Box>
+
+              {/* Bottom-corner meta — gives it a "system" feel */}
+              <Flex
+                position="absolute"
+                bottom={[4, 6]}
+                left={[4, 6]}
+                right={[4, 6]}
+                justify="space-between"
+                align="flex-end"
+                fontFamily="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+                color="rgba(255,255,255,0.3)"
+                fontSize="9px"
+                letterSpacing="2px"
+                sx={{
+                  animation: "metaFade 0.6s ease-out 0.3s both",
+                  "@keyframes metaFade": {
+                    "0%": { opacity: 0 },
+                    "100%": { opacity: 1 },
+                  },
+                }}
+              >
+                <Text>v.{new Date().getFullYear()} · BUILD STABLE</Text>
+                <Text display={{ base: "none", md: "block" }}>JME / PORTFOLIO</Text>
+                <Text>SYS: READY</Text>
+              </Flex>
             </Box>
           </motion.div>
         )}

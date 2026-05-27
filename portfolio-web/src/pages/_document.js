@@ -19,75 +19,45 @@ export default function Document() {
         <meta name="format-detection" content="telephone=no" />
         <style>{`
           body { background-color: #0a0a0a !important; margin: 0 !important; }
-          @keyframes _preBarFill { from { width:0% } to { width:100% } }
-          @keyframes _preDot { 0%,100%{opacity:.2} 50%{opacity:1} }
+          @keyframes _preGlow {
+            0%, 100% { opacity: 0.4; transform: translate(-50%, -50%) scale(1); }
+            50%      { opacity: 0.9; transform: translate(-50%, -50%) scale(1.35); }
+          }
+          @keyframes _preDot {
+            0%, 100% { opacity: 1;   box-shadow: 0 0 14px rgba(224,224,224,0.8); }
+            50%      { opacity: 0.5; box-shadow: 0 0 4px  rgba(224,224,224,0.25); }
+          }
+          #css-preloader.hidden { opacity: 0; }
         `}</style>
       </Head>
       <body style={{ backgroundColor: "#0a0a0a", margin: 0 }}>
 
-        {/* Pure inline-styled pre-loader — shows before any JS loads */}
+        {/* Minimal SSR pre-loader — black canvas with subtle yellow pulse.
+            Acts as a seamless handoff to the React loading screen. */}
         <div id="css-preloader" style={{
           position: "fixed", inset: 0, zIndex: 99999,
           background: "#0a0a0a",
-          display: "flex", flexDirection: "column",
+          display: "flex",
           alignItems: "center", justifyContent: "center",
-          fontFamily: "system-ui,-apple-system,sans-serif",
-          transition: "opacity 0.4s ease",
+          transition: "opacity 0.35s ease",
+          pointerEvents: "none",
         }}>
-          {/* Decorative lines */}
-          <div style={{ display:"flex", alignItems:"center", marginBottom:24 }}>
-            <div style={{ width:80, height:1, background:"#888" }} />
-            <div style={{
-              width:12, height:12, border:"1px solid #888",
-              transform:"rotate(45deg)", margin:"0 6px", flexShrink:0,
-              position:"relative",
-            }}>
-              <div style={{
-                position:"absolute", top:"50%", left:"50%",
-                transform:"translate(-50%,-50%)",
-                width:6, height:6, background:"#888",
-              }} />
-            </div>
-            <div style={{ width:80, height:1, background:"#888" }} />
-          </div>
-
-          {/* Name */}
-          <p style={{
-            color:"#e0e0e0", fontSize:"clamp(20px,4vw,34px)",
-            fontWeight:300, letterSpacing:4, margin:"0 0 8px",
-          }}>
-            John Michael T. Escarlan
-          </p>
-
-          {/* Subtitle */}
-          <p style={{
-            color:"#888", fontSize:12, letterSpacing:2,
-            textTransform:"uppercase", margin:"0 0 24px",
-          }}>
-            Portfolio
-          </p>
-
-          {/* Progress bar */}
+          {/* Outer aurora glow */}
           <div style={{
-            width:200, height:1, background:"#333",
-            position:"relative", overflow:"hidden", marginBottom:8,
-          }}>
-            <div style={{
-              position:"absolute", top:0, left:0, height:"100%",
-              background:"#e0e0e0",
-              animation:"_preBarFill 2s ease-out forwards",
-            }} />
-          </div>
-
-          {/* Dots */}
-          <div style={{ display:"flex", gap:8, marginTop:16 }}>
-            {[0,1,2].map((i) => (
-              <div key={i} style={{
-                width:6, height:6, background:"#888", borderRadius:"50%",
-                animation:`_preDot 1.5s ease-in-out ${i*0.2}s infinite`,
-              }} />
-            ))}
-          </div>
+            position: "absolute", top: "50%", left: "50%",
+            width: 320, height: 320, borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(224,224,224,0.10) 0%, rgba(224,224,224,0.03) 40%, transparent 70%)",
+            filter: "blur(20px)",
+            transform: "translate(-50%, -50%)",
+            animation: "_preGlow 1.8s ease-in-out infinite",
+          }} />
+          {/* Center dot */}
+          <div style={{
+            position: "relative",
+            width: 8, height: 8, borderRadius: "50%",
+            background: "#e0e0e0",
+            animation: "_preDot 1.2s ease-in-out infinite",
+          }} />
         </div>
 
         <Main />
