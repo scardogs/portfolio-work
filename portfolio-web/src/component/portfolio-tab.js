@@ -353,7 +353,7 @@ const PortfolioTab = () => {
   // ─── Active nav section tracker (scroll-position based) ──────────────
   useEffect(() => {
     if (showIntro) return;
-    const sectionIds = ["about-section", "projects-section", "content-gen-section", "contact-section"];
+    const sectionIds = ["about-section", "projects-section", "content-gen-section", "milestones-section", "experience-section", "contact-section"];
     const OFFSET = 120; // pixels below viewport top counted as "active line"
 
     const compute = () => {
@@ -2039,6 +2039,13 @@ const PortfolioTab = () => {
 
               <AnimatedDivider />
 
+              {/* ═══ CONTENT GENERATION ═══ */}
+              <ParallaxSection id="content-gen-section" offset={30}>
+                <ContentGenerationSection />
+              </ParallaxSection>
+
+              <AnimatedDivider />
+
               {/* ═══ KEY MILESTONES ═══ */}
               <ParallaxSection id="milestones-section" mb={[12, 16, 20]} offset={25}>
                 <Box position="relative">
@@ -2645,13 +2652,6 @@ const PortfolioTab = () => {
                     </VStack>
                   </Box>
                 </Box>
-              </ParallaxSection>
-
-              <AnimatedDivider />
-
-              {/* ═══ CONTENT GENERATION ═══ */}
-              <ParallaxSection id="content-gen-section" offset={30}>
-                <ContentGenerationSection />
               </ParallaxSection>
 
               <AnimatedDivider />
