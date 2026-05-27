@@ -25,6 +25,7 @@ import ContactForm from "./ContactForm";
 import ContentGenerationSection from "./ContentGenerationSection";
 import Shuffle from "./Shuffle";
 import { useRouter } from "next/router";
+import NextLink from "next/link";
 import { motion, useScroll, useTransform, useSpring, useInView, AnimatePresence } from "framer-motion";
 import { FaUserShield, FaGithub, FaLinkedin, FaBars } from "react-icons/fa";
 
@@ -257,18 +258,20 @@ const FluidNavbar = ({ activeSection, navLinkProps, onOpen, router, children }) 
           <Button {...navLinkProps("about-section")}>About</Button>
           <Button {...navLinkProps("projects-section")}>Work</Button>
           <Button {...navLinkProps("content-gen-section")}>Content</Button>
-          <Button
-            variant="link"
-            color="#888888"
-            fontSize={[13, 14]}
-            fontWeight="400"
-            letterSpacing="1px"
-            _hover={{ color: "#e0e0e0" }}
-            transition="color 0.3s ease"
-            onClick={() => router.push("/blog")}
-          >
-            Notes
-          </Button>
+          <NextLink href="/blog" prefetch passHref legacyBehavior>
+            <Button
+              as="a"
+              variant="link"
+              color="#888888"
+              fontSize={[13, 14]}
+              fontWeight="400"
+              letterSpacing="1px"
+              _hover={{ color: "#e0e0e0" }}
+              transition="color 0.3s ease"
+            >
+              Notes
+            </Button>
+          </NextLink>
           <Button {...navLinkProps("contact-section")}>Contact</Button>
         </HStack>
 

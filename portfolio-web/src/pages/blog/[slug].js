@@ -41,12 +41,21 @@ function formatDate(d) {
   }
 }
 
-export async function getServerSideProps({ params, res }) {
+export async function getStaticPaths() {
+  await dbConnect();
+  const docs = await BlogPost.find({ status: "published" }).select("slug").lean();
+  return {
+    paths: docs.map((d) => ({ params: { slug: d.slug } })),
+    fallback: "blocking",
+  };
+}
+
+export async function getStaticProps({ params }) {
   await dbConnect();
   const doc = await BlogPost.findOne({ slug: params.slug, status: "published" }).lean();
 
   if (!doc) {
-    return { notFound: true };
+    return { notFound: true, revalidate: 60 };
   }
 
   const post = {
@@ -62,8 +71,7 @@ export async function getServerSideProps({ params, res }) {
     description: doc.excerpt || stripMarkdown(doc.content || "", 200),
   };
 
-  res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=600");
-  return { props: { post } };
+  return { props: { post }, revalidate: 60 };
 }
 
 export default function BlogPostPage({ post }) {

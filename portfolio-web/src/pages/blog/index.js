@@ -42,7 +42,7 @@ function formatDate(d) {
   }
 }
 
-export async function getServerSideProps({ res }) {
+export async function getStaticProps() {
   await dbConnect();
   const docs = await BlogPost.find({ status: "published" })
     .sort({ publishedAt: -1, createdAt: -1 })
@@ -61,9 +61,7 @@ export async function getServerSideProps({ res }) {
     createdAt: new Date(p.createdAt).toISOString(),
   }));
 
-  res.setHeader("Cache-Control", "public, s-maxage=300, stale-while-revalidate=600");
-
-  return { props: { posts } };
+  return { props: { posts }, revalidate: 60 };
 }
 
 export default function BlogIndex({ posts }) {
