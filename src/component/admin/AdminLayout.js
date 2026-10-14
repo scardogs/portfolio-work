@@ -7,6 +7,7 @@ import {
   Text,
   Icon,
   IconButton,
+  Button,
   Tooltip,
   useToast,
   useBreakpointValue,
@@ -31,6 +32,7 @@ import {
   FaBookOpen,
   FaSignOutAlt,
   FaEye,
+  FaEyeSlash,
   FaBars,
   FaAngleLeft,
   FaAngleRight,
@@ -51,18 +53,18 @@ const COLORS = {
 
 const NAV_ITEMS = [
   { label: "Dashboard", icon: FaTachometerAlt, path: "/admin/dashboard" },
-  { label: "About", icon: FaUser, path: "/admin/manage/about" },
-  { label: "Projects", icon: FaFolderOpen, path: "/admin/manage/projects" },
-  { label: "Tech Stack", icon: FaLaptopCode, path: "/admin/manage/skills" },
-  { label: "Work Experience", icon: FaBriefcase, path: "/admin/manage/work-experience" },
-  { label: "Milestones", icon: FaCalendarAlt, path: "/admin/manage/years" },
-  { label: "Content Gallery", icon: FaImages, path: "/admin/manage/content-generation" },
-  { label: "Blog & Notes", icon: FaBookOpen, path: "/admin/manage/blog" },
-  { label: "Contact Info", icon: FaEnvelope, path: "/admin/manage/contact" },
+  { label: "About", icon: FaUser, path: "/admin/manage/about", sectionKey: "about" },
+  { label: "Projects", icon: FaFolderOpen, path: "/admin/manage/projects", sectionKey: "projects" },
+  { label: "Tech Stack", icon: FaLaptopCode, path: "/admin/manage/skills", sectionKey: "skills" },
+  { label: "Work Experience", icon: FaBriefcase, path: "/admin/manage/work-experience", sectionKey: "experience" },
+  { label: "Milestones", icon: FaCalendarAlt, path: "/admin/manage/years", sectionKey: "milestones" },
+  { label: "Content Gallery", icon: FaImages, path: "/admin/manage/content-generation", sectionKey: "contentGeneration" },
+  { label: "Blog & Notes", icon: FaBookOpen, path: "/admin/manage/blog", sectionKey: "blog" },
+  { label: "Contact Info", icon: FaEnvelope, path: "/admin/manage/contact", sectionKey: "contact" },
   { label: "Messages", icon: FaInbox, path: "/admin/manage/messages" },
 ];
 
-function NavLink({ item, active, collapsed, onClick }) {
+function NavLink({ item, active, collapsed, onClick, isHidden }) {
   const inner = (
     <Flex
       align="center"
@@ -79,32 +81,49 @@ function NavLink({ item, active, collapsed, onClick }) {
       color={active ? COLORS.text : COLORS.muted}
       _hover={{ bg: "rgba(255,255,255,0.04)", color: COLORS.text }}
       transition="all 0.2s ease"
-      justify={collapsed ? "center" : "flex-start"}
+      justify={collapsed ? "center" : "space-between"}
     >
-      <Icon
-        as={item.icon}
-        boxSize="16px"
-        color={active ? COLORS.accent : "inherit"}
-        _groupHover={{ color: COLORS.accent }}
-        transition="color 0.2s"
-      />
-      {!collapsed && (
-        <Text
-          fontSize="13px"
-          fontWeight="400"
-          letterSpacing="0.5px"
-          whiteSpace="nowrap"
-          overflow="hidden"
-          textOverflow="ellipsis"
+      <HStack spacing={3} overflow="hidden">
+        <Icon
+          as={item.icon}
+          boxSize="16px"
+          color={active ? COLORS.accent : "inherit"}
+          _groupHover={{ color: COLORS.accent }}
+          transition="color 0.2s"
+        />
+        {!collapsed && (
+          <Text
+            fontSize="13px"
+            fontWeight="400"
+            letterSpacing="0.5px"
+            whiteSpace="nowrap"
+            overflow="hidden"
+            textOverflow="ellipsis"
+            opacity={isHidden ? 0.6 : 1}
+          >
+            {item.label}
+          </Text>
+        )}
+      </HStack>
+      {!collapsed && isHidden && (
+        <Tooltip
+          label="Hidden on public site"
+          placement="right"
+          bg={COLORS.card}
+          color={COLORS.text}
+          border={`1px solid ${COLORS.border}`}
+          fontSize="11px"
         >
-          {item.label}
-        </Text>
+          <Box as="span" display="inline-flex" color="#ff6b6b" flexShrink={0}>
+            <Icon as={FaEyeSlash} boxSize="12px" />
+          </Box>
+        </Tooltip>
       )}
     </Flex>
   );
   return collapsed ? (
     <Tooltip
-      label={item.label}
+      label={isHidden ? `${item.label} (Hidden on site)` : item.label}
       placement="right"
       bg={COLORS.card}
       color={COLORS.text}
@@ -118,7 +137,7 @@ function NavLink({ item, active, collapsed, onClick }) {
   );
 }
 
-function SidebarContent({ collapsed, setCollapsed, router, user, onLogout, onNavigate, isMobile }) {
+function SidebarContent({ collapsed, setCollapsed, router, user, onLogout, onNavigate, isMobile, sectionVisibility = {} }) {
   return (
     <Flex direction="column" h="100%" bg={COLORS.panel}>
       {/* Brand */}
@@ -214,6 +233,7 @@ function SidebarContent({ collapsed, setCollapsed, router, user, onLogout, onNav
             active={router.pathname === item.path}
             collapsed={collapsed}
             onClick={() => onNavigate(item.path)}
+            isHidden={item.sectionKey ? sectionVisibility[item.sectionKey] === false : false}
           />
         ))}
       </VStack>
@@ -300,12 +320,39 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
   const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState(null);
   const [collapsed, setCollapsed] = useState(false);
+  const [sectionVisibility, setSectionVisibility] = useState({});
+  const [togglingSection, setTogglingSection] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const isMobile = useBreakpointValue({ base: true, md: false });
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    const loadSettings = () => {
+      fetch("/api/settings")
+        .then((r) => r.json())
+        .then((json) => {
+          if (json?.success && json.data?.sectionVisibility) {
+            setSectionVisibility(json.data.sectionVisibility);
+          }
+        })
+        .catch(() => {});
+    };
+    loadSettings();
+
+    const handleVisibilityEvent = (e) => {
+      if (e?.detail?.sectionVisibility) {
+        setSectionVisibility(e.detail.sectionVisibility);
+      } else {
+        loadSettings();
+      }
+    };
+    window.addEventListener("section-visibility-updated", handleVisibilityEvent);
+    return () => window.removeEventListener("section-visibility-updated", handleVisibilityEvent);
+  }, [mounted]);
 
   useEffect(() => {
     if (!mounted || !router.isReady) return;
@@ -323,6 +370,58 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
       router.replace("/admin/login");
     }
   }, [mounted, router.isReady]);
+
+  const currentNavItem = NAV_ITEMS.find((item) => item.path === router.pathname);
+  const currentSectionKey = currentNavItem?.sectionKey;
+  const isCurrentSectionVisible = currentSectionKey ? sectionVisibility[currentSectionKey] !== false : true;
+
+  const toggleCurrentSectionVisibility = async () => {
+    if (!currentSectionKey) return;
+    setTogglingSection(true);
+    const nextVisible = !isCurrentSectionVisible;
+    try {
+      const token = localStorage.getItem("token");
+      const r = await fetch("/api/settings", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          sectionVisibility: {
+            ...sectionVisibility,
+            [currentSectionKey]: nextVisible,
+          },
+        }),
+      });
+      const json = await r.json();
+      if (json?.success && json.data?.sectionVisibility) {
+        setSectionVisibility(json.data.sectionVisibility);
+        window.dispatchEvent(
+          new CustomEvent("section-visibility-updated", {
+            detail: { sectionVisibility: json.data.sectionVisibility },
+          })
+        );
+        toast({
+          title: nextVisible ? "Section Unhidden" : "Section Hidden",
+          description: `${currentNavItem.label} is now ${nextVisible ? "visible" : "hidden"} on the public website.`,
+          status: nextVisible ? "success" : "info",
+          duration: 3000,
+        });
+      } else {
+        throw new Error(json?.message || "Failed to update visibility");
+      }
+    } catch (e) {
+      toast({
+        title: "Error",
+        description: e.message || "Failed to update section visibility",
+        status: "error",
+        duration: 3000,
+      });
+    } finally {
+      setTogglingSection(false);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -404,6 +503,7 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
           onLogout={handleLogout}
           onNavigate={handleNavigate}
           isMobile={false}
+          sectionVisibility={sectionVisibility}
         />
       </Box>
 
@@ -421,6 +521,7 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
               onLogout={handleLogout}
               onNavigate={handleNavigate}
               isMobile={true}
+              sectionVisibility={sectionVisibility}
             />
           </DrawerBody>
         </DrawerContent>
@@ -445,6 +546,8 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
           bg="rgba(10,10,10,0.85)"
           backdropFilter="blur(12px)"
           borderBottom={`1px solid ${COLORS.border}`}
+          gap={3}
+          flexWrap="wrap"
         >
           <HStack spacing={3}>
             <IconButton
@@ -478,7 +581,48 @@ export default function AdminLayout({ title, subtitle, actions, children }) {
               </Text>
             </Box>
           </HStack>
-          {actions && <HStack spacing={2}>{actions}</HStack>}
+          <HStack spacing={2} flexWrap="wrap">
+            {currentSectionKey && (
+              <Tooltip
+                label={
+                  isCurrentSectionVisible
+                    ? "Click to hide this section on the public website"
+                    : "Click to unhide this section on the public website"
+                }
+                bg={COLORS.card}
+                color={COLORS.text}
+                border={`1px solid ${COLORS.border}`}
+                fontSize="11px"
+              >
+                <Button
+                  size="sm"
+                  h="36px"
+                  px={3.5}
+                  onClick={toggleCurrentSectionVisibility}
+                  isLoading={togglingSection}
+                  leftIcon={<Icon as={isCurrentSectionVisible ? FaEye : FaEyeSlash} boxSize="13px" />}
+                  bg={isCurrentSectionVisible ? "rgba(226,183,20,0.08)" : "rgba(255,107,107,0.08)"}
+                  color={isCurrentSectionVisible ? COLORS.accent : "#ff6b6b"}
+                  border={`1px solid ${
+                    isCurrentSectionVisible ? "rgba(226,183,20,0.35)" : "rgba(255,107,107,0.35)"
+                  }`}
+                  borderRadius="8px"
+                  fontSize="11px"
+                  fontWeight="500"
+                  letterSpacing="1.5px"
+                  textTransform="uppercase"
+                  _hover={{
+                    bg: isCurrentSectionVisible ? "rgba(226,183,20,0.16)" : "rgba(255,107,107,0.16)",
+                    borderColor: isCurrentSectionVisible ? COLORS.accent : "#ff6b6b",
+                  }}
+                  transition="all 0.2s ease"
+                >
+                  {isCurrentSectionVisible ? "Visible on Site" : "Hidden on Site"}
+                </Button>
+              </Tooltip>
+            )}
+            {actions}
+          </HStack>
         </Flex>
 
         {/* Page content */}

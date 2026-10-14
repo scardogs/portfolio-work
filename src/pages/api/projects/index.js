@@ -20,8 +20,42 @@ async function handler(req, res) {
 // GET - Public
 async function getProjects(req, res) {
   try {
+    const pageParam = req.query?.page ? parseInt(req.query.page, 10) : null;
+    const limitParam = req.query?.limit ? parseInt(req.query.limit, 10) : null;
+
+    if (pageParam && limitParam && pageParam > 0 && limitParam > 0) {
+      const total = await Project.countDocuments();
+      const totalPages = Math.max(1, Math.ceil(total / limitParam));
+      const projects = await Project.find()
+        .sort({ order: 1, createdAt: -1 })
+        .skip((pageParam - 1) * limitParam)
+        .limit(limitParam);
+
+      return res.status(200).json({
+        success: true,
+        data: projects,
+        pagination: {
+          page: pageParam,
+          limit: limitParam,
+          total,
+          totalPages,
+          hasMore: pageParam < totalPages,
+        },
+      });
+    }
+
     const projects = await Project.find().sort({ order: 1, createdAt: -1 });
-    return res.status(200).json({ success: true, data: projects });
+    return res.status(200).json({
+      success: true,
+      data: projects,
+      pagination: {
+        page: 1,
+        limit: projects.length,
+        total: projects.length,
+        totalPages: 1,
+        hasMore: false,
+      },
+    });
   } catch (error) {
     console.error("Get projects error:", error);
     return res.status(500).json({ success: false, message: "Server error" });

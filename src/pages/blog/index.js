@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Head from "next/head";
 import NextLink from "next/link";
 import {
@@ -16,6 +16,7 @@ import {
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import dbConnect from "../../lib/mongodb";
 import BlogPost from "../../models/BlogPost";
+import Settings from "../../models/Settings";
 
 const SITE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://jjscrl.xyz";
 
@@ -44,10 +45,15 @@ function formatDate(d) {
 
 export async function getStaticProps() {
   await dbConnect();
-  const docs = await BlogPost.find({ status: "published" })
-    .sort({ publishedAt: -1, createdAt: -1 })
-    .limit(50)
-    .lean();
+  const [docs, settingsDoc] = await Promise.all([
+    BlogPost.find({ status: "published" })
+      .sort({ publishedAt: -1, createdAt: -1 })
+      .limit(50)
+      .lean(),
+    Settings.findOne().lean(),
+  ]);
+
+  const initialBlogVisible = settingsDoc?.sectionVisibility?.blog !== false;
 
   const posts = docs.map((p) => ({
     _id: String(p._id),
@@ -61,10 +67,23 @@ export async function getStaticProps() {
     createdAt: new Date(p.createdAt).toISOString(),
   }));
 
-  return { props: { posts }, revalidate: 60 };
+  return { props: { posts, initialBlogVisible }, revalidate: 60 };
 }
 
-export default function BlogIndex({ posts }) {
+export default function BlogIndex({ posts, initialBlogVisible = true }) {
+  const [blogVisible, setBlogVisible] = useState(initialBlogVisible);
+
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json?.success && json.data?.sectionVisibility) {
+          setBlogVisible(json.data.sectionVisibility.blog !== false);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <>
       <Head>
@@ -130,7 +149,18 @@ export default function BlogIndex({ posts }) {
           </Box>
 
           {/* Posts */}
-          {posts.length === 0 ? (
+          {!blogVisible ? (
+            <Box
+              border={`1px solid ${COLORS.border}`}
+              borderRadius="12px"
+              p={10}
+              textAlign="center"
+            >
+              <Text color={COLORS.muted} fontSize="13px">
+                This section is currently hidden.
+              </Text>
+            </Box>
+          ) : posts.length === 0 ? (
             <Box
               border={`1px solid ${COLORS.border}`}
               borderRadius="12px"

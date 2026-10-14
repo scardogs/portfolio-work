@@ -63,6 +63,22 @@ const AboutSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    loaderStatusText: {
+      type: String,
+      default: "Initializing",
+    },
+    loaderTitle: {
+      type: String,
+      default: "",
+    },
+    loaderSubtitle: {
+      type: String,
+      default: "Full-Stack Developer · Portfolio",
+    },
+    loaderProgressLabel: {
+      type: String,
+      default: "LOAD",
+    },
     updatedAt: {
       type: Date,
       default: Date.now,
@@ -73,4 +89,8 @@ const AboutSchema = new mongoose.Schema(
   }
 );
 
-export default mongoose.models.About || mongoose.model("About", AboutSchema);
+if (mongoose.models.About) {
+  delete mongoose.models.About;
+}
+
+export default mongoose.model("About", AboutSchema);

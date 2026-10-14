@@ -46,6 +46,10 @@ async function getAbout(req, res) {
         linkedinLink: "",
         portfolioLink: "",
         emailLink: "",
+        loaderStatusText: "Initializing",
+        loaderTitle: "John Michael T. Escarlan",
+        loaderSubtitle: "Full-Stack Developer · Portfolio",
+        loaderProgressLabel: "LOAD",
       });
     }
 
@@ -59,6 +63,12 @@ async function getAbout(req, res) {
     if (!about.linkedinLink) about.linkedinLink = "";
     if (!about.portfolioLink) about.portfolioLink = "";
     if (!about.emailLink) about.emailLink = "";
+    if (!about.loaderStatusText) about.loaderStatusText = "Initializing";
+    if (about.loaderTitle === undefined || about.loaderTitle === null) {
+      about.loaderTitle = about.name || "John Michael T. Escarlan";
+    }
+    if (!about.loaderSubtitle) about.loaderSubtitle = "Full-Stack Developer · Portfolio";
+    if (!about.loaderProgressLabel) about.loaderProgressLabel = "LOAD";
 
     return res.status(200).json({ success: true, data: about });
   } catch (error) {
