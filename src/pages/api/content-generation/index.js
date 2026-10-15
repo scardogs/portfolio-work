@@ -266,6 +266,22 @@ async function patchGalleryTags(req, res) {
       return res.status(200).json({ success: true, availableTags });
     }
 
+    if (action === "bulkDelete") {
+      const validIds = Array.isArray(itemIds) ? itemIds.filter(Boolean) : [];
+      if (validIds.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "At least one itemId is required",
+        });
+      }
+      const result = await ContentGeneration.deleteMany({ _id: { $in: validIds } });
+      return res.status(200).json({
+        success: true,
+        deletedCount: result.deletedCount || validIds.length,
+        message: "Items deleted",
+      });
+    }
+
     return res.status(400).json({ success: false, message: "Invalid action" });
   } catch (error) {
     console.error("Patch gallery tags error:", error);
@@ -273,10 +289,18 @@ async function patchGalleryTags(req, res) {
   }
 }
 
-// DELETE - Protected - Remove item by ID
+// DELETE - Protected - Remove item by ID (or multiple comma-separated IDs)
 async function deleteGalleryItem(req, res, id) {
   try {
     if (!id) return res.status(400).json({ success: false, message: "ID is required" });
+    if (String(id).includes(",")) {
+      const ids = String(id)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      await ContentGeneration.deleteMany({ _id: { $in: ids } });
+      return res.status(200).json({ success: true, message: "Items deleted" });
+    }
     const item = await ContentGeneration.findByIdAndDelete(id);
     if (!item) return res.status(404).json({ success: false, message: "Item not found" });
     return res.status(200).json({ success: true, message: "Item deleted" });

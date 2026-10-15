@@ -92,6 +92,14 @@ export default function ManageContentGeneration() {
   const [bulkCustomTag, setBulkCustomTag] = useState("");
   const [bulkProcessing, setBulkProcessing] = useState(false);
 
+  // Fast Delete / Drag-to-Delete / Drag-Select state
+  const [draggingIds, setDraggingIds] = useState([]);
+  const [isOverTrashZone, setIsOverTrashZone] = useState(false);
+  const [dragSelectMode, setDragSelectMode] = useState(false);
+  const [isPaintSelecting, setIsPaintSelecting] = useState(false);
+  const [paintSelectTargetState, setPaintSelectTargetState] = useState(true);
+  const [fastDeleteMode, setFastDeleteMode] = useState(false);
+
   // "Select Videos for Tag" modal state
   const [assignTagName, setAssignTagName] = useState("");
   const [assignMediaFilter, setAssignMediaFilter] = useState("video"); // "video" | "image" | "all"
@@ -103,6 +111,17 @@ export default function ManageContentGeneration() {
   useEffect(() => {
     fetchItems();
   }, []);
+
+  // End paint-selection when mouse button is released anywhere
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      if (isPaintSelecting) {
+        setIsPaintSelecting(false);
+      }
+    };
+    window.addEventListener("mouseup", handleGlobalMouseUp);
+    return () => window.removeEventListener("mouseup", handleGlobalMouseUp);
+  }, [isPaintSelecting]);
 
   const fetchItems = async () => {
     setLoading(true);
@@ -585,7 +604,7 @@ export default function ManageContentGeneration() {
       });
       const data = await response.json();
       if (data.success) {
-        toast({ title: "Deleted", status: "success" });
+        toast({ title: "Deleted", status: "success", duration: 2000 });
         setSelectedIds((prev) => prev.filter((id) => id !== deleteId));
         fetchItems();
       } else throw new Error(data.message);
@@ -595,6 +614,126 @@ export default function ManageContentGeneration() {
       setDeleting(false);
       setDeleteId(null);
     }
+  };
+
+  // Instant bulk/fast delete (optimistic UI update, zero modal delay)
+  const handleInstantBulkDelete = async (idsInput) => {
+    const targetIds = Array.isArray(idsInput)
+      ? idsInput.filter(Boolean)
+      : [idsInput].filter(Boolean);
+    if (targetIds.length === 0) return;
+
+    const targetSet = new Set(targetIds);
+    const previousItems = items;
+
+    // Optimistically remove immediately so UI feels instantaneous
+    setItems((prev) => prev.filter((it) => !targetSet.has(it._id)));
+    setSelectedIds((prev) => prev.filter((id) => !targetSet.has(id)));
+    setDraggingIds([]);
+    setIsOverTrashZone(false);
+
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("/api/content-generation", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: "bulkDelete",
+          itemIds: targetIds,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast({
+          title: `Deleted ${targetIds.length} item${targetIds.length !== 1 ? "s" : ""}`,
+          status: "success",
+          duration: 2000,
+        });
+      } else {
+        throw new Error(data.message || "Delete failed");
+      }
+    } catch (error) {
+      setItems(previousItems);
+      toast({
+        title: "Fast delete failed",
+        description: error.message,
+        status: "error",
+      });
+    }
+  };
+
+  // Drag-to-Delete card handlers
+  const handleCardDragStart = (e, itemId) => {
+    if (dragSelectMode) {
+      e.preventDefault();
+      return;
+    }
+    const idsToDrag = selectedIds.includes(itemId) ? selectedIds : [itemId];
+    setDraggingIds(idsToDrag);
+    try {
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", JSON.stringify(idsToDrag));
+    } catch (_) {
+      // ignore dataTransfer errors on some browsers
+    }
+  };
+
+  const handleCardDragEnd = () => {
+    setDraggingIds([]);
+    setIsOverTrashZone(false);
+  };
+
+  const handleTrashDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    let ids = draggingIds;
+    if (!ids || ids.length === 0) {
+      try {
+        const raw = e.dataTransfer.getData("text/plain");
+        if (raw) ids = JSON.parse(raw);
+      } catch (_) {
+        ids = [];
+      }
+    }
+    if (Array.isArray(ids) && ids.length > 0) {
+      handleInstantBulkDelete(ids);
+    } else {
+      setDraggingIds([]);
+      setIsOverTrashZone(false);
+    }
+  };
+
+  // Drag-Select (Paint / Sweep Select) handlers
+  const startPaintSelect = (itemId, e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    const currentlySelected = selectedIds.includes(itemId);
+    const nextState = !currentlySelected;
+    setIsPaintSelecting(true);
+    setPaintSelectTargetState(nextState);
+    setSelectedIds((prev) =>
+      nextState
+        ? prev.includes(itemId)
+          ? prev
+          : [...prev, itemId]
+        : prev.filter((id) => id !== itemId)
+    );
+  };
+
+  const enterPaintSelectCard = (itemId) => {
+    if (!isPaintSelecting) return;
+    setSelectedIds((prev) =>
+      paintSelectTargetState
+        ? prev.includes(itemId)
+          ? prev
+          : [...prev, itemId]
+        : prev.filter((id) => id !== itemId)
+    );
   };
 
   const handleBulkComplete = (successCount) => {
@@ -667,11 +806,11 @@ export default function ManageContentGeneration() {
               <HStack spacing={2} mb={1}>
                 <FaTags color={COLORS.accent} size={13} />
                 <Heading fontSize="14px" color={COLORS.text} fontWeight="600">
-                  Gallery Tags & Public Filters
+                  Gallery Tags, Drag-Select & Fast Delete
                 </Heading>
               </HStack>
               <Text fontSize="11px" color={COLORS.muted}>
-                Create tags, click a tag to filter, or click &ldquo;Select Videos&rdquo; on any tag to pick which videos belong to it. Tags automatically appear as filters on the public AI Content Gallery.
+                Drag any card onto the red Trash Zone to delete it immediately, or hold &amp; drag across checkboxes (or enable Drag-Select Mode) to sweep-select multiple items and delete or tag them at once.
               </Text>
             </Box>
 
@@ -858,8 +997,42 @@ export default function ManageContentGeneration() {
               })}
             </HStack>
 
-            {/* Quick Multi-Select Controls */}
-            <HStack spacing={2}>
+            {/* Quick Multi-Select & Fast Delete Controls */}
+            <HStack spacing={2} flexWrap="wrap">
+              <Box
+                as="button"
+                type="button"
+                onClick={() => setDragSelectMode((prev) => !prev)}
+                px={3}
+                h="30px"
+                borderRadius="7px"
+                fontSize="10px"
+                fontWeight="700"
+                bg={dragSelectMode ? COLORS.accent : COLORS.inputBg}
+                color={dragSelectMode ? "#0a0a0a" : COLORS.textSecondary}
+                border={`1px solid ${dragSelectMode ? COLORS.accent : COLORS.border}`}
+                transition="all 0.15s"
+                title="When active, click and drag across cards to select multiple items quickly"
+              >
+                {dragSelectMode ? "✓ Drag-Select Mode ON" : "Drag-Select Mode"}
+              </Box>
+              <Box
+                as="button"
+                type="button"
+                onClick={() => setFastDeleteMode((prev) => !prev)}
+                px={3}
+                h="30px"
+                borderRadius="7px"
+                fontSize="10px"
+                fontWeight="700"
+                bg={fastDeleteMode ? COLORS.danger : COLORS.inputBg}
+                color={fastDeleteMode ? "white" : COLORS.textSecondary}
+                border={`1px solid ${fastDeleteMode ? COLORS.danger : COLORS.border}`}
+                transition="all 0.15s"
+                title="When active, clicking a card's delete icon deletes it immediately without a confirmation dialog"
+              >
+                {fastDeleteMode ? "⚡ 1-Click Delete ON" : "⚡ 1-Click Delete"}
+              </Box>
               <GhostButton
                 h="30px"
                 px={3}
@@ -894,7 +1067,7 @@ export default function ManageContentGeneration() {
           </Flex>
         </Box>
 
-        {/* ── Bulk Tag / Bulk Untag Action Bar (Shown when items are selected) ── */}
+        {/* ── Bulk Tag / Bulk Untag / Instant Bulk Delete Bar (Shown when items are selected) ── */}
         {selectedIds.length > 0 && (
           <Box
             bg="#14120a"
@@ -925,15 +1098,35 @@ export default function ManageContentGeneration() {
                 </Flex>
                 <Box>
                   <Text fontSize="13px" fontWeight="600" color={COLORS.text}>
-                    {selectedIds.length} video/item{selectedIds.length !== 1 ? "s" : ""} selected for bulk tagging
+                    {selectedIds.length} video/item{selectedIds.length !== 1 ? "s" : ""} selected
                   </Text>
                   <Text fontSize="11px" color={COLORS.muted}>
-                    Select one or more tags below, then click Bulk Tag or Bulk Untag.
+                    Drag any selected card to the red Trash Zone, click Delete Selected, or bulk tag below.
                   </Text>
                 </Box>
               </HStack>
 
               <HStack spacing={2} flexWrap="wrap">
+                <Box
+                  as="button"
+                  type="button"
+                  onClick={() => handleInstantBulkDelete(selectedIds)}
+                  h="36px"
+                  px={4}
+                  borderRadius="8px"
+                  bg={COLORS.danger}
+                  color="white"
+                  fontSize="11px"
+                  fontWeight="700"
+                  display="inline-flex"
+                  alignItems="center"
+                  gap={2}
+                  _hover={{ opacity: 0.9, transform: "translateY(-1px)" }}
+                  transition="all 0.15s"
+                >
+                  <FaTrash size={10} />
+                  Delete Selected ({selectedIds.length})
+                </Box>
                 <PrimaryButton
                   h="36px"
                   px={4}
@@ -1054,297 +1247,404 @@ export default function ManageContentGeneration() {
             }
           />
         ) : (
-          <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing={4}>
+          <SimpleGrid
+            columns={{ base: 1, sm: 2, md: 3, lg: 4 }}
+            spacing={4}
+            userSelect={isPaintSelecting || dragSelectMode ? "none" : "auto"}
+          >
             {filteredItems.map((item, i) => {
               const isSelected = selectedIds.includes(item._id);
+              const isBeingDragged = draggingIds.includes(item._id);
               const itemTags = Array.isArray(item.tags) ? item.tags : [];
               const isQuickTagOpen = quickTagItemId === item._id;
 
               return (
-                <GridCard key={item._id} index={i}>
-                  <Box
-                    position="relative"
-                    bg={COLORS.inputBg}
-                    aspectRatio={1}
-                    overflow="hidden"
-                    borderBottom={
-                      isSelected ? `2px solid ${COLORS.accent}` : "none"
+                <Box
+                  key={item._id}
+                  draggable={!dragSelectMode}
+                  onDragStart={(e) => handleCardDragStart(e, item._id)}
+                  onDragEnd={handleCardDragEnd}
+                  onMouseDown={(e) => {
+                    if (dragSelectMode || e.shiftKey) {
+                      startPaintSelect(item._id, e);
                     }
-                  >
-                    {item.mediaType === "video" ? (
-                      <>
-                        <Box
-                          as="video"
+                  }}
+                  onMouseEnter={() => {
+                    if (isPaintSelecting) {
+                      enterPaintSelectCard(item._id);
+                    }
+                  }}
+                  opacity={isBeingDragged ? 0.45 : 1}
+                  cursor={dragSelectMode ? "crosshair" : "grab"}
+                  transition="opacity 0.15s"
+                >
+                  <GridCard index={i}>
+                    <Box
+                      position="relative"
+                      bg={COLORS.inputBg}
+                      aspectRatio={1}
+                      overflow="hidden"
+                      border={
+                        isSelected
+                          ? `2px solid ${COLORS.accent}`
+                          : "2px solid transparent"
+                      }
+                    >
+                      {item.mediaType === "video" ? (
+                        <>
+                          <Box
+                            as="video"
+                            src={item.mediaUrl}
+                            muted
+                            playsInline
+                            preload="metadata"
+                            w="100%"
+                            h="100%"
+                            objectFit="cover"
+                            pointerEvents="none"
+                          />
+                          <Flex
+                            position="absolute"
+                            inset={0}
+                            align="center"
+                            justify="center"
+                            bg="rgba(0,0,0,0.35)"
+                            color="white"
+                            fontSize="20px"
+                            pointerEvents="none"
+                          >
+                            <FaPlay />
+                          </Flex>
+                        </>
+                      ) : (
+                        <Image
                           src={item.mediaUrl}
-                          muted
-                          playsInline
-                          preload="metadata"
+                          alt={item.title}
                           w="100%"
                           h="100%"
                           objectFit="cover"
-                        />
-                        <Flex
-                          position="absolute"
-                          inset={0}
-                          align="center"
-                          justify="center"
-                          bg="rgba(0,0,0,0.35)"
-                          color="white"
-                          fontSize="20px"
+                          draggable={false}
                           pointerEvents="none"
-                        >
-                          <FaPlay />
-                        </Flex>
-                      </>
-                    ) : (
-                      <Image
-                        src={item.mediaUrl}
-                        alt={item.title}
-                        w="100%"
-                        h="100%"
-                        objectFit="cover"
-                      />
-                    )}
+                        />
+                      )}
 
-                    {/* Top-left Selection Checkbox for Bulk Tagging */}
-                    <Box
-                      as="button"
-                      type="button"
-                      onClick={() => toggleSelectItem(item._id)}
-                      position="absolute"
-                      top={2.5}
-                      left={2.5}
-                      w="26px"
-                      h="26px"
-                      borderRadius="6px"
-                      bg={isSelected ? COLORS.accent : "rgba(10,10,10,0.82)"}
-                      border={`1.5px solid ${
-                        isSelected ? COLORS.accent : "rgba(255,255,255,0.35)"
-                      }`}
-                      color={isSelected ? "#0a0a0a" : "transparent"}
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="center"
-                      transition="all 0.15s"
-                      _hover={{ borderColor: COLORS.accent }}
-                      title={isSelected ? "Deselect item" : "Select item for bulk tagging"}
-                      zIndex={3}
-                    >
-                      <FaCheck size={11} />
-                    </Box>
-
-                    {/* Top-right Media Type Badge */}
-                    <Box
-                      position="absolute"
-                      top={2.5}
-                      right={2.5}
-                      px={2}
-                      py={1}
-                      bg="rgba(10,10,10,0.85)"
-                      border={`1px solid ${COLORS.border}`}
-                      borderRadius="6px"
-                      fontSize="9px"
-                      color={
-                        item.mediaType === "video" ? COLORS.accent : COLORS.muted
-                      }
-                      letterSpacing="1px"
-                      fontWeight="600"
-                      textTransform="uppercase"
-                    >
-                      {item.mediaType}
-                    </Box>
-                  </Box>
-
-                  <Box p={4}>
-                    <Heading
-                      fontSize="13px"
-                      color={COLORS.text}
-                      fontWeight="600"
-                      mb={1}
-                      noOfLines={1}
-                    >
-                      {item.title || "Untitled"}
-                    </Heading>
-                    <Text
-                      fontSize="11px"
-                      color={COLORS.muted}
-                      noOfLines={1}
-                      mb={2.5}
-                    >
-                      {item.description || "No description"}
-                    </Text>
-
-                    {/* Item Tags Display + Instant Untag (x) + Quick "+ Tag" */}
-                    <Flex gap={1.5} flexWrap="wrap" mb={3} minH="26px" align="center">
-                      {itemTags.map((tag) => (
-                        <HStack
-                          key={tag}
-                          spacing={1}
-                          px={2}
-                          py={0.5}
-                          bg="rgba(226,183,20,0.12)"
-                          border="1px solid rgba(226,183,20,0.35)"
-                          borderRadius="5px"
-                          fontSize="10px"
-                          color={COLORS.accent}
-                          fontWeight="600"
-                        >
-                          <Text as="span"># {tag}</Text>
-                          <Box
-                            as="button"
-                            type="button"
-                            title={`Untag #${tag} from this ${item.mediaType}`}
-                            onClick={() => handleToggleItemTag(item, tag)}
-                            color={COLORS.accent}
-                            _hover={{ color: COLORS.danger }}
-                            ml={0.5}
-                          >
-                            <FaTimes size={8} />
-                          </Box>
-                        </HStack>
-                      ))}
-
+                      {/* Top-left Selection Checkbox (Supports Click OR Hold-and-Drag Sweep Select!) */}
                       <Box
                         as="button"
                         type="button"
-                        onClick={() => {
-                          setQuickTagItemId(isQuickTagOpen ? null : item._id);
-                          setQuickTagInput("");
+                        onMouseDown={(e) => startPaintSelect(item._id, e)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
                         }}
-                        px={2}
-                        py={0.5}
-                        borderRadius="5px"
-                        fontSize="10px"
-                        fontWeight="600"
-                        bg={COLORS.inputBg}
-                        color={COLORS.textSecondary}
-                        border={`1px dashed ${COLORS.borderStrong}`}
-                        _hover={{ borderColor: COLORS.accent, color: COLORS.accent }}
+                        position="absolute"
+                        top={2.5}
+                        left={2.5}
+                        w="28px"
+                        h="28px"
+                        borderRadius="6px"
+                        bg={isSelected ? COLORS.accent : "rgba(10,10,10,0.85)"}
+                        border={`1.5px solid ${
+                          isSelected ? COLORS.accent : "rgba(255,255,255,0.45)"
+                        }`}
+                        color={isSelected ? "#0a0a0a" : "transparent"}
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                        transition="all 0.12s"
+                        _hover={{ borderColor: COLORS.accent, transform: "scale(1.06)" }}
+                        title="Click or hold & drag across cards to select multiple items"
+                        zIndex={3}
                       >
-                        + Tag
+                        <FaCheck size={11} />
                       </Box>
-                    </Flex>
 
-                    {/* Inline Quick Tag Picker for this specific video/image */}
-                    {isQuickTagOpen && (
+                      {/* Top-right Media Type Badge */}
                       <Box
-                        mb={3}
-                        p={2.5}
-                        bg={COLORS.inputBg}
-                        border={`1px solid ${COLORS.borderStrong}`}
-                        borderRadius="8px"
+                        position="absolute"
+                        top={2.5}
+                        right={2.5}
+                        px={2}
+                        py={1}
+                        bg="rgba(10,10,10,0.85)"
+                        border={`1px solid ${COLORS.border}`}
+                        borderRadius="6px"
+                        fontSize="9px"
+                        color={
+                          item.mediaType === "video" ? COLORS.accent : COLORS.muted
+                        }
+                        letterSpacing="1px"
+                        fontWeight="600"
+                        textTransform="uppercase"
                       >
-                        <Flex justify="space-between" align="center" mb={2}>
-                          <Text fontSize="10px" color={COLORS.muted} fontWeight="600">
-                            Toggle or add tag:
-                          </Text>
-                          <Box
-                            as="button"
-                            type="button"
-                            onClick={() => setQuickTagItemId(null)}
-                            color={COLORS.muted}
-                            _hover={{ color: COLORS.text }}
+                        {item.mediaType}
+                      </Box>
+                    </Box>
+
+                    <Box p={4}>
+                      <Heading
+                        fontSize="13px"
+                        color={COLORS.text}
+                        fontWeight="600"
+                        mb={1}
+                        noOfLines={1}
+                      >
+                        {item.title || "Untitled"}
+                      </Heading>
+                      <Text
+                        fontSize="11px"
+                        color={COLORS.muted}
+                        noOfLines={1}
+                        mb={2.5}
+                      >
+                        {item.description || "No description"}
+                      </Text>
+
+                      {/* Item Tags Display + Instant Untag (x) + Quick "+ Tag" */}
+                      <Flex gap={1.5} flexWrap="wrap" mb={3} minH="26px" align="center">
+                        {itemTags.map((tag) => (
+                          <HStack
+                            key={tag}
+                            spacing={1}
+                            px={2}
+                            py={0.5}
+                            bg="rgba(226,183,20,0.12)"
+                            border="1px solid rgba(226,183,20,0.35)"
+                            borderRadius="5px"
+                            fontSize="10px"
+                            color={COLORS.accent}
+                            fontWeight="600"
                           >
-                            <FaTimes size={10} />
-                          </Box>
-                        </Flex>
-                        {allTags.length > 0 && (
-                          <Flex gap={1} flexWrap="wrap" mb={2}>
-                            {allTags.map((tag) => {
-                              const hasTag = itemTags.some(
-                                (t) => t.toLowerCase() === tag.toLowerCase()
-                              );
-                              return (
-                                <Box
-                                  as="button"
-                                  type="button"
-                                  key={tag}
-                                  onClick={() => handleToggleItemTag(item, tag)}
-                                  px={2}
-                                  py={0.5}
-                                  borderRadius="4px"
-                                  fontSize="10px"
-                                  fontWeight="600"
-                                  bg={hasTag ? COLORS.accent : COLORS.card}
-                                  color={hasTag ? "#0a0a0a" : COLORS.textSecondary}
-                                  border={`1px solid ${
-                                    hasTag ? COLORS.accent : COLORS.border
-                                  }`}
-                                >
-                                  {hasTag ? "✓ " : "+ "}
-                                  {tag}
-                                </Box>
-                              );
-                            })}
+                            <Text as="span"># {tag}</Text>
+                            <Box
+                              as="button"
+                              type="button"
+                              title={`Untag #${tag} from this ${item.mediaType}`}
+                              onClick={() => handleToggleItemTag(item, tag)}
+                              color={COLORS.accent}
+                              _hover={{ color: COLORS.danger }}
+                              ml={0.5}
+                            >
+                              <FaTimes size={8} />
+                            </Box>
+                          </HStack>
+                        ))}
+
+                        <Box
+                          as="button"
+                          type="button"
+                          onClick={() => {
+                            setQuickTagItemId(isQuickTagOpen ? null : item._id);
+                            setQuickTagInput("");
+                          }}
+                          px={2}
+                          py={0.5}
+                          borderRadius="5px"
+                          fontSize="10px"
+                          fontWeight="600"
+                          bg={COLORS.inputBg}
+                          color={COLORS.textSecondary}
+                          border={`1px dashed ${COLORS.borderStrong}`}
+                          _hover={{ borderColor: COLORS.accent, color: COLORS.accent }}
+                        >
+                          + Tag
+                        </Box>
+                      </Flex>
+
+                      {/* Inline Quick Tag Picker for this specific video/image */}
+                      {isQuickTagOpen && (
+                        <Box
+                          mb={3}
+                          p={2.5}
+                          bg={COLORS.inputBg}
+                          border={`1px solid ${COLORS.borderStrong}`}
+                          borderRadius="8px"
+                        >
+                          <Flex justify="space-between" align="center" mb={2}>
+                            <Text fontSize="10px" color={COLORS.muted} fontWeight="600">
+                              Toggle or add tag:
+                            </Text>
+                            <Box
+                              as="button"
+                              type="button"
+                              onClick={() => setQuickTagItemId(null)}
+                              color={COLORS.muted}
+                              _hover={{ color: COLORS.text }}
+                            >
+                              <FaTimes size={10} />
+                            </Box>
                           </Flex>
-                        )}
-                        <HStack spacing={1.5}>
-                          <Input
-                            size="xs"
-                            value={quickTagInput}
-                            onChange={(e) => setQuickTagInput(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                e.preventDefault();
+                          {allTags.length > 0 && (
+                            <Flex gap={1} flexWrap="wrap" mb={2}>
+                              {allTags.map((tag) => {
+                                const hasTag = itemTags.some(
+                                  (t) => t.toLowerCase() === tag.toLowerCase()
+                                );
+                                return (
+                                  <Box
+                                    as="button"
+                                    type="button"
+                                    key={tag}
+                                    onClick={() => handleToggleItemTag(item, tag)}
+                                    px={2}
+                                    py={0.5}
+                                    borderRadius="4px"
+                                    fontSize="10px"
+                                    fontWeight="600"
+                                    bg={hasTag ? COLORS.accent : COLORS.card}
+                                    color={hasTag ? "#0a0a0a" : COLORS.textSecondary}
+                                    border={`1px solid ${
+                                      hasTag ? COLORS.accent : COLORS.border
+                                    }`}
+                                  >
+                                    {hasTag ? "✓ " : "+ "}
+                                    {tag}
+                                  </Box>
+                                );
+                              })}
+                            </Flex>
+                          )}
+                          <HStack spacing={1.5}>
+                            <Input
+                              size="xs"
+                              value={quickTagInput}
+                              onChange={(e) => setQuickTagInput(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  if (quickTagInput.trim()) {
+                                    handleToggleItemTag(item, quickTagInput.trim());
+                                    setQuickTagInput("");
+                                  }
+                                }
+                              }}
+                              placeholder="New tag..."
+                              bg={COLORS.card}
+                              border={`1px solid ${COLORS.border}`}
+                              borderRadius="5px"
+                              color={COLORS.text}
+                            />
+                            <GhostButton
+                              h="24px"
+                              px={2}
+                              fontSize="10px"
+                              onClick={() => {
                                 if (quickTagInput.trim()) {
                                   handleToggleItemTag(item, quickTagInput.trim());
                                   setQuickTagInput("");
                                 }
-                              }
-                            }}
-                            placeholder="New tag..."
-                            bg={COLORS.card}
-                            border={`1px solid ${COLORS.border}`}
-                            borderRadius="5px"
-                            color={COLORS.text}
-                          />
-                          <GhostButton
-                            h="24px"
-                            px={2}
-                            fontSize="10px"
-                            onClick={() => {
-                              if (quickTagInput.trim()) {
-                                handleToggleItemTag(item, quickTagInput.trim());
-                                setQuickTagInput("");
-                              }
-                            }}
-                          >
-                            Add
-                          </GhostButton>
-                        </HStack>
-                      </Box>
-                    )}
+                              }}
+                            >
+                              Add
+                            </GhostButton>
+                          </HStack>
+                        </Box>
+                      )}
 
-                    <HStack spacing={2} justify="space-between">
-                      <HStack spacing={2}>
-                        <IconAction
-                          icon={<FaPen size={10} />}
-                          aria-label="Edit"
-                          onClick={() => handleOpenEdit(item)}
-                        />
-                        <IconAction
-                          tone="danger"
-                          icon={<FaTrash size={10} />}
-                          aria-label="Delete"
-                          onClick={() => setDeleteId(item._id)}
-                        />
+                      <HStack spacing={2} justify="space-between">
+                        <HStack spacing={2}>
+                          <IconAction
+                            icon={<FaPen size={10} />}
+                            aria-label="Edit"
+                            onClick={() => handleOpenEdit(item)}
+                          />
+                          <IconAction
+                            tone="danger"
+                            icon={<FaTrash size={10} />}
+                            aria-label="Delete"
+                            title={
+                              fastDeleteMode
+                                ? "Click to delete immediately"
+                                : "Click to delete (or Shift+Click for instant delete)"
+                            }
+                            onClick={(e) => {
+                              if (fastDeleteMode || e.shiftKey) {
+                                handleInstantBulkDelete([item._id]);
+                              } else {
+                                setDeleteId(item._id);
+                              }
+                            }}
+                          />
+                        </HStack>
+                        <GhostButton
+                          h="28px"
+                          px={2.5}
+                          fontSize="10px"
+                          onClick={() => toggleSelectItem(item._id)}
+                        >
+                          {isSelected ? "Selected ✓" : "Select"}
+                        </GhostButton>
                       </HStack>
-                      <GhostButton
-                        h="28px"
-                        px={2.5}
-                        fontSize="10px"
-                        onClick={() => toggleSelectItem(item._id)}
-                      >
-                        {isSelected ? "Selected ✓" : "Select"}
-                      </GhostButton>
-                    </HStack>
-                  </Box>
-                </GridCard>
+                    </Box>
+                  </GridCard>
+                </Box>
               );
             })}
           </SimpleGrid>
         )}
       </VStack>
+
+      {/* ── Floating Drag-to-Delete Drop Zone (Appears whenever dragging a card) ── */}
+      {draggingIds.length > 0 && (
+        <Box
+          position="fixed"
+          bottom="28px"
+          left="50%"
+          transform={
+            isOverTrashZone
+              ? "translateX(-50%) scale(1.06)"
+              : "translateX(-50%) scale(1)"
+          }
+          zIndex={9999}
+          onDragOver={(e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+            if (!isOverTrashZone) setIsOverTrashZone(true);
+          }}
+          onDragEnter={(e) => {
+            e.preventDefault();
+            setIsOverTrashZone(true);
+          }}
+          onDragLeave={() => setIsOverTrashZone(false)}
+          onDrop={handleTrashDrop}
+          px={10}
+          py={5}
+          borderRadius="16px"
+          bg={isOverTrashZone ? "#dc2626" : "rgba(220, 38, 38, 0.92)"}
+          border={`2px dashed ${isOverTrashZone ? "#ffffff" : "#fca5a5"}`}
+          boxShadow="0 20px 60px rgba(220, 38, 38, 0.55), 0 0 0 6px rgba(10, 10, 10, 0.7)"
+          color="white"
+          transition="all 0.15s ease"
+          cursor="pointer"
+          minW={{ base: "300px", md: "460px" }}
+          textAlign="center"
+        >
+          <VStack spacing={1}>
+            <HStack spacing={3} justify="center">
+              <FaTrash size={18} />
+              <Text
+                fontSize="14px"
+                fontWeight="800"
+                letterSpacing="1.5px"
+                textTransform="uppercase"
+              >
+                {isOverTrashZone
+                  ? `Release to Delete ${draggingIds.length} Item${
+                      draggingIds.length !== 1 ? "s" : ""
+                    }!`
+                  : `Drop Here to Instantly Delete (${draggingIds.length} Item${
+                      draggingIds.length !== 1 ? "s" : ""
+                    })`}
+              </Text>
+            </HStack>
+            <Text fontSize="11px" color="rgba(255,255,255,0.85)">
+              {draggingIds.length > 1
+                ? "All selected items will be removed immediately"
+                : "This item will be removed immediately"}
+            </Text>
+          </VStack>
+        </Box>
+      )}
 
       {/* ── Add / Edit Single Item Modal ─────────────────────────────────── */}
       <Modal
