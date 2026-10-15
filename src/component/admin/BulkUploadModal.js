@@ -17,7 +17,7 @@ const MAX_SIZE = 100 * 1024 * 1024; // 100MB
 const CONCURRENCY = 3;
 
 // Upload a single file straight to Cloudinary, then create the gallery item.
-async function uploadOne(file, order, onProgress) {
+async function uploadOne(file, order, tags, onProgress) {
   const token = localStorage.getItem("token");
 
   // 1. Fresh signature per file
@@ -67,6 +67,7 @@ async function uploadOne(file, order, onProgress) {
       mediaUrl: cloudData.secure_url,
       mediaType,
       order,
+      tags: Array.isArray(tags) ? tags : [],
     }),
   });
   const createData = await createResponse.json();
@@ -75,8 +76,16 @@ async function uploadOne(file, order, onProgress) {
   return createData.data;
 }
 
-export default function BulkUploadModal({ isOpen, onClose, startOrder = 0, onComplete }) {
+export default function BulkUploadModal({
+  isOpen,
+  onClose,
+  startOrder = 0,
+  availableTags = [],
+  onComplete,
+}) {
   const [files, setFiles] = useState([]); // { id, file, name, preview, isVideo, status, progress, error }
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [customTagInput, setCustomTagInput] = useState("");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef();
 
@@ -85,6 +94,8 @@ export default function BulkUploadModal({ isOpen, onClose, startOrder = 0, onCom
       prev.forEach((f) => f.preview && URL.revokeObjectURL(f.preview));
       return [];
     });
+    setSelectedTags([]);
+    setCustomTagInput("");
     setUploading(false);
   }, []);
 
@@ -92,6 +103,21 @@ export default function BulkUploadModal({ isOpen, onClose, startOrder = 0, onCom
     if (uploading) return; // don't close mid-upload
     reset();
     onClose();
+  };
+
+  const toggleTag = (tag) => {
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
+
+  const handleAddCustomTag = () => {
+    const trimmed = customTagInput.trim();
+    if (!trimmed) return;
+    if (!selectedTags.includes(trimmed)) {
+      setSelectedTags((prev) => [...prev, trimmed]);
+    }
+    setCustomTagInput("");
   };
 
   const addFiles = (fileList) => {
@@ -150,7 +176,9 @@ export default function BulkUploadModal({ isOpen, onClose, startOrder = 0, onCom
         orderCursor += 1;
         update(item.id, { status: "uploading", progress: 0, error: null });
         try {
-          await uploadOne(item.file, order, (p) => update(item.id, { progress: p }));
+          await uploadOne(item.file, order, selectedTags, (p) =>
+            update(item.id, { progress: p })
+          );
           update(item.id, { status: "done", progress: 100 });
           successCount += 1;
         } catch (err) {
@@ -168,6 +196,7 @@ export default function BulkUploadModal({ isOpen, onClose, startOrder = 0, onCom
   const pendingCount = files.filter((f) => f.status === "pending" || f.status === "error").length;
   const doneCount = files.filter((f) => f.status === "done").length;
   const allDone = files.length > 0 && doneCount === files.length;
+  const allTagOptions = Array.from(new Set([...availableTags, ...selectedTags]));
 
   return (
     <Modal
@@ -234,6 +263,74 @@ export default function BulkUploadModal({ isOpen, onClose, startOrder = 0, onCom
           onChange={handleSelect}
           display="none"
         />
+
+        {/* Optional Tags for Bulk Upload */}
+        <Box
+          p={3.5}
+          bg={COLORS.card}
+          border={`1px solid ${COLORS.border}`}
+          borderRadius="10px"
+        >
+          <Text
+            fontSize="10px"
+            color={COLORS.muted}
+            letterSpacing="1.5px"
+            textTransform="uppercase"
+            fontWeight="600"
+            mb={2.5}
+          >
+            Assign Tags to Uploaded Items (Optional)
+          </Text>
+          {allTagOptions.length > 0 && (
+            <Flex gap={1.5} flexWrap="wrap" mb={2.5}>
+              {allTagOptions.map((tag) => {
+                const active = selectedTags.includes(tag);
+                return (
+                  <Box
+                    as="button"
+                    type="button"
+                    key={tag}
+                    onClick={() => toggleTag(tag)}
+                    px={2.5}
+                    py={1}
+                    borderRadius="6px"
+                    fontSize="11px"
+                    fontWeight="600"
+                    bg={active ? COLORS.accent : COLORS.inputBg}
+                    color={active ? "#0a0a0a" : COLORS.textSecondary}
+                    border={`1px solid ${active ? COLORS.accent : COLORS.border}`}
+                    transition="all 0.15s"
+                  >
+                    # {tag}
+                  </Box>
+                );
+              })}
+            </Flex>
+          )}
+          <HStack spacing={2}>
+            <Input
+              size="sm"
+              value={customTagInput}
+              onChange={(e) => setCustomTagInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddCustomTag();
+                }
+              }}
+              placeholder="Or type a new tag & press Enter..."
+              bg={COLORS.inputBg}
+              border={`1px solid ${COLORS.border}`}
+              borderRadius="8px"
+              fontSize="12px"
+              color={COLORS.text}
+              _focus={{ borderColor: COLORS.accent, boxShadow: "none" }}
+            />
+            <GhostButton h="32px" px={3} fontSize="11px" onClick={handleAddCustomTag}>
+              + Add Tag
+            </GhostButton>
+          </HStack>
+        </Box>
 
         {files.length > 0 && (
           <Flex justify="space-between" align="center">

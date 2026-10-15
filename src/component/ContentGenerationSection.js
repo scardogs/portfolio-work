@@ -15,7 +15,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 
 const MotionBox = motion.create(Box);
-const PAGE_LIMIT = 12;
+const PAGE_LIMIT = 100;
 
 const ROW_HEIGHT = 10; // px — fine-grained grid rows
 const GAP = 16; // px — must match the grid gap
@@ -101,7 +101,7 @@ function PlayButton({ playing, onClick }) {
   );
 }
 
-function MasonryItem({ item, index, span, onSpanChange }) {
+function MasonryItem({ item, index, span, onSpanChange, activeTag, onSelectTag }) {
   const wrapperRef = useRef(null);
   const videoRef = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -173,6 +173,7 @@ function MasonryItem({ item, index, span, onSpanChange }) {
   }, []);
 
   const isVideo = item.mediaType === "video";
+  const itemTags = Array.isArray(item.tags) ? item.tags.filter(Boolean) : [];
 
   return (
     <Box sx={{ gridRowEnd: `span ${span || 30}` }}>
@@ -237,6 +238,58 @@ function MasonryItem({ item, index, span, onSpanChange }) {
             onLoad={measure}
           />
         )}
+
+        {/* Tag Badges Overlay on Card */}
+        {isVisible && itemTags.length > 0 && !playing && (
+          <Flex
+            position="absolute"
+            bottom={2.5}
+            left={2.5}
+            right={2.5}
+            gap={1.5}
+            flexWrap="wrap"
+            zIndex={3}
+            pointerEvents="auto"
+          >
+            {itemTags.map((tag) => {
+              const isSelectedTag =
+                activeTag && activeTag.toLowerCase() === String(tag).toLowerCase();
+              return (
+                <Box
+                  as="button"
+                  type="button"
+                  key={tag}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelectTag?.(isSelectedTag ? "all" : tag);
+                  }}
+                  px={2.5}
+                  py={0.5}
+                  borderRadius="4px"
+                  fontSize="9px"
+                  fontWeight="700"
+                  letterSpacing="1px"
+                  textTransform="uppercase"
+                  fontFamily="monospace"
+                  bg={isSelectedTag ? "#e2b714" : "rgba(10, 10, 10, 0.82)"}
+                  color={isSelectedTag ? "#0a0a0a" : "#e0e0e0"}
+                  border={`1px solid ${
+                    isSelectedTag ? "#e2b714" : "rgba(255, 255, 255, 0.22)"
+                  }`}
+                  backdropFilter="blur(6px)"
+                  transition="all 0.2s ease"
+                  _hover={{
+                    bg: "#e2b714",
+                    color: "#0a0a0a",
+                    borderColor: "#e2b714",
+                  }}
+                >
+                  #{tag}
+                </Box>
+              );
+            })}
+          </Flex>
+        )}
       </MotionBox>
     </Box>
   );
@@ -252,6 +305,7 @@ const VISIBLE_STEP = 6;
 
 const ContentGenerationSection = ({ items: initialItems }) => {
   const [items, setItems] = useState(initialItems || []);
+  const [availableTags, setAvailableTags] = useState([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [totals, setTotals] = useState({ total: 0, video: 0, image: 0 });
@@ -259,9 +313,45 @@ const ContentGenerationSection = ({ items: initialItems }) => {
   const [initialized, setInitialized] = useState(false);
   const [spans, setSpans] = useState({});
   const [filter, setFilter] = useState("video");
+  const [activeTag, setActiveTag] = useState("all");
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE);
 
-  const filteredItems = items.filter((i) => i.mediaType === filter);
+  // Compute all unique tags across items and API availableTags
+  const allGalleryTags = React.useMemo(() => {
+    const map = new Map();
+    for (const t of availableTags) {
+      const clean = String(t || "").trim();
+      if (clean && !map.has(clean.toLowerCase())) {
+        map.set(clean.toLowerCase(), clean);
+      }
+    }
+    for (const item of items) {
+      if (Array.isArray(item.tags)) {
+        for (const t of item.tags) {
+          const clean = String(t || "").trim();
+          if (clean && !map.has(clean.toLowerCase())) {
+            map.set(clean.toLowerCase(), clean);
+          }
+        }
+      }
+    }
+    return Array.from(map.values());
+  }, [availableTags, items]);
+
+  const mediaFilteredItems = React.useMemo(
+    () => items.filter((i) => i.mediaType === filter),
+    [items, filter]
+  );
+
+  const filteredItems = React.useMemo(() => {
+    if (activeTag === "all") return mediaFilteredItems;
+    return mediaFilteredItems.filter((item) =>
+      (item.tags || []).some(
+        (t) => String(t).toLowerCase() === activeTag.toLowerCase()
+      )
+    );
+  }, [mediaFilteredItems, activeTag]);
+
   const visibleItems = filteredItems.slice(0, visibleCount);
 
   const handleSpanChange = useCallback((index, span) => {
@@ -277,6 +367,9 @@ const ContentGenerationSection = ({ items: initialItems }) => {
       const json = await res.json();
       if (json.success) {
         setItems((prev) => (pageNum === 1 ? json.data : [...prev, ...json.data]));
+        if (Array.isArray(json.availableTags)) {
+          setAvailableTags(json.availableTags);
+        }
         setHasMore(json.pagination?.hasMore ?? false);
         setPage(pageNum);
         if (json.pagination) {
@@ -304,6 +397,17 @@ const ContentGenerationSection = ({ items: initialItems }) => {
     setFilter(nextFilter);
     setVisibleCount(INITIAL_VISIBLE);
     setSpans({});
+    // If activeTag has 0 items in nextFilter, reset activeTag to "all"
+    if (activeTag !== "all") {
+      const hasInNext = items.some(
+        (i) =>
+          i.mediaType === nextFilter &&
+          (i.tags || []).some(
+            (t) => String(t).toLowerCase() === activeTag.toLowerCase()
+          )
+      );
+      if (!hasInNext) setActiveTag("all");
+    }
     const nextFilteredCount = items.filter((i) => i.mediaType === nextFilter).length;
     const nextTotalForFilter = nextFilter === "video" ? totals.video : totals.image;
     if (
@@ -313,6 +417,34 @@ const ContentGenerationSection = ({ items: initialItems }) => {
       !loading
     ) {
       await fetchPage(page + 1);
+    }
+  };
+
+  const handleTagFilterChange = (nextTag) => {
+    setActiveTag(nextTag);
+    setVisibleCount(INITIAL_VISIBLE);
+    setSpans({});
+    if (nextTag !== "all") {
+      const countInCurrentMedia = items.filter(
+        (i) =>
+          i.mediaType === filter &&
+          (i.tags || []).some(
+            (t) => String(t).toLowerCase() === nextTag.toLowerCase()
+          )
+      ).length;
+      if (countInCurrentMedia === 0) {
+        const otherMedia = filter === "video" ? "image" : "video";
+        const countInOther = items.filter(
+          (i) =>
+            i.mediaType === otherMedia &&
+            (i.tags || []).some(
+              (t) => String(t).toLowerCase() === nextTag.toLowerCase()
+            )
+        ).length;
+        if (countInOther > 0) {
+          setFilter(otherMedia);
+        }
+      }
     }
   };
 
@@ -336,10 +468,15 @@ const ContentGenerationSection = ({ items: initialItems }) => {
   const videoCount = totals.video || items.filter((i) => i.mediaType === "video").length;
   const imageCount = totals.image || items.filter((i) => i.mediaType === "image").length;
   const totalCount = totals.total || items.length;
-  const totalForFilter = filter === "video" ? videoCount : imageCount;
+  const totalForFilter =
+    activeTag === "all"
+      ? filter === "video"
+        ? videoCount
+        : imageCount
+      : filteredItems.length;
   const canSeeMore =
     visibleItems.length < totalForFilter &&
-    (visibleCount < filteredItems.length || hasMore);
+    (visibleCount < filteredItems.length || (activeTag === "all" && hasMore));
   const remainingCount = Math.max(0, totalForFilter - visibleItems.length);
 
   return (
@@ -483,73 +620,169 @@ const ContentGenerationSection = ({ items: initialItems }) => {
           </Flex>
         </Box>
 
-        {/* ── Filter Tabs — Editorial style ────────────────── */}
-        <Flex
-          align="center"
-          justify="space-between"
-          gap={4}
-          borderTop="1px solid #1f1f1f"
-          borderBottom="1px solid #1f1f1f"
-          py={4}
-          flexWrap="wrap"
-        >
-          <HStack spacing={[6, 8, 10]}>
-            {FILTERS.map((f) => {
-              const active = filter === f.key;
-              const count = f.key === "video" ? videoCount : imageCount;
-              return (
-                <Button
-                  key={f.key}
-                  variant="link"
-                  onClick={() => handleFilterChange(f.key)}
-                  color={active ? "#e0e0e0" : "#666666"}
-                  fontSize={[12, 13]}
-                  fontWeight="500"
-                  letterSpacing="2px"
-                  textTransform="uppercase"
-                  position="relative"
-                  px={0}
-                  py={2}
-                  _hover={{ color: "#e0e0e0", textDecoration: "none" }}
-                  _after={{
-                    content: '""',
-                    position: "absolute",
-                    bottom: "-2px",
-                    left: active ? "0" : "50%",
-                    right: active ? "0" : "50%",
-                    height: "1px",
-                    bg: "#e0e0e0",
-                    transition: "all 0.3s ease",
-                  }}
-                  transition="color 0.3s ease"
-                >
-                  {f.label}
-                  <Text
-                    as="span"
-                    ml={2}
-                    fontSize="10px"
-                    color={active ? "#888888" : "#444444"}
-                    letterSpacing="1px"
-                    fontFamily="monospace"
+        {/* ── Filter Tabs + Tag Filter Bar — Editorial style ────────────────── */}
+        <Box borderTop="1px solid #1f1f1f" borderBottom="1px solid #1f1f1f">
+          <Flex
+            align="center"
+            justify="space-between"
+            gap={4}
+            py={4}
+            flexWrap="wrap"
+          >
+            <HStack spacing={[6, 8, 10]}>
+              {FILTERS.map((f) => {
+                const active = filter === f.key;
+                const count = f.key === "video" ? videoCount : imageCount;
+                return (
+                  <Button
+                    key={f.key}
+                    variant="link"
+                    onClick={() => handleFilterChange(f.key)}
+                    color={active ? "#e0e0e0" : "#666666"}
+                    fontSize={[12, 13]}
+                    fontWeight="500"
+                    letterSpacing="2px"
+                    textTransform="uppercase"
+                    position="relative"
+                    px={0}
+                    py={2}
+                    _hover={{ color: "#e0e0e0", textDecoration: "none" }}
+                    _after={{
+                      content: '""',
+                      position: "absolute",
+                      bottom: "-2px",
+                      left: active ? "0" : "50%",
+                      right: active ? "0" : "50%",
+                      height: "1px",
+                      bg: "#e0e0e0",
+                      transition: "all 0.3s ease",
+                    }}
                     transition="color 0.3s ease"
                   >
-                    [{String(count).padStart(2, "0")}]
-                  </Text>
-                </Button>
-              );
-            })}
-          </HStack>
+                    {f.label}
+                    <Text
+                      as="span"
+                      ml={2}
+                      fontSize="10px"
+                      color={active ? "#888888" : "#444444"}
+                      letterSpacing="1px"
+                      fontFamily="monospace"
+                      transition="color 0.3s ease"
+                    >
+                      [{String(count).padStart(2, "0")}]
+                    </Text>
+                  </Button>
+                );
+              })}
+            </HStack>
 
-          <Text
-            fontSize="10px"
-            color="#555555"
-            letterSpacing="3px"
-            textTransform="uppercase"
-            fontFamily="monospace"
-          >
-            Showing {visibleItems.length} of {totalForFilter}
-          </Text>
-        </Flex>
+            <Text
+              fontSize="10px"
+              color="#555555"
+              letterSpacing="3px"
+              textTransform="uppercase"
+              fontFamily="monospace"
+            >
+              Showing {visibleItems.length} of {totalForFilter}
+              {activeTag !== "all" ? ` · #${activeTag}` : ""}
+            </Text>
+          </Flex>
+
+          {/* Tag Filter Pills */}
+          {allGalleryTags.length > 0 && (
+            <Flex
+              align="center"
+              gap={2}
+              py={3}
+              borderTop="1px solid #161616"
+              flexWrap="wrap"
+            >
+              <Text
+                fontSize="10px"
+                color="#666666"
+                letterSpacing="2px"
+                textTransform="uppercase"
+                fontFamily="monospace"
+                mr={2}
+              >
+                Filter by Tag:
+              </Text>
+
+              <Box
+                as="button"
+                type="button"
+                onClick={() => handleTagFilterChange("all")}
+                px={3}
+                py={1.5}
+                borderRadius="2px"
+                fontSize="10px"
+                fontWeight="600"
+                letterSpacing="1.5px"
+                textTransform="uppercase"
+                fontFamily="monospace"
+                bg={activeTag === "all" ? "#e0e0e0" : "#111111"}
+                color={activeTag === "all" ? "#0a0a0a" : "#888888"}
+                border={`1px solid ${activeTag === "all" ? "#e0e0e0" : "#222222"}`}
+                transition="all 0.2s ease"
+                _hover={{
+                  borderColor: "#e0e0e0",
+                  color: activeTag === "all" ? "#0a0a0a" : "#e0e0e0",
+                }}
+              >
+                All [{String(mediaFilteredItems.length).padStart(2, "0")}]
+              </Box>
+
+              {allGalleryTags.map((tag) => {
+                const isActive = activeTag.toLowerCase() === tag.toLowerCase();
+                const countInMedia = mediaFilteredItems.filter((item) =>
+                  (item.tags || []).some(
+                    (t) => String(t).toLowerCase() === tag.toLowerCase()
+                  )
+                ).length;
+                const countTotal = items.filter((item) =>
+                  (item.tags || []).some(
+                    (t) => String(t).toLowerCase() === tag.toLowerCase()
+                  )
+                ).length;
+
+                if (countTotal === 0) return null;
+
+                return (
+                  <Box
+                    as="button"
+                    type="button"
+                    key={tag}
+                    onClick={() =>
+                      handleTagFilterChange(isActive ? "all" : tag)
+                    }
+                    px={3}
+                    py={1.5}
+                    borderRadius="2px"
+                    fontSize="10px"
+                    fontWeight="600"
+                    letterSpacing="1.5px"
+                    textTransform="uppercase"
+                    fontFamily="monospace"
+                    bg={isActive ? "#e2b714" : "#111111"}
+                    color={isActive ? "#0a0a0a" : "#999999"}
+                    border={`1px solid ${isActive ? "#e2b714" : "#222222"}`}
+                    transition="all 0.2s ease"
+                    _hover={{
+                      borderColor: "#e2b714",
+                      color: isActive ? "#0a0a0a" : "#e2b714",
+                    }}
+                  >
+                    #{tag} [
+                    {String(
+                      countInMedia > 0 ? countInMedia : countTotal
+                    ).padStart(2, "0")}
+                    ]
+                  </Box>
+                );
+              })}
+            </Flex>
+          )}
+        </Box>
 
         <Box position="relative">
           <Box
@@ -568,6 +801,8 @@ const ContentGenerationSection = ({ items: initialItems }) => {
                 index={index}
                 span={spans[index]}
                 onSpanChange={handleSpanChange}
+                activeTag={activeTag}
+                onSelectTag={handleTagFilterChange}
               />
             ))}
           </Box>

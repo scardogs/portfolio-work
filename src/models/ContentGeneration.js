@@ -23,11 +23,19 @@ const ContentGenerationSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    tags: {
+      type: [String],
+      default: [],
+    },
   },
   {
     timestamps: true,
   }
 );
 
-export default mongoose.models.ContentGeneration ||
-  mongoose.model("ContentGeneration", ContentGenerationSchema);
+if (mongoose.models.ContentGeneration) {
+  delete mongoose.models.ContentGeneration;
+}
+
+export default mongoose.model("ContentGeneration", ContentGenerationSchema);
+

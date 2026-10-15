@@ -53,6 +53,10 @@ const SettingsSchema = new mongoose.Schema(
       type: [String],
       default: () => [...DEFAULT_SECTION_ORDER],
     },
+    contentGalleryTags: {
+      type: [String],
+      default: [],
+    },
   },
   {
     timestamps: true,
