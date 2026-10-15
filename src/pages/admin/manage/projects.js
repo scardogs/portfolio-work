@@ -51,10 +51,11 @@ function SortableProjectCard({ project, onEdit, onDelete }) {
   });
 
   const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
+    transform: CSS.Translate.toString(transform),
+    transition: isDragging ? "none" : transition,
     zIndex: isDragging ? 1000 : 1,
-    opacity: isDragging ? 0.6 : 1,
+    opacity: isDragging ? 0.88 : 1,
+    willChange: isDragging ? "transform" : "auto",
   };
 
   return (
@@ -62,15 +63,17 @@ function SortableProjectCard({ project, onEdit, onDelete }) {
       ref={setNodeRef}
       style={style}
       bg={COLORS.card}
-      border={`1px solid ${COLORS.border}`}
+      border={`1px solid ${isDragging ? COLORS.accent : COLORS.border}`}
       borderRadius="12px"
       overflow="hidden"
       position="relative"
-      transition="all 0.3s ease"
+      transition="border-color 0.2s ease, box-shadow 0.2s ease"
+      boxShadow={isDragging ? "0 20px 50px rgba(0,0,0,0.75)" : "none"}
       _hover={{
-        borderColor: COLORS.borderStrong,
-        transform: "translateY(-3px)",
-        boxShadow: "0 12px 32px rgba(0,0,0,0.4)",
+        borderColor: isDragging ? COLORS.accent : COLORS.borderStrong,
+        boxShadow: isDragging
+          ? "0 20px 50px rgba(0,0,0,0.75)"
+          : "0 12px 32px rgba(0,0,0,0.4)",
       }}
     >
       <Box h="180px" bg={COLORS.inputBg} position="relative" overflow="hidden">
@@ -86,6 +89,8 @@ function SortableProjectCard({ project, onEdit, onDelete }) {
             filter="grayscale(100%)"
             transition="filter 0.4s"
             _hover={{ filter: "grayscale(0%)" }}
+            draggable={false}
+            userSelect="none"
           />
         ) : (
           <Flex w="100%" h="100%" align="center" justify="center" color={COLORS.dim}>
@@ -108,6 +113,7 @@ function SortableProjectCard({ project, onEdit, onDelete }) {
           _hover={{ color: COLORS.accent, borderColor: COLORS.accent }}
           cursor="grab"
           _active={{ cursor: "grabbing" }}
+          style={{ touchAction: "none" }}
         />
         <Box
           position="absolute"
@@ -168,7 +174,7 @@ export default function ManageProjects() {
   const toast = useToast();
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 2 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
@@ -190,29 +196,35 @@ export default function ManageProjects() {
 
   const handleDragEnd = async (event) => {
     const { active, over } = event;
-    if (active.id !== over.id) {
-      const oldIndex = projects.findIndex((i) => i._id === active.id);
-      const newIndex = projects.findIndex((i) => i._id === over.id);
-      const reordered = arrayMove(projects, oldIndex, newIndex);
-      setProjects(reordered);
+    if (!over || active.id === over.id) return;
 
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch("/api/projects/reorder", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ projects: reordered.map((p) => p._id) }),
-        });
-        const data = await response.json();
-        if (data.success) {
-          toast({ title: "Order saved", status: "success", duration: 2000 });
-          fetchProjects();
-        } else {
-          toast({ title: "Error", description: data.message || "Failed", status: "error", duration: 3000 });
-        }
-      } catch (error) {
-        toast({ title: "Error", description: "Failed to save order", status: "error", duration: 3000 });
+    const oldIndex = projects.findIndex((i) => i._id === active.id);
+    const newIndex = projects.findIndex((i) => i._id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reordered = arrayMove(projects, oldIndex, newIndex).map((p, idx) => ({
+      ...p,
+      order: idx,
+    }));
+    setProjects(reordered);
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/projects/reorder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ projects: reordered.map((p) => p._id) }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        toast({ title: "Order saved", status: "success", duration: 1500 });
+      } else {
+        toast({ title: "Error", description: data.message || "Failed", status: "error", duration: 3000 });
+        fetchProjects();
       }
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to save order", status: "error", duration: 3000 });
+      fetchProjects();
     }
   };
 

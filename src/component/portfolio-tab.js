@@ -29,7 +29,16 @@ import Shuffle from "./Shuffle";
 import { useRouter } from "next/router";
 import NextLink from "next/link";
 import { motion, useScroll, useTransform, useSpring, useInView, AnimatePresence } from "framer-motion";
-import { FaUserShield, FaGithub, FaLinkedin, FaBars } from "react-icons/fa";
+import {
+  FaUserShield,
+  FaGithub,
+  FaLinkedin,
+  FaFacebook,
+  FaInstagram,
+  FaTwitter,
+  FaGlobe,
+  FaBars,
+} from "react-icons/fa";
 
 const MotionBox = motion.create(Box);
 const MotionDiv = motion.div;
@@ -43,6 +52,40 @@ const ensureAbsoluteUrl = (url) => {
     return url;
   }
   return `https://${url}`;
+};
+
+const inferContactHref = (label, value, customLink) => {
+  if (customLink && String(customLink).trim()) {
+    return ensureAbsoluteUrl(String(customLink).trim());
+  }
+  const v = String(value || "").trim();
+  const l = String(label || "").trim().toLowerCase();
+  if (!v) return "";
+  if (l.includes("mail") || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
+    return v.startsWith("mailto:") ? v : `mailto:${v}`;
+  }
+  if (
+    l.includes("phone") ||
+    l.includes("mobile") ||
+    l.includes("tel") ||
+    /^[+\d][\d\s\-()]{6,}$/.test(v)
+  ) {
+    return v.startsWith("tel:") ? v : `tel:${v.replace(/\s/g, "")}`;
+  }
+  if (/^https?:\/\//i.test(v)) {
+    return v;
+  }
+  return "";
+};
+
+const getSocialIcon = (label = "") => {
+  const l = String(label).toLowerCase();
+  if (l.includes("github")) return FaGithub;
+  if (l.includes("linkedin")) return FaLinkedin;
+  if (l.includes("facebook") || l.includes("fb")) return FaFacebook;
+  if (l.includes("instagram") || l.includes("ig")) return FaInstagram;
+  if (l.includes("twitter") || l === "x") return FaTwitter;
+  return FaGlobe;
 };
 
 // ─── Animated Section Heading ───────────────────────────────────────────
@@ -185,7 +228,7 @@ const ParallaxSection = ({ children, offset = 40, ...props }) => {
   const y = useTransform(scrollYProgress, [0, 1], [offset, -offset]);
 
   return (
-    <Box ref={ref} overflow="hidden" {...props}>
+    <Box ref={ref} overflow="hidden" sx={{ scrollMarginTop: "96px" }} {...props}>
       <MotionBox style={{ y }}>
         {children}
       </MotionBox>
@@ -220,7 +263,7 @@ const FluidNavbar = ({ navItems = [], navLinkProps, onOpen, router, children }) 
         zIndex={1000}
         mx="auto"
         animate={{
-          width: scrolled ? "min(640px, 92%)" : "100%",
+          width: scrolled ? "min(780px, 94%)" : "100%",
           marginTop: scrolled ? 16 : 0,
           borderRadius: scrolled ? 999 : 0,
           paddingLeft: scrolled ? 18 : 0,
@@ -400,30 +443,109 @@ const PortfolioTab = () => {
   // Tech marquee hover pause
   const [marquePaused, setMarqueePaused] = useState(false);
 
+  const scrollAnimRef = useRef(null);
+
+  const scrollToSection = useCallback((sectionId) => {
+    if (!sectionId || typeof window === "undefined") return;
+    const el = document.getElementById(sectionId);
+    if (!el) return;
+
+    setActiveSection(sectionId);
+
+    if (scrollAnimRef.current) {
+      scrollAnimRef.current.cancel();
+    }
+
+    const HEADER_OFFSET = 88;
+    const DURATION = 580;
+    const SETTLE_WINDOW = 900;
+    const startY = window.scrollY;
+    const startTime = performance.now();
+    let cancelled = false;
+    let rafId = null;
+
+    const cancel = () => {
+      cancelled = true;
+      if (rafId) cancelAnimationFrame(rafId);
+      window.removeEventListener("wheel", cancel, { passive: true });
+      window.removeEventListener("touchmove", cancel, { passive: true });
+      window.removeEventListener("keydown", cancel);
+    };
+
+    window.addEventListener("wheel", cancel, { passive: true });
+    window.addEventListener("touchmove", cancel, { passive: true });
+    window.addEventListener("keydown", cancel);
+
+    scrollAnimRef.current = { cancel };
+
+    const step = (now) => {
+      if (cancelled) return;
+      const targetEl = document.getElementById(sectionId);
+      if (!targetEl) {
+        cancel();
+        return;
+      }
+
+      const rect = targetEl.getBoundingClientRect();
+      const maxScroll = Math.max(
+        0,
+        document.documentElement.scrollHeight - window.innerHeight
+      );
+      const currentTargetY = Math.max(
+        0,
+        Math.min(window.scrollY + rect.top - HEADER_OFFSET, maxScroll)
+      );
+
+      const elapsed = now - startTime;
+      if (elapsed < DURATION) {
+        const t = Math.min(1, elapsed / DURATION);
+        const eased = 1 - Math.pow(1 - t, 3);
+        const nextY = startY + (currentTargetY - startY) * eased;
+        window.scrollTo(0, nextY);
+        rafId = requestAnimationFrame(step);
+      } else if (elapsed < DURATION + SETTLE_WINDOW) {
+        const diff = currentTargetY - window.scrollY;
+        if (Math.abs(diff) > 1.5) {
+          window.scrollTo(0, window.scrollY + diff * 0.35);
+        } else {
+          window.scrollTo(0, currentTargetY);
+        }
+        setActiveSection(sectionId);
+        rafId = requestAnimationFrame(step);
+      } else {
+        window.scrollTo(0, currentTargetY);
+        setActiveSection(sectionId);
+        cancel();
+      }
+    };
+
+    rafId = requestAnimationFrame(step);
+  }, []);
+
   const totalProjectPages = Math.max(1, Math.ceil(projects.length / PROJECTS_PER_PAGE));
 
   const handleProjectsPageChange = useCallback(
     (nextPage) => {
       if (nextPage < 1 || nextPage > totalProjectPages || nextPage === projectsPage) return;
       setProjectsLoading(true);
-      document.getElementById("projects-section")?.scrollIntoView({ behavior: "smooth" });
+      scrollToSection("projects-section");
       setTimeout(() => {
         setProjectsPage(nextPage);
         setProjectsLoading(false);
       }, 320);
     },
-    [projectsPage, totalProjectPages]
+    [projectsPage, totalProjectPages, scrollToSection]
   );
 
   const handleToggleShowAllProjects = useCallback(() => {
     setProjectsLoading(true);
-    document.getElementById("projects-section")?.scrollIntoView({ behavior: "smooth" });
+    scrollToSection("projects-section");
     setTimeout(() => {
       setShowAllProjects((prev) => !prev);
       setProjectsPage(1);
       setProjectsLoading(false);
     }, 320);
-  }, []);
+  }, [scrollToSection]);
 
   const aboutOrSkillsTargetId =
     sectionVisibility.about !== false ? "about-section" : "skills-section";
@@ -436,7 +558,7 @@ const PortfolioTab = () => {
         sectionVisibility.skills !== false && sectionVisibility.about === false
           ? { label: "About", id: "skills-section" }
           : null,
-      projects: sectionVisibility.projects !== false ? { label: "Work", id: "projects-section" } : null,
+      projects: sectionVisibility.projects !== false ? { label: "Projects", id: "projects-section" } : null,
       contentGeneration:
         sectionVisibility.contentGeneration !== false
           ? { label: "Content", id: "content-gen-section" }
@@ -447,7 +569,7 @@ const PortfolioTab = () => {
           : null,
       experience:
         sectionVisibility.experience !== false
-          ? { label: "Experience", id: "experience-section" }
+          ? { label: "Work Experience", id: "experience-section" }
           : null,
       contact:
         sectionVisibility.contact !== false ? { label: "Contact", id: "contact-section" } : null,
@@ -467,11 +589,15 @@ const PortfolioTab = () => {
           : null,
       projects:
         sectionVisibility.projects !== false
-          ? { key: "projects", label: "Work", mobileLabel: "WORK", id: "projects-section" }
+          ? { key: "projects", label: "Projects", mobileLabel: "PROJECTS", id: "projects-section" }
           : null,
       contentGeneration:
         sectionVisibility.contentGeneration !== false
           ? { key: "contentGeneration", label: "Content", mobileLabel: "CONTENT", id: "content-gen-section" }
+          : null,
+      experience:
+        sectionVisibility.experience !== false
+          ? { key: "experience", label: "Work Experience", mobileLabel: "WORK EXPERIENCE", id: "experience-section" }
           : null,
       blog:
         sectionVisibility.blog !== false
@@ -736,10 +862,7 @@ const PortfolioTab = () => {
       transition: "all 0.3s ease",
     },
     transition: "color 0.3s ease",
-    onClick: () =>
-      document
-        .getElementById(sectionId)
-        ?.scrollIntoView({ behavior: "smooth" }),
+    onClick: () => scrollToSection(sectionId),
   });
 
   return (
@@ -1144,9 +1267,9 @@ const PortfolioTab = () => {
       {/* ═══ MAIN PORTFOLIO CONTENT ═══ */}
       {!showIntro && (
         <MotionDiv
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         >
           {/* Scroll progress bar */}
           <ScrollProgressBar />
@@ -1155,6 +1278,7 @@ const PortfolioTab = () => {
           <SectionRail
             activeSection={activeSection}
             sections={orderedRailSections}
+            onNavigate={scrollToSection}
           />
 
           <Box bg="#0a0a0a" minH="100vh" color="#e0e0e0" overflowX="hidden">
@@ -1192,7 +1316,7 @@ const PortfolioTab = () => {
                                 if (item.href) {
                                   router.push(item.href);
                                 } else {
-                                  document.getElementById(item.id)?.scrollIntoView({ behavior: "smooth" });
+                                  setTimeout(() => scrollToSection(item.id), 50);
                                 }
                               }}
                             >
@@ -2023,7 +2147,7 @@ const PortfolioTab = () => {
                   </ParallaxSection>
                 ),
                 projects: sectionVisibility.projects !== false && (
-                  <ParallaxSection mb={[12, 16, 20]} offset={50}>
+                  <ParallaxSection id="projects-section" mb={[12, 16, 20]} offset={30}>
                     <Flex
                       direction={{ base: "column", md: "row" }}
                       justify="space-between"
@@ -2031,7 +2155,7 @@ const PortfolioTab = () => {
                       mb={8}
                       gap={4}
                     >
-                      <SectionHeading id="projects-section" subtitle="What Did I Do?">
+                      <SectionHeading subtitle="What Did I Do?">
                         Featured Projects
                       </SectionHeading>
 
@@ -3402,13 +3526,38 @@ const PortfolioTab = () => {
                             </Text>
                           </HStack>
 
-                          {[
-                            { key: "EMAIL", value: contactData?.email || "johnmichael.escarlan14@gmail.com", href: `mailto:${contactData?.email || "johnmichael.escarlan14@gmail.com"}` },
-                            { key: "PHONE", value: contactData?.mobile || "+63 995 7128385", href: `tel:${(contactData?.mobile || "+639957128385").replace(/\s/g, "")}` },
-                            { key: "BASED", value: contactData?.location || "Cebu City, PH" },
-                          ].map((item, i, arr) => (
+                          {(Array.isArray(contactData?.details)
+                            ? contactData.details.map((d) => ({
+                                key: d.label,
+                                value: d.value,
+                                href: inferContactHref(d.label, d.value, d.link),
+                              }))
+                            : [
+                                {
+                                  key: "EMAIL",
+                                  value:
+                                    contactData?.email ||
+                                    "johnmichael.escarlan14@gmail.com",
+                                  href: `mailto:${
+                                    contactData?.email ||
+                                    "johnmichael.escarlan14@gmail.com"
+                                  }`,
+                                },
+                                {
+                                  key: "PHONE",
+                                  value: contactData?.mobile || "+63 995 7128385",
+                                  href: `tel:${(
+                                    contactData?.mobile || "+639957128385"
+                                  ).replace(/\s/g, "")}`,
+                                },
+                                {
+                                  key: "BASED",
+                                  value: contactData?.location || "Cebu City, PH",
+                                },
+                              ]
+                          ).map((item, i, arr) => (
                             <Box
-                              key={item.key}
+                              key={`${item.key}-${i}`}
                               py={3}
                               borderBottom={i === arr.length - 1 ? "none" : "1px solid #1f1f1f"}
                             >
@@ -3427,6 +3576,14 @@ const PortfolioTab = () => {
                                 <Box
                                   as="a"
                                   href={item.href}
+                                  target={
+                                    item.href.startsWith("http") ? "_blank" : undefined
+                                  }
+                                  rel={
+                                    item.href.startsWith("http")
+                                      ? "noopener noreferrer"
+                                      : undefined
+                                  }
                                   fontSize={[13, 14]}
                                   color="#e0e0e0"
                                   fontWeight="400"
@@ -3488,14 +3645,30 @@ const PortfolioTab = () => {
                           </Text>
 
                           <VStack spacing={0} align="stretch">
-                            {[
-                              { icon: FaGithub, label: "GitHub", href: contactData?.githubLink || "https://github.com" },
-                              { icon: FaLinkedin, label: "LinkedIn", href: contactData?.linkedinLink || "https://linkedin.com" },
-                            ].map((social, i, arr) => {
+                            {(Array.isArray(contactData?.socialLinks)
+                              ? contactData.socialLinks.map((s) => ({
+                                  icon: getSocialIcon(s.label),
+                                  label: s.label,
+                                  href: s.url,
+                                }))
+                              : [
+                                  {
+                                    icon: FaGithub,
+                                    label: "GitHub",
+                                    href: contactData?.githubLink || "https://github.com",
+                                  },
+                                  {
+                                    icon: FaLinkedin,
+                                    label: "LinkedIn",
+                                    href:
+                                      contactData?.linkedinLink || "https://linkedin.com",
+                                  },
+                                ]
+                            ).map((social, i, arr) => {
                               const Icon = social.icon;
                               return (
                                 <Box
-                                  key={social.label}
+                                  key={`${social.label}-${i}`}
                                   as="a"
                                   href={ensureAbsoluteUrl(social.href)}
                                   target="_blank"

@@ -27,13 +27,15 @@ async function getGalleryItems(req, res) {
     const limit = Math.min(60, Math.max(1, parseInt(req.query.limit, 10) || 12));
     const skip = (page - 1) * limit;
 
-    const [items, total] = await Promise.all([
+    const [items, total, videoCount, imageCount] = await Promise.all([
       ContentGeneration.find()
         .sort({ createdAt: -1, order: 1 })
         .skip(skip)
         .limit(limit)
         .lean(),
       ContentGeneration.countDocuments(),
+      ContentGeneration.countDocuments({ mediaType: "video" }),
+      ContentGeneration.countDocuments({ mediaType: "image" }),
     ]);
 
     const totalPages = Math.ceil(total / limit);
@@ -44,6 +46,8 @@ async function getGalleryItems(req, res) {
         page,
         limit,
         total,
+        videoCount,
+        imageCount,
         totalPages,
         hasMore: page < totalPages,
       },

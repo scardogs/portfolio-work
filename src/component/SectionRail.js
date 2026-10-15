@@ -3,9 +3,14 @@ import { Box, VStack, Text, HStack } from "@chakra-ui/react";
 
 // Vertical scroll-spy rail (desktop only). Shows every section as a dot;
 // the active one expands and reveals its label. Click to jump.
-export default function SectionRail({ sections = [], activeSection }) {
-  const jump = (id) =>
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+export default function SectionRail({ sections = [], activeSection, onNavigate }) {
+  const jump = (id) => {
+    if (onNavigate) {
+      onNavigate(id);
+    } else {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
   return (
     <Box

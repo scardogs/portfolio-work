@@ -1,26 +1,63 @@
 import mongoose from "mongoose";
 
+const ContactDetailSchema = new mongoose.Schema(
+  {
+    label: {
+      type: String,
+      required: [true, "Please provide a label"],
+      trim: true,
+    },
+    value: {
+      type: String,
+      required: [true, "Please provide a detail value"],
+      trim: true,
+    },
+    link: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+  },
+  { _id: true }
+);
+
+const SocialLinkSchema = new mongoose.Schema(
+  {
+    label: {
+      type: String,
+      required: [true, "Please provide a platform label"],
+      trim: true,
+    },
+    url: {
+      type: String,
+      required: [true, "Please provide a URL"],
+      trim: true,
+    },
+  },
+  { _id: true }
+);
+
 const ContactSchema = new mongoose.Schema(
   {
     facebook: {
       type: String,
-      required: [true, "Please provide a Facebook link"],
+      default: "",
       trim: true,
     },
     facebookUsername: {
       type: String,
-      required: [true, "Please provide a Facebook username"],
+      default: "",
       trim: true,
     },
     email: {
       type: String,
-      required: [true, "Please provide an email"],
+      default: "",
       trim: true,
       lowercase: true,
     },
     mobile: {
       type: String,
-      required: [true, "Please provide a mobile number"],
+      default: "",
       trim: true,
     },
     location: {
@@ -38,6 +75,14 @@ const ContactSchema = new mongoose.Schema(
       default: "",
       trim: true,
     },
+    details: {
+      type: [ContactDetailSchema],
+      default: undefined,
+    },
+    socialLinks: {
+      type: [SocialLinkSchema],
+      default: undefined,
+    },
     updatedAt: {
       type: Date,
       default: Date.now,
@@ -48,5 +93,9 @@ const ContactSchema = new mongoose.Schema(
   }
 );
 
-export default mongoose.models.Contact ||
-  mongoose.model("Contact", ContactSchema);
+// Force schema refresh in Next.js dev mode if already compiled
+if (mongoose.models.Contact) {
+  delete mongoose.models.Contact;
+}
+
+export default mongoose.model("Contact", ContactSchema);

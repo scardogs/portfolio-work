@@ -16,7 +16,7 @@ export default async function handler(req, res) {
 
 async function getWorkExperiences(req, res) {
   try {
-    const workExperiences = await WorkExperience.find().sort({ order: 1 });
+    const workExperiences = await WorkExperience.find().sort({ order: 1, createdAt: -1 });
     return res.status(200).json({ success: true, data: workExperiences });
   } catch (error) {
     console.error("Get work experiences error:", error);

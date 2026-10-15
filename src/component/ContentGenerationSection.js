@@ -247,17 +247,22 @@ const FILTERS = [
   { key: "image", label: "Images" },
 ];
 
+const INITIAL_VISIBLE = 6;
+const VISIBLE_STEP = 6;
+
 const ContentGenerationSection = ({ items: initialItems }) => {
   const [items, setItems] = useState(initialItems || []);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [totals, setTotals] = useState({ total: 0, video: 0, image: 0 });
   const [loading, setLoading] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [spans, setSpans] = useState({});
   const [filter, setFilter] = useState("video");
-  const sentinelRef = useRef(null);
+  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE);
 
-  const visibleItems = items.filter((i) => i.mediaType === filter);
+  const filteredItems = items.filter((i) => i.mediaType === filter);
+  const visibleItems = filteredItems.slice(0, visibleCount);
 
   const handleSpanChange = useCallback((index, span) => {
     setSpans((prev) => (prev[index] === span ? prev : { ...prev, [index]: span }));
@@ -274,6 +279,13 @@ const ContentGenerationSection = ({ items: initialItems }) => {
         setItems((prev) => (pageNum === 1 ? json.data : [...prev, ...json.data]));
         setHasMore(json.pagination?.hasMore ?? false);
         setPage(pageNum);
+        if (json.pagination) {
+          setTotals((prev) => ({
+            total: json.pagination.total ?? prev.total,
+            video: json.pagination.videoCount ?? prev.video,
+            image: json.pagination.imageCount ?? prev.image,
+          }));
+        }
       }
     } catch (e) {
       console.error("Fetch content gallery failed:", e);
@@ -283,37 +295,55 @@ const ContentGenerationSection = ({ items: initialItems }) => {
     }
   }, []);
 
-  // Initial fetch (always paginated to know hasMore, even if parent prefilled)
+  // Initial fetch (manual "See More" controls subsequent loads — no auto infinite scroll)
   useEffect(() => {
     fetchPage(1);
   }, [fetchPage]);
 
-  // Infinite scroll via sentinel
-  useEffect(() => {
-    if (!hasMore || loading) return;
-    const el = sentinelRef.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            fetchPage(page + 1);
-          }
-        });
-      },
-      { rootMargin: "400px 0px" }
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, [hasMore, loading, page, fetchPage]);
+  const handleFilterChange = async (nextFilter) => {
+    setFilter(nextFilter);
+    setVisibleCount(INITIAL_VISIBLE);
+    setSpans({});
+    const nextFilteredCount = items.filter((i) => i.mediaType === nextFilter).length;
+    const nextTotalForFilter = nextFilter === "video" ? totals.video : totals.image;
+    if (
+      nextFilteredCount < INITIAL_VISIBLE &&
+      hasMore &&
+      (!nextTotalForFilter || nextFilteredCount < nextTotalForFilter) &&
+      !loading
+    ) {
+      await fetchPage(page + 1);
+    }
+  };
+
+  const handleSeeMore = async () => {
+    const nextVisible = visibleCount + VISIBLE_STEP;
+    setVisibleCount(nextVisible);
+    if (nextVisible > filteredItems.length && hasMore && !loading) {
+      await fetchPage(page + 1);
+    }
+  };
+
+  const handleShowLess = () => {
+    setVisibleCount(INITIAL_VISIBLE);
+    document
+      .getElementById("content-gen-section")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   if (initialized && items.length === 0) return null;
 
-  const videoCount = items.filter((i) => i.mediaType === "video").length;
-  const imageCount = items.filter((i) => i.mediaType === "image").length;
+  const videoCount = totals.video || items.filter((i) => i.mediaType === "video").length;
+  const imageCount = totals.image || items.filter((i) => i.mediaType === "image").length;
+  const totalCount = totals.total || items.length;
+  const totalForFilter = filter === "video" ? videoCount : imageCount;
+  const canSeeMore =
+    visibleItems.length < totalForFilter &&
+    (visibleCount < filteredItems.length || hasMore);
+  const remainingCount = Math.max(0, totalForFilter - visibleItems.length);
 
   return (
-    <Container maxW="container.xl" py={20}>
+    <Container maxW="container.xl" pt={2} pb={12} px={0}>
       <VStack spacing={[10, 12, 14]} align="stretch">
         {/* ── Editorial Header ─────────────────────────────── */}
         <Box position="relative">
@@ -414,7 +444,7 @@ const ContentGenerationSection = ({ items: initialItems }) => {
                 w={{ base: "100%", lg: "320px" }}
               >
                 {[
-                  { value: items.length, label: "Total" },
+                  { value: totalCount, label: "Total" },
                   { value: videoCount, label: "Videos" },
                   { value: imageCount, label: "Images" },
                 ].map((stat, idx) => (
@@ -466,12 +496,12 @@ const ContentGenerationSection = ({ items: initialItems }) => {
           <HStack spacing={[6, 8, 10]}>
             {FILTERS.map((f) => {
               const active = filter === f.key;
-              const count = items.filter((i) => i.mediaType === f.key).length;
+              const count = f.key === "video" ? videoCount : imageCount;
               return (
                 <Button
                   key={f.key}
                   variant="link"
-                  onClick={() => setFilter(f.key)}
+                  onClick={() => handleFilterChange(f.key)}
                   color={active ? "#e0e0e0" : "#666666"}
                   fontSize={[12, 13]}
                   fontWeight="500"
@@ -517,57 +547,150 @@ const ContentGenerationSection = ({ items: initialItems }) => {
             textTransform="uppercase"
             fontFamily="monospace"
           >
-            Showing {visibleItems.length} of {items.filter((i) => i.mediaType === filter).length}
+            Showing {visibleItems.length} of {totalForFilter}
           </Text>
         </Flex>
 
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: ["repeat(2, 1fr)", "repeat(2, 1fr)", "repeat(3, 1fr)"],
-            gridAutoRows: `${ROW_HEIGHT}px`,
-            gap: `${GAP}px`,
-            alignItems: "start",
-          }}
-        >
-          {visibleItems.map((item, index) => (
-            <MasonryItem
-              key={item._id || index}
-              item={item}
-              index={index}
-              span={spans[index]}
-              onSpanChange={handleSpanChange}
+        <Box position="relative">
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: ["repeat(2, 1fr)", "repeat(2, 1fr)", "repeat(3, 1fr)"],
+              gridAutoRows: `${ROW_HEIGHT}px`,
+              gap: `${GAP}px`,
+              alignItems: "start",
+            }}
+          >
+            {visibleItems.map((item, index) => (
+              <MasonryItem
+                key={item._id || index}
+                item={item}
+                index={index}
+                span={spans[index]}
+                onSpanChange={handleSpanChange}
+              />
+            ))}
+          </Box>
+
+          {/* Subtle bottom fade when more items are waiting */}
+          {canSeeMore && visibleItems.length > 0 && (
+            <Box
+              position="absolute"
+              bottom={0}
+              left={0}
+              right={0}
+              h="100px"
+              pointerEvents="none"
+              background="linear-gradient(to top, rgba(10,10,10,0.88) 0%, rgba(10,10,10,0) 100%)"
+              zIndex={2}
             />
-          ))}
+          )}
         </Box>
 
-        {/* Infinite-scroll sentinel + manual fallback */}
-        <Box ref={sentinelRef} h="1px" />
+        {/* ── Prominent "See More" Call-to-Action Footer ────────────────── */}
+        <Box pt={4} pb={2}>
+          {canSeeMore ? (
+            <VStack spacing={4}>
+              <Flex align="center" w="100%" gap={[4, 6]}>
+                <Box
+                  flex="1"
+                  h="1px"
+                  bg="linear-gradient(90deg, transparent 0%, #333333 100%)"
+                />
+                <Button
+                  onClick={handleSeeMore}
+                  isLoading={loading}
+                  loadingText="LOADING MORE..."
+                  size="lg"
+                  h={["54px", "60px"]}
+                  minW={["240px", "320px"]}
+                  px={[8, 12]}
+                  bg="#e0e0e0"
+                  color="#0a0a0a"
+                  border="2px solid #e0e0e0"
+                  borderRadius="2px"
+                  fontWeight="700"
+                  letterSpacing="3px"
+                  textTransform="uppercase"
+                  fontSize={["12px", "13px"]}
+                  fontFamily="monospace"
+                  boxShadow="0 14px 40px rgba(0,0,0,0.65), 0 0 25px rgba(226,183,20,0.15)"
+                  transition="all 0.3s cubic-bezier(0.22, 1, 0.36, 1)"
+                  _hover={{
+                    bg: "#e2b714",
+                    borderColor: "#e2b714",
+                    color: "#0a0a0a",
+                    transform: "translateY(-3px) scale(1.02)",
+                    boxShadow: "0 20px 50px rgba(0,0,0,0.8), 0 0 35px rgba(226,183,20,0.35)",
+                  }}
+                  _active={{
+                    transform: "translateY(0) scale(0.99)",
+                  }}
+                  rightIcon={
+                    <Box as="span" fontSize="15px" ml={1}>
+                      ↓
+                    </Box>
+                  }
+                >
+                  See More{remainingCount > 0 ? ` (${remainingCount} More)` : ""}
+                </Button>
+                <Box
+                  flex="1"
+                  h="1px"
+                  bg="linear-gradient(90deg, #333333 0%, transparent 100%)"
+                />
+              </Flex>
 
-        <VStack spacing={3} pt={2}>
-          {loading && <Spinner size="md" color="#888" thickness="2px" />}
-          {hasMore && !loading && (
-            <Button
-              onClick={() => fetchPage(page + 1)}
-              variant="outline"
-              borderColor="#333"
-              color="#e0e0e0"
-              fontWeight="300"
-              letterSpacing="2px"
-              textTransform="uppercase"
-              fontSize="xs"
-              px={8}
-              _hover={{ borderColor: "#e2b714", color: "#e2b714", bg: "transparent" }}
-            >
-              Load More
-            </Button>
+              <Text
+                fontSize="10px"
+                color="#777777"
+                letterSpacing="2.5px"
+                textTransform="uppercase"
+                fontFamily="monospace"
+              >
+                Viewing {visibleItems.length} of {totalForFilter} {filter === "video" ? "Videos" : "Images"}
+              </Text>
+            </VStack>
+          ) : (
+            items.length > 0 && (
+              <VStack spacing={4}>
+                <Flex align="center" w="100%" gap={4}>
+                  <Box flex="1" h="1px" bg="#1f1f1f" />
+                  <Text
+                    fontSize="10px"
+                    color="#555555"
+                    letterSpacing="3px"
+                    textTransform="uppercase"
+                    fontFamily="monospace"
+                  >
+                    — All {visibleItems.length} {filter === "video" ? "Videos" : "Images"} Displayed —
+                  </Text>
+                  <Box flex="1" h="1px" bg="#1f1f1f" />
+                </Flex>
+
+                {visibleItems.length > INITIAL_VISIBLE && (
+                  <Button
+                    onClick={handleShowLess}
+                    variant="outline"
+                    size="sm"
+                    borderColor="#333333"
+                    color="#999999"
+                    borderRadius="2px"
+                    fontWeight="500"
+                    letterSpacing="2px"
+                    textTransform="uppercase"
+                    fontSize="10px"
+                    fontFamily="monospace"
+                    px={6}
+                    _hover={{ borderColor: "#e0e0e0", color: "#e0e0e0", bg: "#141414" }}
+                  >
+                    Show Less ↑
+                  </Button>
+                )}
+              </VStack>
+            )
           )}
-          {!hasMore && items.length > 0 && (
-            <Text fontSize="xs" color="#444" letterSpacing="2px" textTransform="uppercase">
-              — End of Gallery —
-            </Text>
-          )}
-        </VStack>
+        </Box>
       </VStack>
     </Container>
   );
