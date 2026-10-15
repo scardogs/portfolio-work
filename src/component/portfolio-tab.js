@@ -756,7 +756,7 @@ const PortfolioTab = () => {
         const yearsData = await yearsRes.json();
         const settingsData = await settingsRes.json().catch(() => ({}));
 
-        if (aboutData.success) {
+        if (aboutData?.success && aboutData.data) {
           console.log("About data from API:", aboutData.data);
           setAboutData(aboutData.data);
           try {
@@ -777,12 +777,21 @@ const PortfolioTab = () => {
             // ignore localStorage write errors
           }
         }
-        if (projectsData.success) setProjects(projectsData.data);
-        if (skillsData.success) setSkills(skillsData.data);
-        if (contactData.success) setContactData(contactData.data);
-        if (workExperienceData.success)
+        if (projectsData?.success && Array.isArray(projectsData.data)) {
+          setProjects(projectsData.data);
+        }
+        if (skillsData?.success && Array.isArray(skillsData.data)) {
+          setSkills(skillsData.data);
+        }
+        if (contactData?.success && contactData.data) {
+          setContactData(contactData.data);
+        }
+        if (workExperienceData?.success && Array.isArray(workExperienceData.data)) {
           setWorkExperiences(workExperienceData.data);
-        if (yearsData.success) setYears(yearsData.data);
+        }
+        if (yearsData?.success && Array.isArray(yearsData.data)) {
+          setYears(yearsData.data);
+        }
         if (settingsData?.success && settingsData.data?.sectionVisibility) {
           setSectionVisibility((prev) => ({
             ...prev,

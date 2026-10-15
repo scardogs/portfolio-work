@@ -123,6 +123,10 @@ function MasonryItem({ item, index, activeTag, onSelectTag }) {
   useEffect(() => {
     const el = wrapperRef.current;
     if (!el || isVisible) return;
+    if (typeof IntersectionObserver === "undefined") {
+      setIsVisible(true);
+      return;
+    }
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -142,12 +146,17 @@ function MasonryItem({ item, index, activeTag, onSelectTag }) {
     const el = wrapperRef.current;
     if (!el) return;
 
-    const ro = new ResizeObserver(() => {
-      measure();
-    });
-    ro.observe(el);
-    if (videoRef.current) {
-      ro.observe(videoRef.current);
+    let rafId = requestAnimationFrame(measure);
+    let ro = null;
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(() => {
+        cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(measure);
+      });
+      ro.observe(el);
+      if (videoRef.current) {
+        ro.observe(videoRef.current);
+      }
     }
 
     const imgs = el.querySelectorAll("img");
@@ -155,10 +164,9 @@ function MasonryItem({ item, index, activeTag, onSelectTag }) {
     window.addEventListener("resize", measure);
 
     measure();
-    const rafId = requestAnimationFrame(measure);
     return () => {
       cancelAnimationFrame(rafId);
-      ro.disconnect();
+      if (ro) ro.disconnect();
       imgs.forEach((img) => img.removeEventListener("load", measure));
       window.removeEventListener("resize", measure);
     };
