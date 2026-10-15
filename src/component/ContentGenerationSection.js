@@ -101,22 +101,23 @@ function PlayButton({ playing, onClick }) {
   );
 }
 
-function MasonryItem({ item, index, span, onSpanChange, activeTag, onSelectTag }) {
+function MasonryItem({ item, index, activeTag, onSelectTag }) {
   const wrapperRef = useRef(null);
   const videoRef = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [videoLoaded, setVideoLoaded] = useState(false);
+  const [span, setSpan] = useState(9);
 
   const measure = useCallback(() => {
     const el = wrapperRef.current;
     if (!el) return;
-    const h = el.getBoundingClientRect().height;
+    const h = el.offsetHeight || el.getBoundingClientRect().height;
     if (h > 0) {
       const newSpan = Math.ceil((h + GAP) / (ROW_HEIGHT + GAP));
-      onSpanChange(index, newSpan);
+      setSpan((prev) => (prev === newSpan ? prev : newSpan));
     }
-  }, [index, onSpanChange]);
+  }, []);
 
   // Lazy-load: only mount media when within viewport
   useEffect(() => {
@@ -141,18 +142,27 @@ function MasonryItem({ item, index, span, onSpanChange, activeTag, onSelectTag }
     const el = wrapperRef.current;
     if (!el) return;
 
-    const ro = new ResizeObserver(measure);
+    const ro = new ResizeObserver(() => {
+      measure();
+    });
     ro.observe(el);
+    if (videoRef.current) {
+      ro.observe(videoRef.current);
+    }
 
     const imgs = el.querySelectorAll("img");
     imgs.forEach((img) => img.addEventListener("load", measure));
+    window.addEventListener("resize", measure);
 
     measure();
+    const rafId = requestAnimationFrame(measure);
     return () => {
+      cancelAnimationFrame(rafId);
       ro.disconnect();
       imgs.forEach((img) => img.removeEventListener("load", measure));
+      window.removeEventListener("resize", measure);
     };
-  }, [measure, isVisible]);
+  }, [measure, isVisible, activeTag, videoLoaded]);
 
   const handlePlay = useCallback(() => {
     const v = videoRef.current;
@@ -176,7 +186,7 @@ function MasonryItem({ item, index, span, onSpanChange, activeTag, onSelectTag }
   const itemTags = Array.isArray(item.tags) ? item.tags.filter(Boolean) : [];
 
   return (
-    <Box sx={{ gridRowEnd: `span ${span || 30}` }}>
+    <Box sx={{ gridRowEnd: `span ${span}` }}>
       <MotionBox
         ref={wrapperRef}
         initial={{ opacity: 0, y: 20 }}
@@ -220,6 +230,8 @@ function MasonryItem({ item, index, span, onSpanChange, activeTag, onSelectTag }
                 setVideoLoaded(true);
                 measure();
               }}
+              onLoadedData={measure}
+              onCanPlay={measure}
               onPlay={() => setPlaying(true)}
               onPause={() => setPlaying(false)}
               style={{ width: "100%", height: "auto", display: "block" }}
@@ -311,7 +323,6 @@ const ContentGenerationSection = ({ items: initialItems }) => {
   const [totals, setTotals] = useState({ total: 0, video: 0, image: 0 });
   const [loading, setLoading] = useState(false);
   const [initialized, setInitialized] = useState(false);
-  const [spans, setSpans] = useState({});
   const [filter, setFilter] = useState("video");
   const [activeTag, setActiveTag] = useState("all");
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE);
@@ -354,10 +365,6 @@ const ContentGenerationSection = ({ items: initialItems }) => {
 
   const visibleItems = filteredItems.slice(0, visibleCount);
 
-  const handleSpanChange = useCallback((index, span) => {
-    setSpans((prev) => (prev[index] === span ? prev : { ...prev, [index]: span }));
-  }, []);
-
   const fetchPage = useCallback(async (pageNum) => {
     setLoading(true);
     try {
@@ -396,7 +403,6 @@ const ContentGenerationSection = ({ items: initialItems }) => {
   const handleFilterChange = async (nextFilter) => {
     setFilter(nextFilter);
     setVisibleCount(INITIAL_VISIBLE);
-    setSpans({});
     // If activeTag has 0 items in nextFilter, reset activeTag to "all"
     if (activeTag !== "all") {
       const hasInNext = items.some(
@@ -423,7 +429,6 @@ const ContentGenerationSection = ({ items: initialItems }) => {
   const handleTagFilterChange = (nextTag) => {
     setActiveTag(nextTag);
     setVisibleCount(INITIAL_VISIBLE);
-    setSpans({});
     if (nextTag !== "all") {
       const countInCurrentMedia = items.filter(
         (i) =>
@@ -799,8 +804,6 @@ const ContentGenerationSection = ({ items: initialItems }) => {
                 key={item._id || index}
                 item={item}
                 index={index}
-                span={spans[index]}
-                onSpanChange={handleSpanChange}
                 activeTag={activeTag}
                 onSelectTag={handleTagFilterChange}
               />
